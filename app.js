@@ -1,6 +1,6 @@
 // Inisialisasi Supabase
-const supabaseUrl = 'YOUR_SUPABASE_URL';
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+const supabaseUrl = 'https://eazdfwzifcsfayapyshv.supabase.co';
+const supabaseKey = 'sb_publishable_IVJA3hCseLo_d39XX9RzMg_Nz4p8az2';
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentUser = null;
