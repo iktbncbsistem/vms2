@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Tempahan Kenderaan</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Load Supabase JS dari CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Tambahan CSS ringkas untuk jadual */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -23,7 +28,7 @@
         <!-- Bahagian Dashboard Pemohon -->
         <div id="dashboard-pemohon" class="hidden">
             <h2>Borang Tempahan (Pemohon)</h2>
-            <p>Selamat datang, <span id="nama-pemohon"></span></p>
+            <p>Selamat datang, <span id="nama-pemohon"></span>!</p>
             <form id="form-tempahan" onsubmit="hantarTempahan(event)">
                 <input type="text" id="destinasi" placeholder="Destinasi" required>
                 <input type="text" id="tujuan" placeholder="Tujuan" required>
@@ -36,14 +41,23 @@
             <button class="logout-btn" onclick="logout()">Log Keluar</button>
         </div>
 
-        <!-- (Boss boleh tambah div untuk Urusetia dan Pelulus di sini kelak mengikut logik JS) -->
+        <!-- Bahagian Dashboard Urusetia -->
         <div id="dashboard-urusetia" class="hidden">
-            <h2>Paparan Urusetia</h2>
-            <p>Ruang untuk semak permohonan dan agih pemandu...</p>
+            <h2>Panel Urusetia</h2>
+            <p>Sahkan tempahan dan agihkan kenderaan.</p>
+            <div id="senarai-tempahan-urusetia"></div>
             <button class="logout-btn" onclick="logout()">Log Keluar</button>
         </div>
-    </div>
 
+        <!-- Bahagian Dashboard Pelulus -->
+        <div id="dashboard-pelulus" class="hidden">
+            <h2>Panel Pelulus</h2>
+            <p>Senarai tempahan yang menunggu kelulusan.</p>
+            <div id="senarai-tempahan-pelulus"></div>
+            <button class="logout-btn" onclick="logout()">Log Keluar</button>
+        </div>
+
+    </div>
     <script src="app.js"></script>
 </body>
 </html>
