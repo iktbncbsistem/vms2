@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Tempahan Kenderaan</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Load Supabase JS dari CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Sistem Tempahan Kenderaan</h1>
+        
+        <!-- Bahagian Log Masuk -->
+        <div id="login-section">
+            <h2>Log Masuk</h2>
+            <input type="email" id="email" placeholder="Emel" required>
+            <input type="password" id="password" placeholder="Kata Laluan" required>
+            <button onclick="login()">Log Masuk</button>
+        </div>
+
+        <!-- Bahagian Dashboard Pemohon -->
+        <div id="dashboard-pemohon" class="hidden">
+            <h2>Borang Tempahan (Pemohon)</h2>
+            <p>Selamat datang, <span id="nama-pemohon"></span></p>
+            <form id="form-tempahan" onsubmit="hantarTempahan(event)">
+                <input type="text" id="destinasi" placeholder="Destinasi" required>
+                <input type="text" id="tujuan" placeholder="Tujuan" required>
+                <label>Tarikh Pergi:</label>
+                <input type="date" id="tarikh_pergi" required>
+                <label>Tarikh Balik:</label>
+                <input type="date" id="tarikh_balik" required>
+                <button type="submit">Hantar Permohonan</button>
+            </form>
+            <button class="logout-btn" onclick="logout()">Log Keluar</button>
+        </div>
+
+        <!-- (Boss boleh tambah div untuk Urusetia dan Pelulus di sini kelak mengikut logik JS) -->
+        <div id="dashboard-urusetia" class="hidden">
+            <h2>Paparan Urusetia</h2>
+            <p>Ruang untuk semak permohonan dan agih pemandu...</p>
+            <button class="logout-btn" onclick="logout()">Log Keluar</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
