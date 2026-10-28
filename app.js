@@ -112,7 +112,7 @@ async function muatSenaraiUrusetia() {
         html += `<tr>
             <td>${t.profil.nama}</td>
             <td>${t.destinasi} (${t.tujuan})</td>
-            <td>${t.tarikh_pergi} hingga${t.tarikh_balik}</td>
+            <td>${t.tarikh_pergi} hingga ${t.tarikh_balik}</td>
             <td><strong>${t.status}</strong></td>
             <td>`;
 
@@ -123,10 +123,32 @@ async function muatSenaraiUrusetia() {
             html += `<select id="kenderaan-${t.id}">
                         <option value="">Pilih Kenderaan...</option>`;
             kenderaan.forEach(k => {
-                html += `<option value="${k.id}">${k.no_plat} -${k.model}</option>`;
+                html += `<option value="${k.id}">${k.no_plat} - ${k.model}</option>`;
             });
             html += `</select>
-                     <button onclick="agihKenderaan(${t.id})">Agihkan</button>`; }  html += `</td></tr>`; }); html += `</table>`; div.innerHTML = html; }  async function hantarKePelulus(idTempahan) { const { error } = await supabaseClient .from('tempahan') .update({ status: 'Menunggu Kelulusan' }) .eq('id', idTempahan);  if (!error) { alert("Dihantar kepada Pelulus."); muatSenaraiUrusetia(); // Refresh jadual } }  async function agihKenderaan(idTempahan) { const idKenderaan = document.getElementById(`kenderaan-${idTempahan}`).value;
+                     <button onclick="agihKenderaan(${t.id})">Agihkan</button>`;
+        }
+        
+        html += `</td></tr>`;
+    });
+    html += `</table>`;
+    div.innerHTML = html;
+}
+
+async function hantarKePelulus(idTempahan) {
+    const { error } = await supabaseClient
+        .from('tempahan')
+        .update({ status: 'Menunggu Kelulusan' })
+        .eq('id', idTempahan);
+    
+    if (!error) {
+        alert("Dihantar kepada Pelulus.");
+        muatSenaraiUrusetia(); // Refresh jadual
+    }
+}
+
+async function agihKenderaan(idTempahan) {
+    const idKenderaan = document.getElementById(`kenderaan-${idTempahan}`).value;
     if (!idKenderaan) return alert("Sila pilih kenderaan!");
 
     const { error } = await supabaseClient
@@ -158,7 +180,31 @@ async function muatSenaraiPelulus() {
         html += `<tr>
             <td>${t.profil.nama}</td>
             <td>${t.destinasi}</td>
-            <td>${t.tarikh_pergi} hingga${t.tarikh_balik}</td>
+            <td>${t.tarikh_pergi} hingga ${t.tarikh_balik}</td>
             <td>
                 <button onclick="sahkanStatus(${t.id}, 'Lulus')" style="background:green; color:white; padding:5px;">Lulus</button>
-                <button onclick="sahkanStatus(${t.id}, 'Tolak')" style="background:red; color:white; padding:5px;">Tolak
+                <button onclick="sahkanStatus(${t.id}, 'Tolak')" style="background:red; color:white; padding:5px;">Tolak</button>
+            </td>
+        </tr>`;
+    });
+    html += `</table>`;
+    div.innerHTML = html;
+}
+
+async function sahkanStatus(idTempahan, statusBaru) {
+    const { error } = await supabaseClient
+        .from('tempahan')
+        .update({ status: statusBaru })
+        .eq('id', idTempahan);
+    
+    if (!error) {
+        alert("Permohonan telah di" + statusBaru.toLowerCase());
+        muatSenaraiPelulus();
+    }
+}
+
+// ================= UMUM =================
+async function logout() {
+    await supabaseClient.auth.signOut();
+    location.reload();
+}
