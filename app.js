@@ -6,18 +6,17 @@ const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 let currentUser = null;
 let userProfile = null;
 
-// Fungsi Log Masuk
-async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+// Fungsi Log Masuk Google
+async function loginGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: window.location.origin 
+        }
+    });
 
     if (error) {
-        alert("Ralat log masuk: " + error.message);
-    } else {
-        currentUser = data.user;
-        semakPeranan();
+        alert("Ralat log masuk Google: " + error.message);
     }
 }
 
