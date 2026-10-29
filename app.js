@@ -323,3 +323,23 @@ async function sahkanStatus(idTempahan, statusBaru) {
     const { error } = await supabaseClient.from('tempahan').update({ status: statusBaru }).eq('id', idTempahan);
     if (!error) { alert("Permohonan telah di" + statusBaru.toLowerCase()); muatSenaraiPelulus(); }
 }
+const { error: insertError } = await supabaseClient.from('tempahan').insert([{
+    id_pemohon: currentUserId, // atau currentUser.id bergantung pada kod bos
+    nama_pemohon: $('#applicantName').value,
+    no_telefon: $('#phone').value,
+    bahagian: $('#department').value,
+    tujuan: $('#purpose').value,
+    destinasi: $('#location').value,      // <--- TAMBAH INI (Penuhi syarat wajib)
+    tarikh_pergi: $('#tripDate').value,
+    tarikh_balik: $('#tripDate').value,   // <--- TAMBAH INI (Penuhi syarat wajib)
+    masa_bertolak: $('#departTime').value,
+    masa_balik: $('#returnTime').value,
+    lokasi: $('#location').value,
+    urusan_perjalanan: $('#tripPurpose').value,
+    pemandu_tunggu: driverWaitVal,
+    bilangan_penumpang: $('#passengerCount').value,
+    fail_surat: fileUrl,
+    senarai_penumpang: passengers,
+    senarai_peralatan: equipments,
+    status: 'Menunggu Semakan'
+}]);
