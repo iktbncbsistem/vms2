@@ -206,7 +206,18 @@
     </div>
 </header>
 
-<div class="stepper-container">
+<!-- 1. BAHAGIAN LOG MASUK -->
+<div id="login-section" style="max-width: 400px; margin: 100px auto; text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #cbd5e1;">
+    <h2 style="margin-top:0; color: #102a43;">Log Masuk VMS</h2>
+    <p style="color:#64748b; margin-bottom:20px;">Sila log masuk menggunakan akaun Google rasmi anda.</p>
+    <button class="btn btn-primary" onclick="loginGoogle()" style="width:100%; padding:12px; font-size: 15px;">🌐 Log Masuk dengan Google</button>
+</div>
+
+<!-- 2. KONTENA PEMOHON (Borang Premium) -->
+<div id="dashboard-pemohon" class="hidden">
+    
+    <!-- Stepper -->
+    <div class="stepper-container">
     <div class="stepper">
         <div class="step active"><div class="circle">1</div><div class="label">Maklumat Pemohon</div></div>
         <div class="step"><div class="circle">2</div><div class="label">Jadual Perjalanan</div></div>
@@ -382,6 +393,7 @@
         </aside>
     </div>
 </form>
+            </div>
 
 <script>
     const $ = selector => document.querySelector(selector);
