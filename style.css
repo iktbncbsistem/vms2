@@ -36,3 +36,21 @@ button:hover {
 .hidden {
     display: none;
 }
+
+
+body {
+    padding: 20px;
+    background-color: #f1f5f9;
+}
+
+#dashboard-pemohon, #dashboard-urusetia, #dashboard-pelulus, #modalUrusetia {
+    border: 3px solid #cbd5e1;
+    border-radius: 16px;
+    background: #ffffff;
+    padding: 25px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+    width: 100%;
+    min-height: 80vh;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
