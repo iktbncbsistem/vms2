@@ -202,89 +202,529 @@ async function sahkanUrusetia(id) {
     }
 }
 
-// ==========================================
-// FUNGSI PAPAR BUTIRAN POP-UP (PREMIUM FORM)
-// ==========================================
-function paparButiran(index) {
-    const t = cacheUrusetia[index];
-    
-    // Butang Muat Turun Surat
-    const failHtml = t.fail_surat 
-        ? `<a href="${t.fail_surat}" target="_blank" style="background:var(--primary); color:white; padding:6px 12px; text-decoration:none; border-radius:4px; font-size:12px; display:inline-block; font-weight:600;">📎 Muat Turun Surat Rasmi</a>` 
-        : '<span style="color:#94a3b8; font-size:12px; font-style:italic;">Tiada fail dilampirkan</span>';
-    
-    // Tukar JSON Penumpang kepada Jadual HTML yang kemas
-    let htmlPenumpang = '';
-    if (t.senarai_penumpang && t.senarai_penumpang.length > 0) {
-        htmlPenumpang = `
-            <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:13px; background:white;">
-                <thead>
-                    <tr style="background:#e2e8f0; text-align:left; color:#334155;">
-                        <th style="padding:8px 12px; border:1px solid #cbd5e1; width:40px; text-align:center;">Bil</th>
-                        <th style="padding:8px 12px; border:1px solid #cbd5e1;">Nama Penumpang</th>
-                        <th style="padding:8px 12px; border:1px solid #cbd5e1;">No. K/P</th>
-                        <th style="padding:8px 12px; border:1px solid #cbd5e1;">Bahagian</th>
-                    </tr>
-                </thead>
-                <tbody>
+
+/* VMS - PAPARAN BUTIRAN PERMOHONAN KENDERAAN */
+(function () {
+    'use strict';
+
+    function pasangGayaVMS() {
+        if (document.getElementById('vms-professional-style')) return;
+
+        const css = `
+        .vms-form {
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            color: #17365d;
+            background: #fff;
+            padding: 24px;
+            border-radius: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .vms-form * { box-sizing: border-box; }
+
+        .vms-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 8px 5px 22px;
+            margin-bottom: 24px;
+            border-bottom: 2px dashed #bfdbfe;
+        }
+        .vms-logo {
+            width: 70px;
+            height: 70px;
+            min-width: 70px;
+            background: linear-gradient(135deg,#1767c2,#0c3d78);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 34px;
+        }
+        .vms-heading { min-width: 0; }
+        .vms-header h3 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #124783;
+            margin: 0 0 7px;
+        }
+        .vms-subtitle {
+            color: #647da0;
+            font-size: 13px;
+        }
+        .vms-reference {
+            margin-left: auto;
+            padding: 12px 17px;
+            border-radius: 12px;
+            background: #eff6ff;
+            color: #174c8b;
+            text-align: center;
+            min-width: 120px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .vms-reference strong {
+            display: block;
+            font-size: 18px;
+            margin-top: 4px;
+        }
+        .vms-section {
+            border: 1px solid #dbeafe;
+            border-radius: 13px;
+            overflow: hidden;
+            margin-bottom: 22px;
+            background: white;
+        }
+        .vms-section-title {
+            padding: 15px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 800;
+            margin: 0;
+        }
+        .vms-blue {
+            background: linear-gradient(100deg,#1767b5,#9ac5f0);
+        }
+        .vms-teal {
+            background: linear-gradient(100deg,#087d83,#a3d8d3);
+        }
+        .vms-purple {
+            background: linear-gradient(100deg,#6267bd,#c9c9f5);
+        }
+        .vms-section-icon {
+            background: white;
+            color: #1767b5;
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+        }
+        .vms-content {
+            padding: 18px;
+            margin: 14px;
+            background: #f8fbff;
+            border: 1px solid #e0edfc;
+            border-radius: 10px;
+        }
+        .vms-grid {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 22px;
+        }
+        .vms-field {
+            padding-bottom: 13px;
+            border-bottom: 1px solid #e1eaf5;
+            min-width: 0;
+        }
+        .vms-field.full { grid-column: 1 / -1; }
+        .vms-label {
+            display: block;
+            color: #527397;
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 7px;
+        }
+        .vms-value {
+            color: #153765;
+            font-size: 14px;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+        .vms-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg,#1976d2,#0755aa);
+            color: white !important;
+            text-decoration: none !important;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(25,118,210,.18);
+        }
+        .vms-download:hover {
+            transform: translateY(-2px);
+        }
+        .vms-empty {
+            color: #94a3b8;
+            font-size: 13px;
+            font-style: italic;
+        }
+        .vms-table-wrap {
+            overflow-x: auto;
+            padding: 0 14px 14px;
+        }
+        .vms-table {
+            width: 100%;
+            min-width: 560px;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+            border: 1px solid #dce7f7;
+            border-radius: 9px;
+        }
+        .vms-table th {
+            background: #edf2ff;
+            color: #254c83;
+            font-weight: 800;
+            text-align: left;
+            padding: 14px 12px;
+            border-bottom: 1px solid #dce7f7;
+        }
+        .vms-table td {
+            padding: 13px 12px;
+            color: #29476c;
+            border-bottom: 1px solid #e7edf7;
+            overflow-wrap: anywhere;
+        }
+        .vms-table tbody tr:nth-child(even) {
+            background: #f5f8fd;
+        }
+        .vms-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .vms-table th:first-child,
+        .vms-table td:first-child {
+            text-align: center;
+            width: 45px;
+        }
+        .vms-passenger-total {
+            margin: 0 14px 14px;
+            padding: 12px 16px;
+            border-radius: 9px;
+            background: #f0f1ff;
+            color: #555eae;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .vms-no-passenger {
+            margin: 14px;
+            padding: 16px;
+            background: #f8fbff;
+            border: 1px solid #e0edfc;
+            border-radius: 9px;
+        }
+        .vms-footer {
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+            margin-top: 20px;
+        }
+        .vms-close {
+            border: none;
+            background: #64748b;
+            color: white;
+            padding: 11px 24px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .vms-close:hover { background: #334155; }
+
+        @media(max-width:600px) {
+            .vms-form { padding: 14px; }
+            .vms-header { flex-wrap: wrap; gap: 12px; }
+            .vms-header h3 { font-size: 17px; }
+            .vms-logo {
+                width: 55px;
+                height: 55px;
+                min-width: 55px;
+                font-size: 27px;
+            }
+            .vms-reference {
+                margin-left: 0;
+                width: 100%;
+            }
+            .vms-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .vms-field.full { grid-column: auto; }
+            .vms-content { padding: 13px; margin: 9px; }
+            .vms-section-title { font-size: 14px; }
+        }
         `;
-        t.senarai_penumpang.forEach((p, i) => {
-            htmlPenumpang += `
-                <tr>
-                    <td style="padding:8px 12px; border:1px solid #cbd5e1; text-align:center;">${i+1}</td>
-                    <td style="padding:8px 12px; border:1px solid #cbd5e1; font-weight:500;">${p.nama || '-'}</td>
-                    <td style="padding:8px 12px; border:1px solid #cbd5e1;">${p.kp || '-'}</td>
-                    <td style="padding:8px 12px; border:1px solid #cbd5e1;">${p.bahagian || '-'}</td>
-                </tr>`;
-        });
-        htmlPenumpang += `</tbody></table>`;
-    } else {
-        htmlPenumpang = `<p style="color:#64748b; font-size:13px; font-style:italic; padding:10px 0;">Tiada rekod penumpang.</p>`;
+
+        const style = document.createElement('style');
+        style.id = 'vms-professional-style';
+        style.textContent = css;
+        document.head.appendChild(style);
     }
 
-    // Reka Bentuk Borang Premium
-    const modalHtml = `
-        <div style="font-family: 'Inter', sans-serif; color: #334155;">
-            
-            <!-- HEADER BORANG -->
-            <div style="text-align:center; margin-bottom:25px; padding-bottom:15px; border-bottom:2px dashed #cbd5e1;">
-                <h4 style="margin:0; color:#102a43; font-size:18px; text-transform:uppercase; letter-spacing:0.5px;">Borang Permohonan Kenderaan</h4>
-                <span style="background:#f1f5f9; border:1px solid #cbd5e1; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; color:#475569; display:inline-block; margin-top:10px;">
-                    NO. RUJUKAN: VMS-${t.id.toString().padStart(4, '0')}
-                </span>
-            </div>
+    // Keselamatan teks HTML
+    function vmsEscape(value) {
+        return String(value ?? '-').replace(/[&<>"']/g, char => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        })[char]);
+    }
 
-            <!-- SEKSYEN A -->
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:18px; margin-bottom:15px;">
-                <h5 style="margin:0 0 12px 0; color:#1767c2; font-size:14px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">A. MAKLUMAT PEMOHON</h5>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; font-size:13px;">
-                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">NAMA PEMOHON</strong> <span style="font-weight:600;">${t.nama_pemohon}</span></div>
-                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">NO. TELEFON</strong> ${t.no_telefon}</div>
-                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">BAHAGIAN / CAWANGAN</strong> ${t.bahagian || '-'}</div>
-                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">TUJUAN PERMOHONAN</strong> ${t.tujuan || '-'}</div>
-                    <div style="grid-column: span 2; margin-top:5px;"><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:6px;">SURAT ARAHAN TUGAS RASMI</strong> ${failHtml}</div>
+    // Semak pautan surat
+    function vmsSafeFileUrl(value) {
+        const url = String(value ?? '').trim();
+        if (!url) return null;
+
+        try {
+            const parsed = new URL(url, window.location.href);
+            if (!['http:', 'https:'].includes(parsed.protocol)) {
+                return null;
+            }
+            return parsed.href;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    // FUNGSI UTAMA
+    window.paparButiran = function(index) {
+
+        const sumberCache =
+            (typeof cacheUrusetia !== 'undefined')
+                ? cacheUrusetia
+                : window.cacheUrusetia;
+
+        const t = sumberCache && sumberCache[index];
+
+        if (!t) {
+            alert('Rekod permohonan tidak dijumpai.');
+            return;
+        }
+
+        pasangGayaVMS();
+
+        const noRujukan = 'VMS-' +
+            String(t.id ?? Number(index) + 1).padStart(4,'0');
+
+        // SURAT RASMI
+        const fileUrl = vmsSafeFileUrl(t.fail_surat);
+
+        const failHtml = fileUrl
+            ? `<a href="${vmsEscape(fileUrl)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="vms-download">
+                  📎 Muat Turun Surat Rasmi
+               </a>`
+            : `<span class="vms-empty">
+                  ${t.fail_surat
+                    ? 'Pautan fail tidak sah.'
+                    : 'Tiada fail dilampirkan.'}
+               </span>`;
+
+        // SENARAI PENUMPANG
+        const penumpang = Array.isArray(t.senarai_penumpang)
+            ? t.senarai_penumpang
+            : [];
+
+        let htmlPenumpang = '';
+
+        if (penumpang.length > 0) {
+
+            htmlPenumpang = `
+                <div class="vms-table-wrap">
+                    <table class="vms-table">
+                        <thead>
+                            <tr>
+                                <th>Bil</th>
+                                <th>Nama Penumpang</th>
+                                <th>No. K/P</th>
+                                <th>Bahagian</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${penumpang.map((p,i) => `
+                                <tr>
+                                    <td>${i+1}</td>
+                                    <td><strong>${vmsEscape(p.nama)}</strong></td>
+                                    <td>${vmsEscape(p.kp)}</td>
+                                    <td>${vmsEscape(p.bahagian)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-
-            <!-- SEKSYEN B -->
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:18px; margin-bottom:15px;">
-                <h5 style="margin:0 0 12px 0; color:#1767c2; font-size:14px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">B. JADUAL PERJALANAN</h5>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; font-size:13px;">
-                    <div style="grid-column: span 2;"><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">DESTINASI / LOKASI</strong> <span style="font-weight:600;">${t.destinasi || t.lokasi}</span></div>
-                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">TARIKH PERJALANAN</strong> ${t.tarikh_pergi}</div>
-                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">MASA PERJALANAN</strong> ${t.masa_bertolak || '-'} hingga ${t.masa_balik || '-'}</div>
+                <div class="vms-passenger-total">
+                    👥 Jumlah penumpang: ${penumpang.length} orang
                 </div>
-            </div>
+            `;
 
-            <!-- SEKSYEN C -->
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:18px;">
-                <h5 style="margin:0 0 8px 0; color:#1767c2; font-size:14px;">C. SENARAI PENUMPANG</h5>
-                ${htmlPenumpang}
-            </div>
+        } else {
+            htmlPenumpang = `
+                <div class="vms-no-passenger">
+                    <span class="vms-empty">
+                        Tiada rekod penumpang.
+                    </span>
+                </div>
+            `;
+        }
 
-        </div>
-    `;
-    
-    document.getElementById('isiModalUrusetia').innerHTML = modalHtml;
-    document.getElementById('modalUrusetia').classList.remove('hidden');
-}
+        // PAPARAN MODAL
+        const modalHtml = `
+            <div class="vms-form">
+
+                <div class="vms-header">
+                    <div class="vms-logo">🚘</div>
+
+                    <div class="vms-heading">
+                        <h3>BORANG PERMOHONAN KENDERAAN</h3>
+                        <div class="vms-subtitle">
+                            Perjalanan Rasmi • Urusan Kerajaan
+                        </div>
+                    </div>
+
+                    <div class="vms-reference">
+                        NO. RUJUKAN
+                        <strong>${vmsEscape(noRujukan)}</strong>
+                    </div>
+                </div>
+
+                <!-- SEKSYEN A -->
+                <section class="vms-section">
+                    <h4 class="vms-section-title vms-blue">
+                        <span class="vms-section-icon">👤</span>
+                        A. MAKLUMAT PEMOHON
+                    </h4>
+
+                    <div class="vms-content">
+                        <div class="vms-grid">
+
+                            <div class="vms-field">
+                                <span class="vms-label">NAMA PEMOHON</span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.nama_pemohon)}
+                                </div>
+                            </div>
+
+                            <div class="vms-field">
+                                <span class="vms-label">NO. TELEFON</span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.no_telefon)}
+                                </div>
+                            </div>
+
+                            <div class="vms-field">
+                                <span class="vms-label">BAHAGIAN / CAWANGAN</span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.bahagian)}
+                                </div>
+                            </div>
+
+                            <div class="vms-field">
+                                <span class="vms-label">TUJUAN PERMOHONAN</span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.tujuan)}
+                                </div>
+                            </div>
+
+                            <div class="vms-field full">
+                                <span class="vms-label">
+                                    SURAT ARAHAN TUGAS RASMI
+                                </span>
+                                ${failHtml}
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SEKSYEN B -->
+                <section class="vms-section">
+                    <h4 class="vms-section-title vms-teal">
+                        <span class="vms-section-icon">📍</span>
+                        B. JADUAL PERJALANAN
+                    </h4>
+
+                    <div class="vms-content">
+                        <div class="vms-grid">
+
+                            <div class="vms-field full">
+                                <span class="vms-label">
+                                    DESTINASI / LOKASI
+                                </span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.destinasi || t.lokasi)}
+                                </div>
+                            </div>
+
+                            <div class="vms-field">
+                                <span class="vms-label">
+                                    TARIKH PERJALANAN
+                                </span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.tarikh_pergi)}
+                                </div>
+                            </div>
+
+                            <div class="vms-field">
+                                <span class="vms-label">
+                                    MASA PERJALANAN
+                                </span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.masa_bertolak || '-')}
+                                    hingga
+                                    ${vmsEscape(t.masa_balik || '-')}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SEKSYEN C -->
+                <section class="vms-section">
+                    <h4 class="vms-section-title vms-purple">
+                        <span class="vms-section-icon">👥</span>
+                        C. SENARAI PENUMPANG
+                    </h4>
+                    ${htmlPenumpang}
+                </section>
+
+                <div class="vms-footer">
+                    <button type="button"
+                        class="vms-close"
+                        id="btnTutupVms">
+                        ✕ &nbsp; Tutup
+                    </button>
+                </div>
+
+            </div>
+        `;
+
+        const isiModal = document.getElementById('isiModalUrusetia');
+        const modal = document.getElementById('modalUrusetia');
+
+        if (!isiModal || !modal) {
+            console.error(
+                'Elemen #isiModalUrusetia atau #modalUrusetia tidak dijumpai.'
+            );
+            return;
+        }
+
+        isiModal.innerHTML = modalHtml;
+        modal.classList.remove('hidden');
+
+        // TUTUP MODAL
+        const btnTutup = document.getElementById('btnTutupVms');
+
+        if (btnTutup) {
+            btnTutup.addEventListener('click', function() {
+                modal.classList.add('hidden');
+            });
+        }
+    };
+
+})();
