@@ -983,3 +983,79 @@ async function sahkanUrusetia(id) {
     };
 
 })();
+
+
+// ==========================================
+// PELULUS: LULUS ATAU TOLAK PERMOHONAN
+// ==========================================
+async function muatSenaraiPelulus() {
+    const div = document.getElementById('senarai-tempahan-pelulus');
+    if (!div) return;
+    
+    div.innerHTML = "Memuatkan data kelulusan...";
+
+    const { data: tempahan, error } = await supabaseClient
+        .from('tempahan')
+        .select('*')
+        .eq('status', 'Menunggu Kelulusan')
+        .order('id', {ascending: false});
+        
+    if (error) { 
+        div.innerHTML = "Ralat: " + error.message; 
+        return; 
+    }
+    
+    if (!tempahan || tempahan.length === 0) { 
+        div.innerHTML = "<p style='padding: 15px;'>Tiada kelulusan diperlukan setakat ini.</p>"; 
+        return; 
+    }
+
+    let html = `<table class="vms-table" style="min-width: 100%;">
+        <thead>
+            <tr>
+                <th>No. Rujukan</th>
+                <th>Pemohon & Destinasi</th>
+                <th>Tarikh Perjalanan</th>
+                <th>Tindakan Pelulus</th>
+            </tr>
+        </thead>
+        <tbody>`;
+        
+    tempahan.forEach((t, index) => {
+        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+        // Simpan dalam cacheUrusetia supaya butiran penuh boleh diguna pakai oleh Pelulus juga
+        cacheUrusetia[index] = t; 
+
+        html += `<tr>
+            <td><strong>${noRujukan}</strong></td>
+            <td><strong>${t.nama_pemohon}</strong><br><small>${t.destinasi || t.lokasi}</small></td>
+            <td>${t.tarikh_pergi}</td>
+            <td>
+                <button class="btn btn-light" onclick="paparButiran(${index})" style="font-size:12px; margin-bottom:5px; width:100%;">🔍 Butiran Penuh</button>
+                <button class="btn btn-success" onclick="updateStatus(${t.id}, 'Lulus')" style="font-size:12px; margin-bottom:5px; width:100%;">✅ Lulus</button>
+                <button class="btn btn-danger" onclick="updateStatus(${t.id}, 'Tolak')" style="font-size:12px; width:100%;">❌ Tolak</button>
+            </td>
+        </tr>`;
+    });
+    
+    div.innerHTML = html + `</tbody></table>`;
+}
+
+// ==========================================
+// FUNGSI KEMAS KINI STATUS (DIGUNAKAN OLEH URUSETIA & PELULUS)
+// ==========================================
+async function updateStatus(id, statusBaru) {
+    if(!confirm(`Adakah anda pasti untuk menukar status kepada: ${statusBaru}?`)) return;
+    
+    const { error } = await supabaseClient
+        .from('tempahan')
+        .update({ status: statusBaru })
+        .eq('id', id);
+        
+    if (error) {
+        alert("Ralat mengemas kini status: " + error.message);
+    } else {
+        alert(`Berjaya! Permohonan telah dikemas kini kepada status: ${statusBaru}`);
+        if(currentUser) semakPeranan(); // Refresh data pada papan pemuka
+    }
+}
