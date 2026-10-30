@@ -226,10 +226,39 @@
     </div>
 </div>
 
+
 <!-- ========================================== -->
 <!-- 2. DASHBOARD PEMOHON -->
 <!-- ========================================== -->
 <div id="dashboard-pemohon" class="hidden">
+
+    <!-- TAMBAH KOTAK SEJARAH PERMOHONAN DI SINI -->
+    <div class="container" style="padding-bottom: 0;">
+        <div class="card" style="margin-bottom: 10px; border-top: 4px solid var(--primary);">
+            <div class="card-header" style="background: white; color: #102a43; font-size: 16px;">
+                Senarai Permohonan Saya
+            </div>
+            <div class="card-body" style="padding: 15px;">
+                <div class="table-responsive" style="margin-bottom: 0;">
+                    <table style="min-width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 150px;">No. Rujukan</th>
+                                <th>Destinasi / Lokasi</th>
+                                <th>Tarikh Perjalanan</th>
+                                <th style="text-align: right;">Status Terkini</th>
+                            </tr>
+                        </thead>
+                        <tbody id="isiSejarahPemohon">
+                            <tr><td colspan="4" style="text-align:center;">Memuatkan rekod...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- TAMAT KOTAK SEJARAH -->
+    
     <div class="stepper-container">
         <div class="stepper">
             <div class="step active"><div class="circle">1</div><div class="label">Maklumat Pemohon</div></div>
@@ -466,29 +495,7 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header" style="background: white; color: #1e293b; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
-                        Status Permohonan
-                    </div>
-                    <div class="card-body" style="padding: 20px;">
-                        <ul class="status-list">
-                            <li class="active">
-                                <div class="status-circle">1</div>
-                                <div class="status-text">
-                                    <strong>Dihantar</strong>
-                                    <small>Permohonan dihantar</small>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="status-circle">2</div>
-                                <div class="status-text">
-                                    <strong>Semakan Urusetia</strong>
-                                    <small>Dalam proses</small>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                
 
                 <div class="card">
                     <div class="card-header" style="background: white; color: #1e293b; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
