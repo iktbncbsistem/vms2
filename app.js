@@ -209,3 +209,44 @@ async function updateStatus(id, statusBaru) {
     alert(`Permohonan dikemas kini kepada: ${statusBaru}`);
     if(currentUser) semakPeranan(); // Refresh dashboard masing-masing
 }
+
+// ==========================================
+// FUNGSI SEJARAH PEMOHON
+// ==========================================
+async function muatSejarahPemohon() {
+    const tbody = document.getElementById('isiSejarahPemohon');
+    if(!tbody) return;
+
+    // Tarik data hanya untuk pengguna yang sedang log masuk
+    const { data: sejarah, error } = await supabaseClient
+        .from('tempahan')
+        .select('id, tarikh_pergi, destinasi, lokasi, status')
+        .eq('id_pemohon', currentUser.id)
+        .order('id', { ascending: false });
+
+    if (error) { tbody.innerHTML = `<tr><td colspan="4" style="color:red;">Ralat: ${error.message}</td></tr>`; return; }
+    if (!sejarah || sejarah.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Tiada rekod permohonan setakat ini. Sila isi borang di bawah untuk permohonan baharu.</td></tr>`; return; }
+
+    let html = '';
+    sejarah.forEach(t => {
+        let badge = ``;
+        // Warna label status ikut keadaan
+        if(t.status === 'Menunggu Semakan') badge = `<span style="background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Menunggu Semakan</span>`;
+        else if(t.status === 'Menunggu Kelulusan') badge = `<span style="background:#e0e7ff; color:#3730a3; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Menunggu Kelulusan</span>`;
+        else if(t.status === 'Lulus') badge = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Lulus</span>`;
+        else if(t.status === 'Tolak') badge = `<span style="background:#fee2e2; color:#b91c1c; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Ditolak</span>`;
+        else if(t.status === 'Selesai Diagih') badge = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Kenderaan Diagih</span>`;
+        else badge = `<span>${t.status}</span>`;
+
+        // Format nombor rujukan cth: VMS-0045
+        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+
+        html += `<tr>
+            <td><strong>${noRujukan}</strong></td>
+            <td>${t.destinasi || t.lokasi || '-'}</td>
+            <td>${t.tarikh_pergi}</td>
+            <td style="text-align: right;">${badge}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
