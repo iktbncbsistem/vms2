@@ -126,103 +126,59 @@ if(vehicleForm) {
 }
 
 // ==========================================
-// FUNGSI AGIHAN KENDERAAN & PEMANDU (URUSETIA)
+// URUSETIA: PAPAR & AGIH KENDERAAN
 // ==========================================
-async function agihKenderaan(id) {
-    // 1. Tarik nilai yang dipilih oleh Urusetia dari dropdown
-    const idKenderaan = document.getElementById(`kenderaan-${id}`).value;
-    const namaPemandu = document.getElementById(`pemandu-${id}`).value;
+async function muatSenaraiUrusetia() {
+    const div = document.getElementById('senarai-tempahan-urusetia');
+    div.innerHTML = "Memuatkan data...";
+
+    const { data: tempahan, error } = await supabaseClient.from('tempahan').select('*').in('status', ['Menunggu Semakan', 'Lulus']).order('id', {ascending: false});
+    if (error) return div.innerHTML = "Ralat: " + error.message;
+    if (!tempahan || tempahan.length === 0) return div.innerHTML = "<p>Tiada permohonan baharu.</p>";
+
+    cacheUrusetia = tempahan; // Simpan untuk modal
+    const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
+
+    // Tambah lajur No. Rujukan
+    let html = `<table style="min-width: 900px;"><tr><th>No. Rujukan</th><th>Pemohon & Lokasi</th><th>Tarikh Perjalanan</th><th>Status</th><th>Tindakan Urusetia</th></tr>`;
     
-    // 2. Halang jika ada yang belum dipilih
-    if (!idKenderaan || !namaPemandu) {
-        alert("Sila pastikan bos telah memilih Pemandu DAN Kenderaan!");
-        return;
-    }
-
-    // 3. Hantar ke pangkalan data Supabase
-    const { error } = await supabaseClient.from('tempahan').update({ 
-        id_kenderaan: idKenderaan, 
-        nama_pemandu: namaPemandu, 
-        status: 'Selesai Diagih' 
-    }).eq('id', id);
-
-    // 4. Mesej berjaya dan 'refresh' jadual secara automatik
-    if (error) {
-        alert("Ralat! Pastikan lajur 'nama_pemandu' (jenis text) wujud di Supabase. Ralat: " + error.message);
-    } else {
-        alert("Mantap bos! Pemandu dan Kenderaan telah berjaya diagihkan."); 
-        muatSenaraiUrusetia();
-    }
-}
-
-// ==========================================
-// PELULUS: LULUS ATAU TOLAK
-// ==========================================
-async function muatSenaraiPelulus() {
-    const div = document.getElementById('senarai-tempahan-pelulus');
-    const { data: tempahan } = await supabaseClient.from('tempahan').select('*').eq('status', 'Menunggu Kelulusan');
-    if (!tempahan || tempahan.length === 0) return div.innerHTML = "<p>Tiada kelulusan diperlukan.</p>";
-
-    let html = `<table><tr><th>Pemohon & Destinasi</th><th>Tarikh</th><th>Tindakan</th></tr>`;
-    tempahan.forEach(t => {
-        html += `<tr>
-            <td><strong>${t.nama_pemohon}</strong><br><small>${t.destinasi || t.lokasi}</small></td>
-            <td>${t.tarikh_pergi}</td>
-            <td>
-                <button class="btn btn-success" onclick="updateStatus(${t.id}, 'Lulus')">Lulus</button>
-                <button class="btn btn-danger" onclick="updateStatus(${t.id}, 'Tolak')">Tolak</button>
-            </td>
-        </tr>`;
-    });
-    div.innerHTML = html + `</table>`;
-}
-
-async function updateStatus(id, statusBaru) {
-    if(!confirm(`Pasti untuk ${statusBaru} permohonan ini?`)) return;
-    await supabaseClient.from('tempahan').update({ status: statusBaru }).eq('id', id);
-    alert(`Permohonan dikemas kini kepada: ${statusBaru}`);
-    if(currentUser) semakPeranan(); // Refresh dashboard masing-masing
-}
-
-// ==========================================
-// FUNGSI SEJARAH PEMOHON
-// ==========================================
-async function muatSejarahPemohon() {
-    const tbody = document.getElementById('isiSejarahPemohon');
-    if(!tbody) return;
-
-    // Tarik data hanya untuk pengguna yang sedang log masuk
-    const { data: sejarah, error } = await supabaseClient
-        .from('tempahan')
-        .select('id, tarikh_pergi, destinasi, lokasi, status')
-        .eq('id_pemohon', currentUser.id)
-        .order('id', { ascending: false });
-
-    if (error) { tbody.innerHTML = `<tr><td colspan="4" style="color:red;">Ralat: ${error.message}</td></tr>`; return; }
-    if (!sejarah || sejarah.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Tiada rekod permohonan setakat ini. Sila isi borang di bawah untuk permohonan baharu.</td></tr>`; return; }
-
-    let html = '';
-    sejarah.forEach(t => {
-        let badge = ``;
-        // Warna label status ikut keadaan
-        if(t.status === 'Menunggu Semakan') badge = `<span style="background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Menunggu Semakan</span>`;
-        else if(t.status === 'Menunggu Kelulusan') badge = `<span style="background:#e0e7ff; color:#3730a3; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Menunggu Kelulusan</span>`;
-        else if(t.status === 'Lulus') badge = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Lulus</span>`;
-        else if(t.status === 'Tolak') badge = `<span style="background:#fee2e2; color:#b91c1c; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Ditolak</span>`;
-        else if(t.status === 'Selesai Diagih') badge = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Kenderaan Diagih</span>`;
-        else badge = `<span>${t.status}</span>`;
-
-        // Format nombor rujukan cth: VMS-0045
+    tempahan.forEach((t, index) => {
+        // Format No Rujukan
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
 
         html += `<tr>
             <td><strong>${noRujukan}</strong></td>
-            <td>${t.destinasi || t.lokasi || '-'}</td>
+            <td><strong>${t.nama_pemohon}</strong><br><small>${t.destinasi || t.lokasi}</small></td>
             <td>${t.tarikh_pergi}</td>
-            <td style="text-align: right;">${badge}</td>
-        </tr>`;
+            <td><strong style="color:var(--primary);">${t.status}</strong></td>
+            <td>
+                <button class="btn btn-light" onclick="paparButiran(${index})" style="margin-bottom:8px; font-size:12px; width:100%;">🔍 Butiran Penuh</button><br>
+        `;
+
+        // FLOW BAHAGIAN B: Semakan Pegawai Mengurus
+        if (t.status === 'Menunggu Semakan') {
+            html += `<button class="btn btn-primary" onclick="updateStatus(${t.id}, 'Menunggu Kelulusan')" style="font-size:12px; width:100%;">Hantar ke Pelulus</button>`;
+        
+        // FLOW BAHAGIAN C: Arahan Pemandu & Kenderaan (Selepas Diluluskan)
+        } else if (t.status === 'Lulus') {
+            html += `
+                <select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
+                    <option value="">-- Pilih Pemandu --</option>
+                    <option value="Rohaizan bin Mohd Fuzi">Rohaizan bin Mohd Fuzi</option>
+                    <option value="Mohamad Khairoul Azuan">Mohamad Khairoul Azuan</option>
+                    <option value="Pemandu Gantian">Pemandu Gantian</option>
+                </select><br>
+                <select id="kenderaan-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
+                    <option value="">-- Pilih Kenderaan --</option>`;
+            if (kenderaanList) {
+                kenderaanList.forEach(k => html += `<option value="${k.id}">${k.no_plat} - ${k.model}</option>`);
+            }
+            html += `</select><br>
+                <button class="btn btn-success" onclick="agihKenderaan(${t.id})" style="font-size:12px; width:100%;">Sahkan Agihan</button>`;
+        }
+        html += `</td></tr>`;
     });
-    tbody.innerHTML = html;
+    div.innerHTML = html + `</table>`;
 }
 
 // ==========================================
