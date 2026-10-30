@@ -203,19 +203,88 @@ async function sahkanUrusetia(id) {
 }
 
 // ==========================================
-// FUNGSI PAPAR BUTIRAN POP-UP (MODAL)
+// FUNGSI PAPAR BUTIRAN POP-UP (PREMIUM FORM)
 // ==========================================
 function paparButiran(index) {
     const t = cacheUrusetia[index];
-    const failHtml = t.fail_surat ? `<a href="${t.fail_surat}" target="_blank" style="color:blue;">📎 Muat Turun Surat Rasmi</a>` : 'Tiada fail dilampirkan.';
     
-    document.getElementById('isiModalUrusetia').innerHTML = `
-        <p><strong>Nama:</strong> ${t.nama_pemohon} (${t.no_telefon})</p>
-        <p><strong>Destinasi:</strong> ${t.destinasi || t.lokasi}</p>
-        <p><strong>Masa Bertolak:</strong> ${t.masa_bertolak}</p>
-        <p><strong>Dokumen:</strong> ${failHtml}</p>
-        <hr style="border:1px solid #eee; margin:15px 0;">
-        <p><strong>Senarai Penumpang:</strong><br><pre style="font-family:inherit; background:#f4f7f6; padding:10px;">${JSON.stringify(t.senarai_penumpang, null, 2)}</pre></p>
+    // Butang Muat Turun Surat
+    const failHtml = t.fail_surat 
+        ? `<a href="${t.fail_surat}" target="_blank" style="background:var(--primary); color:white; padding:6px 12px; text-decoration:none; border-radius:4px; font-size:12px; display:inline-block; font-weight:600;">📎 Muat Turun Surat Rasmi</a>` 
+        : '<span style="color:#94a3b8; font-size:12px; font-style:italic;">Tiada fail dilampirkan</span>';
+    
+    // Tukar JSON Penumpang kepada Jadual HTML yang kemas
+    let htmlPenumpang = '';
+    if (t.senarai_penumpang && t.senarai_penumpang.length > 0) {
+        htmlPenumpang = `
+            <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:13px; background:white;">
+                <thead>
+                    <tr style="background:#e2e8f0; text-align:left; color:#334155;">
+                        <th style="padding:8px 12px; border:1px solid #cbd5e1; width:40px; text-align:center;">Bil</th>
+                        <th style="padding:8px 12px; border:1px solid #cbd5e1;">Nama Penumpang</th>
+                        <th style="padding:8px 12px; border:1px solid #cbd5e1;">No. K/P</th>
+                        <th style="padding:8px 12px; border:1px solid #cbd5e1;">Bahagian</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        t.senarai_penumpang.forEach((p, i) => {
+            htmlPenumpang += `
+                <tr>
+                    <td style="padding:8px 12px; border:1px solid #cbd5e1; text-align:center;">${i+1}</td>
+                    <td style="padding:8px 12px; border:1px solid #cbd5e1; font-weight:500;">${p.nama || '-'}</td>
+                    <td style="padding:8px 12px; border:1px solid #cbd5e1;">${p.kp || '-'}</td>
+                    <td style="padding:8px 12px; border:1px solid #cbd5e1;">${p.bahagian || '-'}</td>
+                </tr>`;
+        });
+        htmlPenumpang += `</tbody></table>`;
+    } else {
+        htmlPenumpang = `<p style="color:#64748b; font-size:13px; font-style:italic; padding:10px 0;">Tiada rekod penumpang.</p>`;
+    }
+
+    // Reka Bentuk Borang Premium
+    const modalHtml = `
+        <div style="font-family: 'Inter', sans-serif; color: #334155;">
+            
+            <!-- HEADER BORANG -->
+            <div style="text-align:center; margin-bottom:25px; padding-bottom:15px; border-bottom:2px dashed #cbd5e1;">
+                <h4 style="margin:0; color:#102a43; font-size:18px; text-transform:uppercase; letter-spacing:0.5px;">Borang Permohonan Kenderaan</h4>
+                <span style="background:#f1f5f9; border:1px solid #cbd5e1; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; color:#475569; display:inline-block; margin-top:10px;">
+                    NO. RUJUKAN: VMS-${t.id.toString().padStart(4, '0')}
+                </span>
+            </div>
+
+            <!-- SEKSYEN A -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:18px; margin-bottom:15px;">
+                <h5 style="margin:0 0 12px 0; color:#1767c2; font-size:14px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">A. MAKLUMAT PEMOHON</h5>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; font-size:13px;">
+                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">NAMA PEMOHON</strong> <span style="font-weight:600;">${t.nama_pemohon}</span></div>
+                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">NO. TELEFON</strong> ${t.no_telefon}</div>
+                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">BAHAGIAN / CAWANGAN</strong> ${t.bahagian || '-'}</div>
+                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">TUJUAN PERMOHONAN</strong> ${t.tujuan || '-'}</div>
+                    <div style="grid-column: span 2; margin-top:5px;"><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:6px;">SURAT ARAHAN TUGAS RASMI</strong> ${failHtml}</div>
+                </div>
+            </div>
+
+            <!-- SEKSYEN B -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:18px; margin-bottom:15px;">
+                <h5 style="margin:0 0 12px 0; color:#1767c2; font-size:14px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">B. JADUAL PERJALANAN</h5>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; font-size:13px;">
+                    <div style="grid-column: span 2;"><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">DESTINASI / LOKASI</strong> <span style="font-weight:600;">${t.destinasi || t.lokasi}</span></div>
+                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">TARIKH PERJALANAN</strong> ${t.tarikh_pergi}</div>
+                    <div><strong style="color:#64748b; font-size:11px; display:block; margin-bottom:3px;">MASA PERJALANAN</strong> ${t.masa_bertolak || '-'} hingga ${t.masa_balik || '-'}</div>
+                </div>
+            </div>
+
+            <!-- SEKSYEN C -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:18px;">
+                <h5 style="margin:0 0 8px 0; color:#1767c2; font-size:14px;">C. SENARAI PENUMPANG</h5>
+                ${htmlPenumpang}
+            </div>
+
+        </div>
     `;
+    
+    document.getElementById('isiModalUrusetia').innerHTML = modalHtml;
     document.getElementById('modalUrusetia').classList.remove('hidden');
 }
