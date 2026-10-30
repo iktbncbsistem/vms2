@@ -42,7 +42,10 @@ async function semakPeranan() {
         if (data.peranan === 'pemohon') {
             document.getElementById('dashboard-pemohon').classList.remove('hidden');
             document.getElementById('applicantName').value = data.nama;
-        } else if (data.peranan === 'urusetia') {
+            muatSejarahPemohon();
+        } 
+        
+        else if (data.peranan === 'urusetia') {
             document.getElementById('dashboard-urusetia').classList.remove('hidden');
             muatSenaraiUrusetia();
         } else if (data.peranan === 'pelulus') {
@@ -111,6 +114,7 @@ if(vehicleForm) {
             if (insertError) throw insertError;
             alert("Permohonan berjaya dihantar!");
             vehicleForm.reset();
+            muatSejarahPemohon();
 
         } catch (error) {
             alert("Ralat menghantar permohonan: " + error.message);
