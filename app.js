@@ -126,34 +126,34 @@ if(vehicleForm) {
 }
 
 // ==========================================
-// URUSETIA: PAPAR & AGIH KENDERAAN (DIKEMAS KINI)
+// FUNGSI AGIHAN KENDERAAN & PEMANDU (URUSETIA)
 // ==========================================
-async function muatSenaraiUrusetia() {
-    const div = document.getElementById('senarai-tempahan-urusetia');
-    div.innerHTML = "Memuatkan data...";
-
-    const { data: tempahan, error } = await supabaseClient.from('tempahan').select('*').in('status', ['Menunggu Semakan', 'Lulus']).order('id', {ascending: false});
-    if (error) return div.innerHTML = "Ralat: " + error.message;
-    if (!tempahan || tempahan.length === 0) return div.innerHTML = "<p>Tiada permohonan baharu.</p>";
-
-    cacheUrusetia = tempahan; // Simpan untuk modal
-    const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
-
-    // Tambah lajur No. Rujukan
-    let html = `<table style="min-width: 900px;"><tr><th>No. Rujukan</th><th>Pemohon & Lokasi</th><th>Tarikh Perjalanan</th><th>Status</th><th>Tindakan Urusetia</th></tr>`;
+async function agihKenderaan(id) {
+    // 1. Tarik nilai yang dipilih oleh Urusetia dari dropdown
+    const idKenderaan = document.getElementById(`kenderaan-${id}`).value;
+    const namaPemandu = document.getElementById(`pemandu-${id}`).value;
     
-    tempahan.forEach((t, index) => {
-        // Format No Rujukan
-        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+    // 2. Halang jika ada yang belum dipilih
+    if (!idKenderaan || !namaPemandu) {
+        alert("Sila pastikan bos telah memilih Pemandu DAN Kenderaan!");
+        return;
+    }
 
-        html += `<tr>
-            <td><strong>${noRujukan}</strong></td>
-            <td><strong>${t.nama_pemohon}</strong><br><small>${t.destinasi || t.lokasi}</small></td>
-            <td>${t.tarikh_pergi}</td>
-            <td><strong style="color:var(--primary);">${t.status}</strong></td>
-            <td>
-                <button class="btn btn-light" onclick="paparButiran(${index})" style="margin-bottom:8px; font-size:12px; width:100%;">🔍 Butiran Penuh</button><br>
-        `;
+    // 3. Hantar ke pangkalan data Supabase
+    const { error } = await supabaseClient.from('tempahan').update({ 
+        id_kenderaan: idKenderaan, 
+        nama_pemandu: namaPemandu, 
+        status: 'Selesai Diagih' 
+    }).eq('id', id);
+
+    // 4. Mesej berjaya dan 'refresh' jadual secara automatik
+    if (error) {
+        alert("Ralat! Pastikan lajur 'nama_pemandu' (jenis text) wujud di Supabase. Ralat: " + error.message);
+    } else {
+        alert("Mantap bos! Pemandu dan Kenderaan telah berjaya diagihkan."); 
+        muatSenaraiUrusetia();
+    }
+}
 
         // FLOW BAHAGIAN B: Semakan Pegawai Mengurus
         if (t.status === 'Menunggu Semakan') {
