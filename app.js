@@ -951,26 +951,32 @@ async function sahkanUrusetia(id) {
 
         const isiModal = document.getElementById('isiModalUrusetia');
         const modal = document.getElementById('modalUrusetia');
+        const jadualUrusetia = document.getElementById('dashboard-urusetia');
 
         if (!isiModal || !modal) return;
 
         isiModal.innerHTML = modalHtml;
         
-        // 1. Sembunyikan jadual Urusetia
-        const jadualUrusetia = document.getElementById('dashboard-urusetia');
-        if(jadualUrusetia) jadualUrusetia.classList.add('hidden');
+        // 1. Sembunyikan jadual Urusetia sepenuhnya
+        if(jadualUrusetia) {
+            jadualUrusetia.classList.add('hidden');
+        }
         
-        // 2. Tunjuk borang premium & scroll atas
+        // 2. Tunjuk borang premium sebagai halaman penuh
         modal.classList.remove('hidden');
         window.scrollTo(0, 0);
 
-        // 3. FUNGSI KEMBALI
+        // 3. FUNGSI KEMBALI KE SENARAI
         const btnTutup = document.getElementById('btnTutupVms');
         if (btnTutup) {
+            btnTutup.innerHTML = '← &nbsp; Kembali ke Senarai';
+            btnTutup.style.background = '#1767c2'; // Warna biru supaya lebih menyerlah
+            
             btnTutup.addEventListener('click', function() {
+                // Sembunyikan borang
                 modal.classList.add('hidden');
-                // Panggil semula fungsi semak peranan untuk paparkan jadual
-                if(currentUser) semakPeranan(); 
+                // Tunjukkan jadual semula
+                if(jadualUrusetia) jadualUrusetia.classList.remove('hidden');
                 window.scrollTo(0, 0);
             });
         }
