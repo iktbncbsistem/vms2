@@ -155,9 +155,14 @@ async function muatSenaraiUrusetia() {
                 <button class="btn btn-light" onclick="paparButiran(${index})" style="margin-bottom:8px; font-size:12px; width:100%;">🔍 Butiran Penuh</button><br>
         `;
 
-        // FLOW BAHAGIAN B: Semakan Pegawai Mengurus
+        // FLOW BAHAGIAN B: Semakan Pegawai Mengurus (Dikemas kini)
         if (t.status === 'Menunggu Semakan') {
-            html += `<button class="btn btn-primary" onclick="updateStatus(${t.id}, 'Menunggu Kelulusan')" style="font-size:12px; width:100%;">Hantar ke Pelulus</button>`;
+            html += `
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <button class="btn btn-primary" onclick="sahkanUrusetia(${t.id})" style="font-size:12px; width:100%;">✅ Sahkan & Hantar Pelulus</button>
+                    <button class="btn btn-danger" onclick="updateStatus(${t.id}, 'Tolak')" style="font-size:12px; width:100%;">❌ Tolak (Tidak Lengkap)</button>
+                </div>
+            `;
         
         // FLOW BAHAGIAN C: Arahan Pemandu & Kenderaan (Selepas Diluluskan)
         } else if (t.status === 'Lulus') {
@@ -179,6 +184,22 @@ async function muatSenaraiUrusetia() {
         html += `</td></tr>`;
     });
     div.innerHTML = html + `</table>`;
+}
+
+// ==========================================
+// FUNGSI PENGESAHAN URUSETIA (BAHAGIAN B)
+// ==========================================
+async function sahkanUrusetia(id) {
+    if(!confirm("Adakah anda pasti borang ini lengkap dan terdapat kenderaan/pemandu yang tersedia pada tarikh tersebut?")) return;
+    
+    const { error } = await supabaseClient.from('tempahan').update({ status: 'Menunggu Kelulusan' }).eq('id', id);
+    
+    if(error) {
+        alert("Ralat: " + error.message);
+    } else {
+        alert("Pengesahan berjaya! Permohonan telah dihantar kepada Pelulus.");
+        muatSenaraiUrusetia(); // Refresh jadual Urusetia
+    }
 }
 
 // ==========================================
