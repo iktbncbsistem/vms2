@@ -153,53 +153,7 @@ async function agihKenderaan(id) {
         alert("Mantap bos! Pemandu dan Kenderaan telah berjaya diagihkan."); 
         muatSenaraiUrusetia();
     }
-
-        // FLOW BAHAGIAN B: Semakan Pegawai Mengurus
-        if (t.status === 'Menunggu Semakan') {
-            html += `<button class="btn btn-primary" onclick="updateStatus(${t.id}, 'Menunggu Kelulusan')" style="font-size:12px; width:100%;">Hantar ke Pelulus</button>`;
-        
-        // FLOW BAHAGIAN C: Arahan Pemandu & Kenderaan (Selepas Diluluskan)
-        } else if (t.status === 'Lulus') {
-            html += `
-                <select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
-                    <option value="">-- Pilih Pemandu --</option>
-                    <option value="Rohaizan bin Mohd Fuzi">Rohaizan bin Mohd Fuzi</option>
-                    <option value="Mohamad Khairoul Azuan">Mohamad Khairoul Azuan</option>
-                    <option value="Pemandu Gantian">Pemandu Gantian</option>
-                </select><br>
-                <select id="kenderaan-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
-                    <option value="">-- Pilih Kenderaan --</option>`;
-            if (kenderaanList) {
-                kenderaanList.forEach(k => html += `<option value="${k.id}">${k.no_plat} - ${k.model}</option>`);
-            }
-            html += `</select><br>
-                <button class="btn btn-success" onclick="agihKenderaan(${t.id})" style="font-size:12px; width:100%;">Sahkan Agihan</button>`;
-        }
-        html += `</td></tr>`;
-    });
-    div.innerHTML = html + `</table>`;
 }
-
-async function agihKenderaan(id) {
-    const idK = document.getElementById(`kenderaan-${id}`).value;
-    const namaP = document.getElementById(`pemandu-${id}`).value;
-    
-    if (!idK || !namaP) return alert("Sila pilih Pemandu dan Kenderaan!");
-
-    const { error } = await supabaseClient.from('tempahan').update({ 
-        id_kenderaan: idK, 
-        nama_pemandu: namaP, 
-        status: 'Selesai Diagih' 
-    }).eq('id', id);
-
-    if (error) {
-        alert("Ralat! Pastikan bos dah cipta lajur 'nama_pemandu' di dalam jadual 'tempahan' di Supabase. Ralat: " + error.message);
-    } else {
-        alert("Pemandu dan Kenderaan berjaya diagihkan!"); 
-        muatSenaraiUrusetia();
-    }
-}
-
 
 // ==========================================
 // PELULUS: LULUS ATAU TOLAK
