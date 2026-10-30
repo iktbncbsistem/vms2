@@ -126,7 +126,7 @@ if(vehicleForm) {
 }
 
 // ==========================================
-// URUSETIA: PAPAR & AGIH KENDERAAN
+// URUSETIA: PAPAR & AGIH KENDERAAN (DIKEMAS KINI)
 // ==========================================
 async function muatSenaraiUrusetia() {
     const div = document.getElementById('senarai-tempahan-urusetia');
@@ -139,51 +139,68 @@ async function muatSenaraiUrusetia() {
     cacheUrusetia = tempahan; // Simpan untuk modal
     const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
 
-    let html = `<table><tr><th>Pemohon & Lokasi</th><th>Tarikh Perjalanan</th><th>Status</th><th>Tindakan Urusetia</th></tr>`;
+    // Tambah lajur No. Rujukan
+    let html = `<table style="min-width: 900px;"><tr><th>No. Rujukan</th><th>Pemohon & Lokasi</th><th>Tarikh Perjalanan</th><th>Status</th><th>Tindakan Urusetia</th></tr>`;
     
     tempahan.forEach((t, index) => {
+        // Format No Rujukan
+        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+
         html += `<tr>
+            <td><strong>${noRujukan}</strong></td>
             <td><strong>${t.nama_pemohon}</strong><br><small>${t.destinasi || t.lokasi}</small></td>
             <td>${t.tarikh_pergi}</td>
             <td><strong style="color:var(--primary);">${t.status}</strong></td>
             <td>
-                <button class="btn btn-light" onclick="paparButiran(${index})" style="margin-bottom:5px;">🔍 Butiran Penuh</button><br>
+                <button class="btn btn-light" onclick="paparButiran(${index})" style="margin-bottom:8px; font-size:12px; width:100%;">🔍 Butiran Penuh</button><br>
         `;
 
+        // FLOW BAHAGIAN B: Semakan Pegawai Mengurus
         if (t.status === 'Menunggu Semakan') {
-            html += `<button class="btn btn-primary" onclick="updateStatus(${t.id}, 'Menunggu Kelulusan')">Hantar ke Pelulus</button>`;
+            html += `<button class="btn btn-primary" onclick="updateStatus(${t.id}, 'Menunggu Kelulusan')" style="font-size:12px; width:100%;">Hantar ke Pelulus</button>`;
+        
+        // FLOW BAHAGIAN C: Arahan Pemandu & Kenderaan (Selepas Diluluskan)
         } else if (t.status === 'Lulus') {
-            html += `<select id="kenderaan-${t.id}" style="margin-bottom:5px;">
-                        <option value="">-- Pilih Kenderaan --</option>`;
-            kenderaanList.forEach(k => html += `<option value="${k.id}">${k.no_plat} - ${k.model}</option>`);
-            html += `</select><br><button class="btn btn-success" onclick="agihKenderaan(${t.id})">Sahkan Agihan</button>`;
+            html += `
+                <select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
+                    <option value="">-- Pilih Pemandu --</option>
+                    <option value="Rohaizan bin Mohd Fuzi">Rohaizan bin Mohd Fuzi</option>
+                    <option value="Mohamad Khairoul Azuan">Mohamad Khairoul Azuan</option>
+                    <option value="Pemandu Gantian">Pemandu Gantian</option>
+                </select><br>
+                <select id="kenderaan-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
+                    <option value="">-- Pilih Kenderaan --</option>`;
+            if (kenderaanList) {
+                kenderaanList.forEach(k => html += `<option value="${k.id}">${k.no_plat} - ${k.model}</option>`);
+            }
+            html += `</select><br>
+                <button class="btn btn-success" onclick="agihKenderaan(${t.id})" style="font-size:12px; width:100%;">Sahkan Agihan</button>`;
         }
         html += `</td></tr>`;
     });
     div.innerHTML = html + `</table>`;
 }
 
-function paparButiran(index) {
-    const t = cacheUrusetia[index];
-    const failHtml = t.fail_surat ? `<a href="${t.fail_surat}" target="_blank" style="color:blue;">📎 Muat Turun Surat Rasmi</a>` : 'Tiada fail dilampirkan.';
-    
-    document.getElementById('isiModalUrusetia').innerHTML = `
-        <p><strong>Nama:</strong> ${t.nama_pemohon} (${t.no_telefon})</p>
-        <p><strong>Destinasi:</strong> ${t.destinasi || t.lokasi}</p>
-        <p><strong>Masa Bertolak:</strong> ${t.masa_bertolak}</p>
-        <p><strong>Dokumen:</strong> ${failHtml}</p>
-        <hr style="border:1px solid #eee; margin:15px 0;">
-        <p><strong>Senarai Penumpang:</strong><br><pre style="font-family:inherit; background:#f4f7f6; padding:10px;">${JSON.stringify(t.senarai_penumpang, null, 2)}</pre></p>
-    `;
-    document.getElementById('modalUrusetia').classList.remove('hidden');
-}
-
 async function agihKenderaan(id) {
     const idK = document.getElementById(`kenderaan-${id}`).value;
-    if (!idK) return alert("Sila pilih kenderaan.");
-    await supabaseClient.from('tempahan').update({ id_kenderaan: idK, status: 'Selesai Diagih' }).eq('id', id);
-    alert("Berjaya diagihkan!"); muatSenaraiUrusetia();
+    const namaP = document.getElementById(`pemandu-${id}`).value;
+    
+    if (!idK || !namaP) return alert("Sila pilih Pemandu dan Kenderaan!");
+
+    const { error } = await supabaseClient.from('tempahan').update({ 
+        id_kenderaan: idK, 
+        nama_pemandu: namaP, 
+        status: 'Selesai Diagih' 
+    }).eq('id', id);
+
+    if (error) {
+        alert("Ralat! Pastikan bos dah cipta lajur 'nama_pemandu' di dalam jadual 'tempahan' di Supabase. Ralat: " + error.message);
+    } else {
+        alert("Pemandu dan Kenderaan berjaya diagihkan!"); 
+        muatSenaraiUrusetia();
+    }
 }
+
 
 // ==========================================
 // PELULUS: LULUS ATAU TOLAK
