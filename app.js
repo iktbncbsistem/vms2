@@ -816,20 +816,17 @@ async function sahkanUrusetia(id) {
                     </span>
                </div>`;
 
-        // PAPARAN MODAL
+       // PAPARAN MODAL (HALAMAN PENUH)
         const modalHtml = `
             <div class="vms-form">
 
-                <header class="vms-header">
-
-                    <div class="vms-logo" aria-hidden="true">
-                        🚘
-                    </div>
+                <div class="vms-header">
+                    <div class="vms-logo">🚘</div>
 
                     <div class="vms-heading">
                         <h3>BORANG PERMOHONAN KENDERAAN</h3>
                         <div class="vms-subtitle">
-                            Perjalanan Rasmi&nbsp; • &nbsp;Urusan Kerajaan
+                            Perjalanan Rasmi • Urusan Kerajaan
                         </div>
                     </div>
 
@@ -837,153 +834,117 @@ async function sahkanUrusetia(id) {
                         NO. RUJUKAN
                         <strong>${vmsEscape(noRujukan)}</strong>
                     </div>
-
-                    <button type="button"
-                        class="vms-header-close"
-                        id="btnTutupVmsAtas"
-                        aria-label="Tutup">
-                        &times;
-                    </button>
-
-                </header>
+                </div>
 
                 <!-- SEKSYEN A -->
                 <section class="vms-section">
-
                     <h4 class="vms-section-title vms-blue">
-                        <span class="vms-section-icon" aria-hidden="true">
-                            👤
-                        </span>
-                        A. &nbsp; MAKLUMAT PEMOHON
+                        <span class="vms-section-icon">👤</span>
+                        A. MAKLUMAT PEMOHON
                     </h4>
 
                     <div class="vms-content">
                         <div class="vms-grid">
 
-                            ${vmsField(
-                                '👤',
-                                'NAMA PEMOHON',
-                                t.nama_pemohon
-                            )}
+                            <div class="vms-field">
+                                <span class="vms-label">NAMA PEMOHON</span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.nama_pemohon)}
+                                </div>
+                            </div>
 
-                            ${vmsField(
-                                '☎',
-                                'NO. TELEFON',
-                                t.no_telefon
-                            )}
+                            <div class="vms-field">
+                                <span class="vms-label">NO. TELEFON</span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.no_telefon)}
+                                </div>
+                            </div>
 
-                            ${vmsField(
-                                '▦',
-                                'BAHAGIAN / CAWANGAN',
-                                t.bahagian,
-                                'teal'
-                            )}
+                            <div class="vms-field">
+                                <span class="vms-label">BAHAGIAN / CAWANGAN</span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.bahagian)}
+                                </div>
+                            </div>
 
-                            ${vmsField(
-                                '◎',
-                                'TUJUAN PERMOHONAN',
-                                t.tujuan,
-                                'purple'
-                            )}
+                            <div class="vms-field">
+                                <span class="vms-label">TUJUAN PERMOHONAN</span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.tujuan)}
+                                </div>
+                            </div>
 
                             <div class="vms-field full">
-
-                                <span class="vms-field-icon gold" aria-hidden="true">
-                                    ▤
+                                <span class="vms-label">
+                                    SURAT ARAHAN TUGAS RASMI
                                 </span>
-
-                                <div class="vms-field-body">
-                                    <span class="vms-label">
-                                        SURAT ARAHAN TUGAS RASMI
-                                    </span>
-
-                                    ${failHtml}
-                                </div>
-
+                                ${failHtml}
                             </div>
 
                         </div>
                     </div>
-
                 </section>
 
                 <!-- SEKSYEN B -->
                 <section class="vms-section">
-
                     <h4 class="vms-section-title vms-teal">
-                        <span class="vms-section-icon" aria-hidden="true">
-                            📍
-                        </span>
-                        B. &nbsp; JADUAL PERJALANAN
+                        <span class="vms-section-icon">📍</span>
+                        B. JADUAL PERJALANAN
                     </h4>
 
                     <div class="vms-content">
                         <div class="vms-grid">
 
                             <div class="vms-field full">
-
-                                <span class="vms-field-icon teal" aria-hidden="true">
-                                    📍
+                                <span class="vms-label">
+                                    DESTINASI / LOKASI
                                 </span>
-
-                                <div class="vms-field-body">
-                                    <span class="vms-label">
-                                        DESTINASI / LOKASI
-                                    </span>
-
-                                    <div class="vms-value">
-                                        ${vmsEscape(t.destinasi || t.lokasi)}
-                                    </div>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.destinasi || t.lokasi)}
                                 </div>
-
                             </div>
 
-                            ${vmsField(
-                                '▦',
-                                'TARIKH PERJALANAN',
-                                t.tarikh_pergi,
-                                'teal'
-                            )}
+                            <div class="vms-field">
+                                <span class="vms-label">
+                                    TARIKH PERJALANAN
+                                </span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.tarikh_pergi)}
+                                </div>
+                            </div>
 
-                            ${vmsField(
-                                '◷',
-                                'MASA PERJALANAN',
-                                `${t.masa_bertolak || '-'} hingga ${t.masa_balik || '-'}`,
-                                'teal'
-                            )}
+                            <div class="vms-field">
+                                <span class="vms-label">
+                                    MASA PERJALANAN
+                                </span>
+                                <div class="vms-value">
+                                    ${vmsEscape(t.masa_bertolak || '-')}
+                                    hingga
+                                    ${vmsEscape(t.masa_balik || '-')}
+                                </div>
+                            </div>
 
                         </div>
                     </div>
-
                 </section>
 
                 <!-- SEKSYEN C -->
                 <section class="vms-section">
-
                     <h4 class="vms-section-title vms-purple">
-                        <span class="vms-section-icon" aria-hidden="true">
-                            👥
-                        </span>
-                        C. &nbsp; SENARAI PENUMPANG
+                        <span class="vms-section-icon">👥</span>
+                        C. SENARAI PENUMPANG
                     </h4>
-
                     ${htmlPenumpang}
-
                 </section>
 
-                <!-- BUTANG TUTUP -->
-                <footer class="vms-footer">
-
+                <div class="vms-footer">
                     <button type="button"
                         class="vms-close"
-                        id="btnTutupVms">
-
-                        <span aria-hidden="true">×</span>
-                        Tutup
-
+                        id="btnTutupVms"
+                        style="background:var(--primary);">
+                        ← &nbsp; Kembali ke Senarai
                     </button>
-
-                </footer>
+                </div>
 
             </div>
         `;
@@ -991,27 +952,28 @@ async function sahkanUrusetia(id) {
         const isiModal = document.getElementById('isiModalUrusetia');
         const modal = document.getElementById('modalUrusetia');
 
-        if (!isiModal || !modal) {
-            console.error(
-                'Elemen #isiModalUrusetia atau #modalUrusetia tidak dijumpai.'
-            );
-            return;
-        }
+        if (!isiModal || !modal) return;
 
         isiModal.innerHTML = modalHtml;
+        
+        // 1. Sembunyikan jadual Urusetia
+        const jadualUrusetia = document.getElementById('dashboard-urusetia');
+        if(jadualUrusetia) jadualUrusetia.classList.add('hidden');
+        
+        // 2. Tunjuk borang premium & scroll atas
         modal.classList.remove('hidden');
+        window.scrollTo(0, 0);
 
-        // FUNGSI TUTUP MODAL
-        function tutupModal() {
-            modal.classList.add('hidden');
+        // 3. FUNGSI KEMBALI
+        const btnTutup = document.getElementById('btnTutupVms');
+        if (btnTutup) {
+            btnTutup.addEventListener('click', function() {
+                modal.classList.add('hidden');
+                // Panggil semula fungsi semak peranan untuk paparkan jadual
+                if(currentUser) semakPeranan(); 
+                window.scrollTo(0, 0);
+            });
         }
-
-        document.getElementById('btnTutupVms')
-            ?.addEventListener('click', tutupModal);
-
-        document.getElementById('btnTutupVmsAtas')
-            ?.addEventListener('click', tutupModal);
-
     };
 
 })();
