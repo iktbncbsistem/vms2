@@ -271,3 +271,21 @@ async function muatSejarahPemohon() {
     });
     tbody.innerHTML = html;
 }
+
+// ==========================================
+// FUNGSI PAPAR BUTIRAN POP-UP (MODAL)
+// ==========================================
+function paparButiran(index) {
+    const t = cacheUrusetia[index];
+    const failHtml = t.fail_surat ? `<a href="${t.fail_surat}" target="_blank" style="color:blue;">📎 Muat Turun Surat Rasmi</a>` : 'Tiada fail dilampirkan.';
+    
+    document.getElementById('isiModalUrusetia').innerHTML = `
+        <p><strong>Nama:</strong> ${t.nama_pemohon} (${t.no_telefon})</p>
+        <p><strong>Destinasi:</strong> ${t.destinasi || t.lokasi}</p>
+        <p><strong>Masa Bertolak:</strong> ${t.masa_bertolak}</p>
+        <p><strong>Dokumen:</strong> ${failHtml}</p>
+        <hr style="border:1px solid #eee; margin:15px 0;">
+        <p><strong>Senarai Penumpang:</strong><br><pre style="font-family:inherit; background:#f4f7f6; padding:10px;">${JSON.stringify(t.senarai_penumpang, null, 2)}</pre></p>
+    `;
+    document.getElementById('modalUrusetia').classList.remove('hidden');
+}
