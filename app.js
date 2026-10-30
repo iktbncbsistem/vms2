@@ -153,8 +153,7 @@ async function agihKenderaan(id) {
         alert("Mantap bos! Pemandu dan Kenderaan telah berjaya diagihkan."); 
         muatSenaraiUrusetia();
     }
-}
-}
+
         // FLOW BAHAGIAN B: Semakan Pegawai Mengurus
         if (t.status === 'Menunggu Semakan') {
             html += `<button class="btn btn-primary" onclick="updateStatus(${t.id}, 'Menunggu Kelulusan')" style="font-size:12px; width:100%;">Hantar ke Pelulus</button>`;
