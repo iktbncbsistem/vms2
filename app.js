@@ -203,299 +203,541 @@ async function sahkanUrusetia(id) {
 }
 
 
-/* VMS - PAPARAN BUTIRAN PERMOHONAN KENDERAAN */
+/* VMS - PAPARAN BUTIRAN PERMOHONAN KENDERAAN
+   Reka bentuk baharu berdasarkan imej rujukan.
+   Fungsi data dan nama medan asal dikekalkan.
+*/
 (function () {
     'use strict';
 
     function pasangGayaVMS() {
-        if (document.getElementById('vms-professional-style')) return;
+        if (document.getElementById('vms-modern-style')) return;
 
         const css = `
+        #modalUrusetia .vms-form,
         .vms-form {
-            font-family: Inter, "Segoe UI", Arial, sans-serif;
-            color: #17365d;
-            background: #fff;
-            padding: 24px;
-            border-radius: 16px;
+            --vms-blue: #1769c2;
+            --vms-navy: #102f70;
+            --vms-muted: #5576a8;
+            --vms-line: #d8e6fa;
             width: 100%;
+            max-height: 92vh;
+            overflow-y: auto;
             box-sizing: border-box;
+            padding: 0 0 18px;
+            border: 1px solid #dce7f5;
+            border-radius: 14px;
+            background: #fff;
+            color: var(--vms-navy);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            box-shadow: 0 18px 50px rgba(20, 48, 91, .18);
         }
         .vms-form * { box-sizing: border-box; }
 
         .vms-header {
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 18px;
-            padding: 8px 5px 22px;
-            margin-bottom: 24px;
-            border-bottom: 2px dashed #bfdbfe;
+            gap: 20px;
+            min-height: 130px;
+            padding: 22px 42px;
+            margin: 0 0 14px;
+            border-bottom: 1px solid #e4edf9;
+            background:
+                radial-gradient(circle at 82% 40%, rgba(213,232,255,.48) 0 105px, transparent 106px),
+                linear-gradient(115deg, #fff 0%, #f7fbff 72%, #eaf4ff 100%);
+            overflow: hidden;
+        }
+        .vms-header:after {
+            content: "";
+            position: absolute;
+            right: -25px;
+            bottom: -62px;
+            width: 230px;
+            height: 105px;
+            transform: rotate(-25deg);
+            background: linear-gradient(90deg, rgba(183,215,255,.12), rgba(153,196,250,.55));
+            pointer-events: none;
         }
         .vms-logo {
-            width: 70px;
-            height: 70px;
-            min-width: 70px;
-            background: linear-gradient(135deg,#1767c2,#0c3d78);
-            border-radius: 15px;
+            position: relative;
+            z-index: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 34px;
+            flex: 0 0 90px;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 43px;
+            background: linear-gradient(145deg, #3194f6, #1255b8);
+            box-shadow: 0 7px 17px rgba(28, 105, 197, .18);
         }
-        .vms-heading { min-width: 0; }
+        .vms-heading {
+            position: relative;
+            z-index: 1;
+            min-width: 0;
+        }
         .vms-header h3 {
-            font-size: 22px;
-            font-weight: 800;
-            color: #124783;
-            margin: 0 0 7px;
+            margin: 0 0 8px;
+            color: #102e70;
+            font-size: clamp(18px, 2.1vw, 27px);
+            line-height: 1.2;
+            font-weight: 850;
+            letter-spacing: -.45px;
         }
         .vms-subtitle {
-            color: #647da0;
-            font-size: 13px;
+            color: #607da9;
+            font-size: 16px;
+            line-height: 1.4;
         }
         .vms-reference {
+            position: relative;
+            z-index: 1;
+            min-width: 155px;
             margin-left: auto;
-            padding: 12px 17px;
-            border-radius: 12px;
-            background: #eff6ff;
-            color: #174c8b;
+            padding: 13px 20px;
+            border-radius: 40px;
+            background: rgba(220, 237, 255, .9);
+            color: #5275a8;
             text-align: center;
-            min-width: 120px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
+            letter-spacing: .2px;
         }
         .vms-reference strong {
             display: block;
-            font-size: 18px;
             margin-top: 4px;
+            color: #102f70;
+            font-size: 20px;
+            letter-spacing: .3px;
         }
+        .vms-header-close {
+            position: absolute;
+            z-index: 3;
+            top: 13px;
+            right: 18px;
+            width: 32px;
+            height: 32px;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: #647b9c;
+            font-size: 27px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .vms-header-close:hover {
+            background: #e8f1fc;
+            color: #173d7b;
+        }
+
         .vms-section {
-            border: 1px solid #dbeafe;
-            border-radius: 13px;
+            margin: 14px 32px 18px;
             overflow: hidden;
-            margin-bottom: 22px;
-            background: white;
+            border: 1px solid #cfe2ff;
+            border-radius: 15px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(35, 89, 155, .035);
         }
         .vms-section-title {
-            padding: 15px 18px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            color: white;
-            font-size: 16px;
-            font-weight: 800;
+            gap: 14px;
+            min-height: 51px;
             margin: 0;
+            padding: 8px 13px;
+            color: #123775;
+            font-size: 18px;
+            font-weight: 850;
+            line-height: 1.3;
         }
         .vms-blue {
-            background: linear-gradient(100deg,#1767b5,#9ac5f0);
+            background: linear-gradient(100deg, #e5f1ff, #edf6ff);
+            color: #123775;
         }
         .vms-teal {
-            background: linear-gradient(100deg,#087d83,#a3d8d3);
+            background: linear-gradient(100deg, #e0f4f2, #eaf8f6);
+            color: #08666a;
         }
         .vms-purple {
-            background: linear-gradient(100deg,#6267bd,#c9c9f5);
+            background: linear-gradient(100deg, #e9eaff, #f0f0ff);
+            color: #5559b4;
         }
         .vms-section-icon {
-            background: white;
-            color: #1767b5;
-            width: 38px;
-            height: 38px;
-            flex: 0 0 38px;
-            border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 19px;
+            flex: 0 0 42px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1595ce, #1262a8);
+            color: #fff;
+            font-size: 21px;
+            box-shadow: 0 2px 5px rgba(0,0,0,.08);
         }
+        .vms-teal .vms-section-icon {
+            background: linear-gradient(145deg, #15958f, #075c5c);
+        }
+        .vms-purple .vms-section-icon {
+            background: linear-gradient(145deg, #7779db, #4546a4);
+        }
+
         .vms-content {
-            padding: 18px;
-            margin: 14px;
-            background: #f8fbff;
-            border: 1px solid #e0edfc;
-            border-radius: 10px;
+            margin: 0;
+            padding: 17px 24px 12px;
+            background: linear-gradient(115deg, #fff, #fbfdff);
         }
         .vms-grid {
             display: grid;
-            grid-template-columns: repeat(2,minmax(0,1fr));
-            gap: 22px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            column-gap: 24px;
+            row-gap: 0;
         }
         .vms-field {
-            padding-bottom: 13px;
-            border-bottom: 1px solid #e1eaf5;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 17px;
             min-width: 0;
+            min-height: 85px;
+            padding: 12px 7px;
+            border-bottom: 1px solid #dce8f8;
         }
-        .vms-field.full { grid-column: 1 / -1; }
+        .vms-field:nth-child(2n):not(.full) {
+            border-left: 1px solid #dce8f8;
+            padding-left: 20px;
+        }
+        .vms-field.full {
+            grid-column: 1 / -1;
+            border-bottom: 0;
+        }
+        .vms-field-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 55px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: #e5f1ff;
+            color: #1769c2;
+            font-size: 25px;
+        }
+        .vms-field-icon.teal {
+            background: #e1f4f1;
+            color: #08716e;
+        }
+        .vms-field-icon.purple {
+            background: #f0e9fb;
+            color: #6547c7;
+        }
+        .vms-field-icon.gold {
+            background: #fff0cf;
+            color: #b77912;
+        }
+        .vms-field-body {
+            min-width: 0;
+            flex: 1;
+        }
         .vms-label {
             display: block;
-            color: #527397;
-            font-size: 11px;
+            margin-bottom: 6px;
+            color: #5679a8;
+            font-size: 12px;
             font-weight: 800;
-            margin-bottom: 7px;
+            line-height: 1.25;
         }
         .vms-value {
-            color: #153765;
-            font-size: 14px;
-            font-weight: 600;
+            color: #102f70;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.4;
             overflow-wrap: anywhere;
+        }
+        .vms-subvalue {
+            display: block;
+            margin-top: 3px;
+            color: #6481ad;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .vms-file-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 22px;
         }
         .vms-download {
             display: inline-flex;
             align-items: center;
-            gap: 9px;
-            padding: 12px 20px;
-            background: linear-gradient(135deg,#1976d2,#0755aa);
-            color: white !important;
-            text-decoration: none !important;
+            justify-content: center;
+            gap: 10px;
+            min-height: 44px;
+            padding: 11px 25px;
             border-radius: 9px;
+            background: linear-gradient(110deg, #1680f0, #075bd0);
+            color: #fff !important;
+            text-decoration: none !important;
             font-size: 13px;
-            font-weight: 700;
-            box-shadow: 0 4px 10px rgba(25,118,210,.18);
+            font-weight: 800;
+            box-shadow: 0 4px 9px rgba(17, 105, 215, .16);
+            transition: transform .18s ease, box-shadow .18s ease;
         }
         .vms-download:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
+            box-shadow: 0 7px 14px rgba(17, 105, 215, .22);
+        }
+        .vms-file-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 42px;
+            padding-left: 22px;
+            border-left: 1px solid #9dbce5;
+            color: #617da8;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+        .vms-file-name .file-icon {
+            color: #8298b8;
+            font-size: 27px;
         }
         .vms-empty {
-            color: #94a3b8;
+            color: #8b9bb2;
             font-size: 13px;
             font-style: italic;
+            font-weight: 500;
         }
-        .vms-table-wrap {
+
+        .vms-passenger-wrap {
+            padding: 15px 20px 10px;
             overflow-x: auto;
-            padding: 0 14px 14px;
         }
         .vms-table {
             width: 100%;
-            min-width: 560px;
-            border-collapse: separate;
+            min-width: 590px;
+            border: 1px solid #d6e2fa;
+            border-radius: 10px;
             border-spacing: 0;
-            font-size: 13px;
-            border: 1px solid #dce7f7;
-            border-radius: 9px;
+            border-collapse: separate;
+            overflow: hidden;
+            font-size: 14px;
         }
         .vms-table th {
-            background: #edf2ff;
-            color: #254c83;
-            font-weight: 800;
+            padding: 11px 15px;
+            border-right: 1px solid #dce6fa;
+            border-bottom: 1px solid #d6e2fa;
+            background: #eef0ff;
+            color: #18366f;
             text-align: left;
-            padding: 14px 12px;
-            border-bottom: 1px solid #dce7f7;
+            font-weight: 800;
+            white-space: nowrap;
         }
         .vms-table td {
-            padding: 13px 12px;
-            color: #29476c;
-            border-bottom: 1px solid #e7edf7;
-            overflow-wrap: anywhere;
+            padding: 10px 15px;
+            border-right: 1px solid #e0e8f8;
+            border-bottom: 1px solid #e4ebf8;
+            color: #18366f;
+            line-height: 1.35;
+        }
+        .vms-table th:last-child,
+        .vms-table td:last-child {
+            border-right: 0;
         }
         .vms-table tbody tr:nth-child(even) {
-            background: #f5f8fd;
+            background: #f3f5ff;
         }
         .vms-table tbody tr:last-child td {
-            border-bottom: none;
+            border-bottom: 0;
         }
         .vms-table th:first-child,
         .vms-table td:first-child {
+            width: 65px;
             text-align: center;
-            width: 45px;
         }
         .vms-passenger-total {
-            margin: 0 14px 14px;
-            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            margin: 0 20px 10px;
+            padding: 9px 16px;
             border-radius: 9px;
-            background: #f0f1ff;
-            color: #555eae;
+            background: #f0f0ff;
+            color: #6469c5;
             font-size: 13px;
+            font-style: italic;
             font-weight: 700;
         }
         .vms-no-passenger {
-            margin: 14px;
-            padding: 16px;
-            background: #f8fbff;
-            border: 1px solid #e0edfc;
+            margin: 15px 20px;
+            padding: 18px;
+            border: 1px solid #e0e8f8;
             border-radius: 9px;
+            background: #f8faff;
         }
         .vms-footer {
             display: flex;
             justify-content: flex-end;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 15px;
-            margin-top: 20px;
+            padding: 0 32px;
+            margin-top: 12px;
         }
         .vms-close {
-            border: none;
-            background: #64748b;
-            color: white;
-            padding: 11px 24px;
-            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 118px;
+            min-height: 46px;
+            padding: 11px 22px;
+            border: 0;
+            border-radius: 10px;
+            background: #71819b;
+            color: #fff;
             cursor: pointer;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 800;
+            transition: background .18s ease;
         }
-        .vms-close:hover { background: #334155; }
+        .vms-close:hover {
+            background: #52647f;
+        }
 
-        @media(max-width:600px) {
-            .vms-form { padding: 14px; }
-            .vms-header { flex-wrap: wrap; gap: 12px; }
-            .vms-header h3 { font-size: 17px; }
+        @media (max-width: 760px) {
+            .vms-header {
+                gap: 13px;
+                padding: 20px 18px;
+                min-height: 105px;
+            }
             .vms-logo {
-                width: 55px;
-                height: 55px;
-                min-width: 55px;
-                font-size: 27px;
+                flex-basis: 62px;
+                width: 62px;
+                height: 62px;
+                font-size: 30px;
+            }
+            .vms-header h3 {
+                font-size: 17px;
+            }
+            .vms-subtitle {
+                font-size: 12px;
             }
             .vms-reference {
-                margin-left: 0;
-                width: 100%;
+                min-width: 105px;
+                padding: 9px 12px;
+                font-size: 10px;
+            }
+            .vms-reference strong {
+                font-size: 15px;
+            }
+            .vms-section {
+                margin: 12px 14px 15px;
+            }
+            .vms-section-title {
+                font-size: 15px;
+            }
+            .vms-content {
+                padding: 10px 13px;
             }
             .vms-grid {
                 grid-template-columns: 1fr;
-                gap: 14px;
             }
-            .vms-field.full { grid-column: auto; }
-            .vms-content { padding: 13px; margin: 9px; }
-            .vms-section-title { font-size: 14px; }
+            .vms-field {
+                min-height: 76px;
+            }
+            .vms-field:nth-child(2n):not(.full) {
+                border-left: 0;
+                padding-left: 7px;
+            }
+            .vms-field.full {
+                grid-column: auto;
+            }
+            .vms-field-icon {
+                flex-basis: 46px;
+                width: 46px;
+                height: 46px;
+                font-size: 21px;
+            }
+            .vms-value {
+                font-size: 14px;
+            }
+            .vms-file-name {
+                padding-left: 0;
+                border-left: 0;
+            }
+            .vms-footer {
+                padding: 0 14px;
+            }
+        }
+        @media (max-width: 430px) {
+            .vms-header {
+                flex-wrap: wrap;
+                padding-right: 42px;
+            }
+            .vms-reference {
+                margin-left: 75px;
+            }
+            .vms-file-row {
+                gap: 10px;
+            }
+            .vms-download {
+                width: 100%;
+            }
         }
         `;
 
         const style = document.createElement('style');
-        style.id = 'vms-professional-style';
+        style.id = 'vms-modern-style';
         style.textContent = css;
         document.head.appendChild(style);
     }
 
-    // Keselamatan teks HTML
     function vmsEscape(value) {
-        return String(value ?? '-').replace(/[&<>"']/g, char => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        })[char]);
+        return String(value ?? '-').replace(/[&<>"']/g, function (char) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char];
+        });
     }
 
-    // Semak pautan surat
     function vmsSafeFileUrl(value) {
         const url = String(value ?? '').trim();
         if (!url) return null;
 
         try {
             const parsed = new URL(url, window.location.href);
-            if (!['http:', 'https:'].includes(parsed.protocol)) {
-                return null;
-            }
-            return parsed.href;
+            return ['http:', 'https:'].includes(parsed.protocol)
+                ? parsed.href
+                : null;
         } catch (error) {
             return null;
         }
     }
 
-    // FUNGSI UTAMA
-    window.paparButiran = function(index) {
+    function vmsField(icon, label, value, extraClass, subvalue) {
+        return `
+            <div class="vms-field">
+                <span class="vms-field-icon ${extraClass || ''}" aria-hidden="true">${icon}</span>
+                <div class="vms-field-body">
+                    <span class="vms-label">${label}</span>
+                    <div class="vms-value">${vmsEscape(value)}</div>
+                    ${subvalue ? `<span class="vms-subvalue">${vmsEscape(subvalue)}</span>` : ''}
+                </div>
+            </div>`;
+    }
 
-        const sumberCache =
-            (typeof cacheUrusetia !== 'undefined')
-                ? cacheUrusetia
-                : window.cacheUrusetia;
+    // FUNGSI UTAMA
+    window.paparButiran = function (index) {
+
+        const sumberCache = (typeof cacheUrusetia !== 'undefined')
+            ? cacheUrusetia
+            : window.cacheUrusetia;
 
         const t = sumberCache && sumberCache[index];
 
@@ -507,22 +749,33 @@ async function sahkanUrusetia(id) {
         pasangGayaVMS();
 
         const noRujukan = 'VMS-' +
-            String(t.id ?? Number(index) + 1).padStart(4,'0');
+            String(t.id ?? Number(index) + 1).padStart(4, '0');
 
         // SURAT RASMI
         const fileUrl = vmsSafeFileUrl(t.fail_surat);
 
         const failHtml = fileUrl
-            ? `<a href="${vmsEscape(fileUrl)}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="vms-download">
-                  📎 Muat Turun Surat Rasmi
-               </a>`
+            ? `<div class="vms-file-row">
+                    <a href="${vmsEscape(fileUrl)}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="vms-download">
+                        <span aria-hidden="true">📎</span>
+                        Muat Turun Surat Rasmi
+                    </a>
+                    <span class="vms-file-name">
+                        <span class="file-icon" aria-hidden="true">▤</span>
+                        <span>
+                            ${vmsEscape(fileUrl.split('/').pop().split('?')[0] || 'Fail surat')}
+                            <br>
+                            <small>Dokumen lampiran</small>
+                        </span>
+                    </span>
+               </div>`
             : `<span class="vms-empty">
-                  ${t.fail_surat
-                    ? 'Pautan fail tidak sah.'
-                    : 'Tiada fail dilampirkan.'}
+                    ${t.fail_surat
+                        ? 'Pautan fail tidak sah.'
+                        : 'Tiada fail dilampirkan.'}
                </span>`;
 
         // SENARAI PENUMPANG
@@ -530,12 +783,8 @@ async function sahkanUrusetia(id) {
             ? t.senarai_penumpang
             : [];
 
-        let htmlPenumpang = '';
-
-        if (penumpang.length > 0) {
-
-            htmlPenumpang = `
-                <div class="vms-table-wrap">
+        const htmlPenumpang = penumpang.length > 0
+            ? `<div class="vms-passenger-wrap">
                     <table class="vms-table">
                         <thead>
                             <tr>
@@ -546,9 +795,9 @@ async function sahkanUrusetia(id) {
                             </tr>
                         </thead>
                         <tbody>
-                            ${penumpang.map((p,i) => `
+                            ${penumpang.map((p, i) => `
                                 <tr>
-                                    <td>${i+1}</td>
+                                    <td>${i + 1}</td>
                                     <td><strong>${vmsEscape(p.nama)}</strong></td>
                                     <td>${vmsEscape(p.kp)}</td>
                                     <td>${vmsEscape(p.bahagian)}</td>
@@ -558,31 +807,29 @@ async function sahkanUrusetia(id) {
                     </table>
                 </div>
                 <div class="vms-passenger-total">
-                    👥 Jumlah penumpang: ${penumpang.length} orang
-                </div>
-            `;
-
-        } else {
-            htmlPenumpang = `
-                <div class="vms-no-passenger">
+                    <span aria-hidden="true">👥</span>
+                    Jumlah penumpang: ${penumpang.length} orang
+                </div>`
+            : `<div class="vms-no-passenger">
                     <span class="vms-empty">
                         Tiada rekod penumpang.
                     </span>
-                </div>
-            `;
-        }
+               </div>`;
 
         // PAPARAN MODAL
         const modalHtml = `
             <div class="vms-form">
 
-                <div class="vms-header">
-                    <div class="vms-logo">🚘</div>
+                <header class="vms-header">
+
+                    <div class="vms-logo" aria-hidden="true">
+                        🚘
+                    </div>
 
                     <div class="vms-heading">
                         <h3>BORANG PERMOHONAN KENDERAAN</h3>
                         <div class="vms-subtitle">
-                            Perjalanan Rasmi • Urusan Kerajaan
+                            Perjalanan Rasmi&nbsp; • &nbsp;Urusan Kerajaan
                         </div>
                     </div>
 
@@ -590,116 +837,153 @@ async function sahkanUrusetia(id) {
                         NO. RUJUKAN
                         <strong>${vmsEscape(noRujukan)}</strong>
                     </div>
-                </div>
+
+                    <button type="button"
+                        class="vms-header-close"
+                        id="btnTutupVmsAtas"
+                        aria-label="Tutup">
+                        &times;
+                    </button>
+
+                </header>
 
                 <!-- SEKSYEN A -->
                 <section class="vms-section">
+
                     <h4 class="vms-section-title vms-blue">
-                        <span class="vms-section-icon">👤</span>
-                        A. MAKLUMAT PEMOHON
+                        <span class="vms-section-icon" aria-hidden="true">
+                            👤
+                        </span>
+                        A. &nbsp; MAKLUMAT PEMOHON
                     </h4>
 
                     <div class="vms-content">
                         <div class="vms-grid">
 
-                            <div class="vms-field">
-                                <span class="vms-label">NAMA PEMOHON</span>
-                                <div class="vms-value">
-                                    ${vmsEscape(t.nama_pemohon)}
-                                </div>
-                            </div>
+                            ${vmsField(
+                                '👤',
+                                'NAMA PEMOHON',
+                                t.nama_pemohon
+                            )}
 
-                            <div class="vms-field">
-                                <span class="vms-label">NO. TELEFON</span>
-                                <div class="vms-value">
-                                    ${vmsEscape(t.no_telefon)}
-                                </div>
-                            </div>
+                            ${vmsField(
+                                '☎',
+                                'NO. TELEFON',
+                                t.no_telefon
+                            )}
 
-                            <div class="vms-field">
-                                <span class="vms-label">BAHAGIAN / CAWANGAN</span>
-                                <div class="vms-value">
-                                    ${vmsEscape(t.bahagian)}
-                                </div>
-                            </div>
+                            ${vmsField(
+                                '▦',
+                                'BAHAGIAN / CAWANGAN',
+                                t.bahagian,
+                                'teal'
+                            )}
 
-                            <div class="vms-field">
-                                <span class="vms-label">TUJUAN PERMOHONAN</span>
-                                <div class="vms-value">
-                                    ${vmsEscape(t.tujuan)}
-                                </div>
-                            </div>
+                            ${vmsField(
+                                '◎',
+                                'TUJUAN PERMOHONAN',
+                                t.tujuan,
+                                'purple'
+                            )}
 
                             <div class="vms-field full">
-                                <span class="vms-label">
-                                    SURAT ARAHAN TUGAS RASMI
+
+                                <span class="vms-field-icon gold" aria-hidden="true">
+                                    ▤
                                 </span>
-                                ${failHtml}
+
+                                <div class="vms-field-body">
+                                    <span class="vms-label">
+                                        SURAT ARAHAN TUGAS RASMI
+                                    </span>
+
+                                    ${failHtml}
+                                </div>
+
                             </div>
 
                         </div>
                     </div>
+
                 </section>
 
                 <!-- SEKSYEN B -->
                 <section class="vms-section">
+
                     <h4 class="vms-section-title vms-teal">
-                        <span class="vms-section-icon">📍</span>
-                        B. JADUAL PERJALANAN
+                        <span class="vms-section-icon" aria-hidden="true">
+                            📍
+                        </span>
+                        B. &nbsp; JADUAL PERJALANAN
                     </h4>
 
                     <div class="vms-content">
                         <div class="vms-grid">
 
                             <div class="vms-field full">
-                                <span class="vms-label">
-                                    DESTINASI / LOKASI
+
+                                <span class="vms-field-icon teal" aria-hidden="true">
+                                    📍
                                 </span>
-                                <div class="vms-value">
-                                    ${vmsEscape(t.destinasi || t.lokasi)}
+
+                                <div class="vms-field-body">
+                                    <span class="vms-label">
+                                        DESTINASI / LOKASI
+                                    </span>
+
+                                    <div class="vms-value">
+                                        ${vmsEscape(t.destinasi || t.lokasi)}
+                                    </div>
                                 </div>
+
                             </div>
 
-                            <div class="vms-field">
-                                <span class="vms-label">
-                                    TARIKH PERJALANAN
-                                </span>
-                                <div class="vms-value">
-                                    ${vmsEscape(t.tarikh_pergi)}
-                                </div>
-                            </div>
+                            ${vmsField(
+                                '▦',
+                                'TARIKH PERJALANAN',
+                                t.tarikh_pergi,
+                                'teal'
+                            )}
 
-                            <div class="vms-field">
-                                <span class="vms-label">
-                                    MASA PERJALANAN
-                                </span>
-                                <div class="vms-value">
-                                    ${vmsEscape(t.masa_bertolak || '-')}
-                                    hingga
-                                    ${vmsEscape(t.masa_balik || '-')}
-                                </div>
-                            </div>
+                            ${vmsField(
+                                '◷',
+                                'MASA PERJALANAN',
+                                `${t.masa_bertolak || '-'} hingga ${t.masa_balik || '-'}`,
+                                'teal'
+                            )}
 
                         </div>
                     </div>
+
                 </section>
 
                 <!-- SEKSYEN C -->
                 <section class="vms-section">
+
                     <h4 class="vms-section-title vms-purple">
-                        <span class="vms-section-icon">👥</span>
-                        C. SENARAI PENUMPANG
+                        <span class="vms-section-icon" aria-hidden="true">
+                            👥
+                        </span>
+                        C. &nbsp; SENARAI PENUMPANG
                     </h4>
+
                     ${htmlPenumpang}
+
                 </section>
 
-                <div class="vms-footer">
+                <!-- BUTANG TUTUP -->
+                <footer class="vms-footer">
+
                     <button type="button"
                         class="vms-close"
                         id="btnTutupVms">
-                        ✕ &nbsp; Tutup
+
+                        <span aria-hidden="true">×</span>
+                        Tutup
+
                     </button>
-                </div>
+
+                </footer>
 
             </div>
         `;
@@ -717,14 +1001,17 @@ async function sahkanUrusetia(id) {
         isiModal.innerHTML = modalHtml;
         modal.classList.remove('hidden');
 
-        // TUTUP MODAL
-        const btnTutup = document.getElementById('btnTutupVms');
-
-        if (btnTutup) {
-            btnTutup.addEventListener('click', function() {
-                modal.classList.add('hidden');
-            });
+        // FUNGSI TUTUP MODAL
+        function tutupModal() {
+            modal.classList.add('hidden');
         }
+
+        document.getElementById('btnTutupVms')
+            ?.addEventListener('click', tutupModal);
+
+        document.getElementById('btnTutupVmsAtas')
+            ?.addEventListener('click', tutupModal);
+
     };
 
 })();
