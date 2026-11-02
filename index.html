@@ -32,9 +32,23 @@
         color: var(--text-main);
         font-size: 14px;
         line-height: 1.5;
+        padding: 20px; /* Frame Keseluruhan */
     }
 
     .hidden { display: none !important; }
+
+    /* Frame Berbingkai Untuk Keseluruhan Sistem */
+    #login-section, #dashboard-pemohon, #dashboard-urusetia, #dashboard-pelulus, #modalUrusetia {
+        border: 3px solid #cbd5e1;
+        border-radius: 16px;
+        background: #ffffff;
+        padding: 25px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+        width: 100%;
+        min-height: 80vh;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
 
     /* Header */
     .header {
@@ -45,6 +59,8 @@
         align-items: center;
         overflow: hidden;
         min-height: 120px;
+        border-radius: 12px;
+        margin-bottom: 20px;
     }
     
     .header-bg-img {
@@ -53,7 +69,6 @@
         top: 0;
         bottom: 0;
         width: 50%;
-        /* GAMBAR CONTOH KENDERAAN DI SINI BOS */
         background-image: url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
         background-size: cover;
         background-position: right center;
@@ -213,10 +228,10 @@
 <!-- ========================================== -->
 <!-- 1. BAHAGIAN LOG MASUK -->
 <!-- ========================================== -->
-<div id="login-section" style="min-height: calc(100vh - 120px); background-image: url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; position: relative;">
+<div id="login-section" style="background-image: url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; position: relative;">
     
     <!-- Lapisan gelap (overlay) -->
-    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4);"></div>
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); border-radius: 12px;"></div>
     
     <!-- Kotak Putih Log Masuk -->
     <div style="position: relative; z-index: 1; max-width: 400px; width: 90%; text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #cbd5e1;">
@@ -226,18 +241,23 @@
     </div>
 </div>
 
-
 <!-- ========================================== -->
 <!-- 2. DASHBOARD PEMOHON -->
 <!-- ========================================== -->
 <div id="dashboard-pemohon" class="hidden">
 
-    <!-- TAMBAH KOTAK SEJARAH PERMOHONAN DI SINI -->
+    <!-- KOTAK SEJARAH PERMOHONAN -->
     <div class="container" style="padding-bottom: 0;">
         <div class="card" style="margin-bottom: 10px; border-top: 4px solid var(--primary);">
-            <div class="card-header" style="background: white; color: #102a43; font-size: 16px;">
-                Senarai Permohonan Saya
+            
+            <!-- HEADER & BUTANG MOHON BARU -->
+            <div class="card-header" style="background: white; color: #102a43; font-size: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Senarai Permohonan Saya</span>
+                <button onclick="toggleBorangBaru()" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px; font-weight: 700;">
+                    ➕ Mohon Baru
+                </button>
             </div>
+            
             <div class="card-body" style="padding: 15px;">
                 <div class="table-responsive" style="margin-bottom: 0;">
                     <table style="min-width: 100%;">
@@ -259,269 +279,273 @@
     </div>
     <!-- TAMAT KOTAK SEJARAH -->
     
-    <div class="stepper-container">
-        <div class="stepper">
-            <div class="step active"><div class="circle">1</div><div class="label">Maklumat Pemohon</div></div>
-            <div class="step"><div class="circle">2</div><div class="label">Jadual Perjalanan</div></div>
-            <div class="step"><div class="circle">3</div><div class="label">Senarai Penumpang</div></div>
-            <div class="step"><div class="circle">4</div><div class="label">Peralatan / Kelengkapan</div></div>
-            <div class="step"><div class="circle">5</div><div class="label">Pengesahan & Kelulusan</div></div>
-        </div>
-    </div>
-
-    <form id="vehicleForm">
-        <div class="container">
-            
-            <div class="form-sections">
-                <!-- A. Maklumat Pemohon -->
-                <div class="card">
-                    <div class="card-header">
-                        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                        A. Maklumat Pemohon
-                    </div>
-                    <div class="card-body form-grid">
-                        <div class="form-group">
-                            <label>Nama Pemohon <span class="req">*</span></label>
-                            <input type="text" id="applicantName" placeholder="Sila masukkan nama penuh" required>
-                        </div>
-                        <div class="form-group">
-                            <label>No. Telefon <span class="req">*</span></label>
-                            <input type="tel" id="phone" placeholder="Contoh: 012-3456789" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Bahagian / Cawangan <span class="req">*</span></label>
-                            <select id="department" required>
-                                <option value="">Sila pilih bahagian / cawangan</option>
-                                <option>Bahagian Latihan</option>
-                                <option>Pengurusan</option>
-                                <option>Unit Kewangan</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Tujuan Permohonan <span class="req">*</span></label>
-                            <select id="purpose" required>
-                                <option value="">Sila pilih tujuan permohonan</option>
-                                <option>Urusan Rasmi</option>
-                                <option>Mesyuarat</option>
-                                <option>Lawatan</option>
-                            </select>
-                        </div>
-                        <div class="form-group col-span-2">
-                            <label>Muat Naik Surat Arahan Tugas Rasmi <span class="req">*</span></label>
-                            <label class="upload-box">
-                                <div class="icon">☁️</div>
-                                <div class="title">Klik untuk muat naik fail <span style="font-weight:normal; color:#64748b;">atau seret fail ke sini</span></div>
-                                <div class="desc">Format: PDF, JPG, PNG (Saiz maksimum 5MB)</div>
-                                <input type="file" id="fileUpload" required>
-                            </label>
-                            <div id="fileNameDisplay" class="file-name-display"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- B. Jadual Perjalanan -->
-                <div class="card">
-                    <div class="card-header">
-                        <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
-                        B. Jadual Perjalanan
-                    </div>
-                    <div class="card-body form-grid">
-                        <div class="form-group">
-                            <label>Tarikh Perjalanan <span class="req">*</span></label>
-                            <input type="date" id="tripDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Masa Bertolak <span class="req">*</span></label>
-                            <input type="time" id="departTime" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Masa Balik <span class="req">*</span></label>
-                            <input type="time" id="returnTime" required>
-                        </div>
-                        <div class="form-group col-span-2">
-                            <label>Tempat / Lokasi <span class="req">*</span></label>
-                            <input type="text" id="location" placeholder="Contoh: KLIA, Kuala Lumpur" required>
-                        </div>
-                        <div class="form-group col-span-2">
-                            <label>Urusan Perjalanan <span class="req">*</span></label>
-                            <input type="text" id="tripPurpose" placeholder="Contoh: Mesyuarat, Lawatan, Kursus" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Pemandu Perlu</label>
-                            <div class="radio-group">
-                                <label class="radio-label"><input type="radio" name="driver" value="Tunggu" checked> Tunggu</label>
-                                <label class="radio-label"><input type="radio" name="driver" value="Tidak Tunggu (Balik)"> Tidak Tunggu (Balik) <span title="Info" style="color:var(--primary); cursor:help;">ⓘ</span></label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Bilangan Penumpang <span class="req">*</span></label>
-                            <input type="number" id="passengerCount" value="1" min="1" required>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- C. Senarai Penumpang -->
-                <div class="card">
-                    <div class="card-header">
-                        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05.02.01.03.03.04.04 1.14.83 1.93 1.94 1.93 3.41V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-                        C. Senarai Penumpang
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table id="tblPassengers">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px; text-align:center;">Bil</th>
-                                        <th>Nama Penumpang <span class="req">*</span></th>
-                                        <th>No. K/P <span class="req">*</span></th>
-                                        <th>No. Telefon <span class="req">*</span></th>
-                                        <th>Bahagian / Jabatan <span class="req">*</span></th>
-                                        <th style="width: 60px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows generated by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                        <button type="button" class="btn btn-primary" id="btnAddPassenger" style="margin-top:10px;">+ Tambah Penumpang</button>
-                    </div>
-                </div>
-
-                <!-- D. Peralatan -->
-                <div class="card">
-                    <div class="card-header">
-                        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                        D. Peralatan / Kelengkapan (jika ada)
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table id="tblEquipment">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px; text-align:center;">Bil</th>
-                                        <th>Nama Peralatan / Kelengkapan</th>
-                                        <th>Kuantiti</th>
-                                        <th>Unit</th>
-                                        <th>Catatan</th>
-                                        <th style="width: 60px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows generated by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                        <button type="button" class="btn btn-primary" id="btnAddEquipment" style="margin-top:10px;">+ Tambah Peralatan</button>
-                    </div>
-                </div>
-
-                <!-- E. Pengesahan -->
-                <div class="card">
-                    <div class="card-header" style="border-radius: 8px;">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                        E. Pengesahan dan Kelulusan
-                    </div>
-                    <div class="card-body" style="padding: 15px 24px;">
-                        <div style="display: flex; gap: 10px; color: var(--text-muted); font-size: 13px;">
-                            <span style="font-size: 18px;">ⓘ</span> 
-                            <div>
-                                Bahagian ini akan diisi oleh <strong>Pegawai Kenderaan</strong> dan <strong>Pegawai Bertanggungjawab</strong>.<br>
-                                Status permohonan akan dimaklumkan kepada pemohon melalui sistem.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Actions -->
-                <div class="bottom-actions">
-                    <button type="button" class="btn btn-light" id="btnBack">← Kembali</button>
-                    <div class="actions-right">
-                        <button type="button" class="btn btn-outline" id="btnDraft">💾 Simpan Draf</button>
-                        <button type="button" class="btn btn-primary" id="btnReview">👁️ Semak Semula</button>
-                        <button type="submit" class="btn btn-success" id="btnSubmit">➤ Hantar Permohonan</button>
-                    </div>
-                </div>
-                
+    <!-- RUANG BORANG (DISOROKKAN SECARA DEFAULT) -->
+    <div id="ruangBorangPemohon" class="hidden" style="margin-top: 30px;">
+        
+        <div class="stepper-container">
+            <div class="stepper">
+                <div class="step active"><div class="circle">1</div><div class="label">Maklumat Pemohon</div></div>
+                <div class="step"><div class="circle">2</div><div class="label">Jadual Perjalanan</div></div>
+                <div class="step"><div class="circle">3</div><div class="label">Senarai Penumpang</div></div>
+                <div class="step"><div class="circle">4</div><div class="label">Peralatan / Kelengkapan</div></div>
+                <div class="step"><div class="circle">5</div><div class="label">Pengesahan & Kelulusan</div></div>
             </div>
-
-            <!-- Right Column: Sidebar -->
-            <aside class="sidebar">
-                
-                <div class="card">
-                    <div class="card-header" style="background: white; color: #1e293b; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
-                        Ringkasan Permohonan
-                    </div>
-                    <div class="card-body" style="padding: 15px 20px;">
-                        <div class="summary-item">
-                            <div class="summary-icon">👤</div>
-                            <div class="summary-content">
-                                <small>Nama Pemohon</small>
-                                <strong id="sumName">-</strong>
-                            </div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-icon">🏢</div>
-                            <div class="summary-content">
-                                <small>Bahagian / Cawangan</small>
-                                <strong id="sumDept">-</strong>
-                            </div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-icon">🎯</div>
-                            <div class="summary-content">
-                                <small>Tujuan Permohonan</small>
-                                <strong id="sumPurpose">-</strong>
-                            </div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-icon">📅</div>
-                            <div class="summary-content">
-                                <small>Tarikh Perjalanan</small>
-                                <strong id="sumDate">-</strong>
-                            </div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-icon">👥</div>
-                            <div class="summary-content">
-                                <small>Jumlah Penumpang</small>
-                                <strong id="sumCount">-</strong>
-                            </div>
-                        </div>
-                        <div class="info-box">
-                            <span style="color:#b45309; font-weight:bold;">!</span> 
-                            Sila pastikan semua maklumat diisi dengan lengkap dan tepat sebelum menghantar permohonan.
-                        </div>
-                    </div>
-                </div>
-
-                
-
-                <div class="card">
-                    <div class="card-header" style="background: white; color: #1e293b; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
-                        ⓘ Maklumat Penting
-                    </div>
-                    <div class="card-body" style="padding: 20px; display:flex; flex-direction:column; gap:15px;">
-                        <div style="display:flex; gap:12px; font-size:12px; color:var(--text-main);">
-                            <span style="font-size:16px; color:var(--primary);">📄</span>
-                            Sertakan Surat Arahan Tugas Rasmi.
-                        </div>
-                        <div style="display:flex; gap:12px; font-size:12px; color:var(--text-main);">
-                            <span style="font-size:16px; color:var(--primary);">📤</span>
-                            Format fail: PDF, JPG atau PNG (maksimum 5MB).
-                        </div>
-                    </div>
-                </div>
-
-            </aside>
         </div>
-    </form>
+
+        <form id="vehicleForm">
+            <div class="container">
+                
+                <div class="form-sections">
+                    <!-- A. Maklumat Pemohon -->
+                    <div class="card">
+                        <div class="card-header">
+                            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            A. Maklumat Pemohon
+                        </div>
+                        <div class="card-body form-grid">
+                            <div class="form-group">
+                                <label>Nama Pemohon <span class="req">*</span></label>
+                                <input type="text" id="applicantName" placeholder="Sila masukkan nama penuh" required>
+                            </div>
+                            <div class="form-group">
+                                <label>No. Telefon <span class="req">*</span></label>
+                                <input type="tel" id="phone" placeholder="Contoh: 012-3456789" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Bahagian / Cawangan <span class="req">*</span></label>
+                                <select id="department" required>
+                                    <option value="">Sila pilih bahagian / cawangan</option>
+                                    <option>Bahagian Latihan</option>
+                                    <option>Pengurusan</option>
+                                    <option>Unit Kewangan</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tujuan Permohonan <span class="req">*</span></label>
+                                <select id="purpose" required>
+                                    <option value="">Sila pilih tujuan permohonan</option>
+                                    <option>Urusan Rasmi</option>
+                                    <option>Mesyuarat</option>
+                                    <option>Lawatan</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-span-2">
+                                <label>Muat Naik Surat Arahan Tugas Rasmi <span class="req">*</span></label>
+                                <label class="upload-box">
+                                    <div class="icon">☁️</div>
+                                    <div class="title">Klik untuk muat naik fail <span style="font-weight:normal; color:#64748b;">atau seret fail ke sini</span></div>
+                                    <div class="desc">Format: PDF, JPG, PNG (Saiz maksimum 5MB)</div>
+                                    <input type="file" id="fileUpload" required>
+                                </label>
+                                <div id="fileNameDisplay" class="file-name-display"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- B. Jadual Perjalanan -->
+                    <div class="card">
+                        <div class="card-header">
+                            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+                            B. Jadual Perjalanan
+                        </div>
+                        <div class="card-body form-grid">
+                            <div class="form-group">
+                                <label>Tarikh Perjalanan <span class="req">*</span></label>
+                                <input type="date" id="tripDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Masa Bertolak <span class="req">*</span></label>
+                                <input type="time" id="departTime" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Masa Balik <span class="req">*</span></label>
+                                <input type="time" id="returnTime" required>
+                            </div>
+                            <div class="form-group col-span-2">
+                                <label>Tempat / Lokasi <span class="req">*</span></label>
+                                <input type="text" id="location" placeholder="Contoh: KLIA, Kuala Lumpur" required>
+                            </div>
+                            <div class="form-group col-span-2">
+                                <label>Urusan Perjalanan <span class="req">*</span></label>
+                                <input type="text" id="tripPurpose" placeholder="Contoh: Mesyuarat, Lawatan, Kursus" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Pemandu Perlu</label>
+                                <div class="radio-group">
+                                    <label class="radio-label"><input type="radio" name="driver" value="Tunggu" checked> Tunggu</label>
+                                    <label class="radio-label"><input type="radio" name="driver" value="Tidak Tunggu (Balik)"> Tidak Tunggu (Balik) <span title="Info" style="color:var(--primary); cursor:help;">ⓘ</span></label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Bilangan Penumpang <span class="req">*</span></label>
+                                <input type="number" id="passengerCount" value="1" min="1" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- C. Senarai Penumpang -->
+                    <div class="card">
+                        <div class="card-header">
+                            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05.02.01.03.03.04.04 1.14.83 1.93 1.94 1.93 3.41V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                            C. Senarai Penumpang
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="tblPassengers">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 50px; text-align:center;">Bil</th>
+                                            <th>Nama Penumpang <span class="req">*</span></th>
+                                            <th>No. K/P <span class="req">*</span></th>
+                                            <th>No. Telefon <span class="req">*</span></th>
+                                            <th>Bahagian / Jabatan <span class="req">*</span></th>
+                                            <th style="width: 60px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Rows generated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="btnAddPassenger" style="margin-top:10px;">+ Tambah Penumpang</button>
+                        </div>
+                    </div>
+
+                    <!-- D. Peralatan -->
+                    <div class="card">
+                        <div class="card-header">
+                            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                            D. Peralatan / Kelengkapan (jika ada)
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="tblEquipment">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 50px; text-align:center;">Bil</th>
+                                            <th>Nama Peralatan / Kelengkapan</th>
+                                            <th>Kuantiti</th>
+                                            <th>Unit</th>
+                                            <th>Catatan</th>
+                                            <th style="width: 60px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Rows generated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="btnAddEquipment" style="margin-top:10px;">+ Tambah Peralatan</button>
+                        </div>
+                    </div>
+
+                    <!-- E. Pengesahan -->
+                    <div class="card">
+                        <div class="card-header" style="border-radius: 8px;">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                            E. Pengesahan dan Kelulusan
+                        </div>
+                        <div class="card-body" style="padding: 15px 24px;">
+                            <div style="display: flex; gap: 10px; color: var(--text-muted); font-size: 13px;">
+                                <span style="font-size: 18px;">ⓘ</span> 
+                                <div>
+                                    Bahagian ini akan diisi oleh <strong>Pegawai Kenderaan</strong> dan <strong>Pegawai Bertanggungjawab</strong>.<br>
+                                    Status permohonan akan dimaklumkan kepada pemohon melalui sistem.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Actions -->
+                    <div class="bottom-actions">
+                        <button type="button" class="btn btn-light" id="btnBack" onclick="toggleBorangBaru()">← Batal</button>
+                        <div class="actions-right">
+                            <button type="button" class="btn btn-outline" id="btnDraft">💾 Simpan Draf</button>
+                            <button type="button" class="btn btn-primary" id="btnReview">👁️ Semak Semula</button>
+                            <button type="submit" class="btn btn-success" id="btnSubmit">➤ Hantar Permohonan</button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <!-- Right Column: Sidebar -->
+                <aside class="sidebar">
+                    
+                    <div class="card">
+                        <div class="card-header" style="background: white; color: #1e293b; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
+                            Ringkasan Permohonan
+                        </div>
+                        <div class="card-body" style="padding: 15px 20px;">
+                            <div class="summary-item">
+                                <div class="summary-icon">👤</div>
+                                <div class="summary-content">
+                                    <small>Nama Pemohon</small>
+                                    <strong id="sumName">-</strong>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-icon">🏢</div>
+                                <div class="summary-content">
+                                    <small>Bahagian / Cawangan</small>
+                                    <strong id="sumDept">-</strong>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-icon">🎯</div>
+                                <div class="summary-content">
+                                    <small>Tujuan Permohonan</small>
+                                    <strong id="sumPurpose">-</strong>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-icon">📅</div>
+                                <div class="summary-content">
+                                    <small>Tarikh Perjalanan</small>
+                                    <strong id="sumDate">-</strong>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-icon">👥</div>
+                                <div class="summary-content">
+                                    <small>Jumlah Penumpang</small>
+                                    <strong id="sumCount">-</strong>
+                                </div>
+                            </div>
+                            <div class="info-box">
+                                <span style="color:#b45309; font-weight:bold;">!</span> 
+                                Sila pastikan semua maklumat diisi dengan lengkap dan tepat sebelum menghantar permohonan.
+                            </div>
+                        </div>
+                    </div>
+
+                    
+
+                    <div class="card">
+                        <div class="card-header" style="background: white; color: #1e293b; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
+                            ⓘ Maklumat Penting
+                        </div>
+                        <div class="card-body" style="padding: 20px; display:flex; flex-direction:column; gap:15px;">
+                            <div style="display:flex; gap:12px; font-size:12px; color:var(--text-main);">
+                                <span style="font-size:16px; color:var(--primary);">📄</span>
+                                Sertakan Surat Arahan Tugas Rasmi.
+                            </div>
+                            <div style="display:flex; gap:12px; font-size:12px; color:var(--text-main);">
+                                <span style="font-size:16px; color:var(--primary);">📤</span>
+                                Format fail: PDF, JPG atau PNG (maksimum 5MB).
+                            </div>
+                        </div>
+                    </div>
+
+                </aside>
+            </div>
+        </form>
+    </div> <!-- TAMAT RUANG BORANG -->
 </div>
 
 <!-- ========================================== -->
 <!-- 3. DASHBOARD URUSETIA -->
 <!-- ========================================== -->
-<div id="dashboard-urusetia" class="hidden" style="max-width: 1400px; margin: 30px auto; padding: 0 40px;">
+<div id="dashboard-urusetia" class="hidden">
     <div class="card">
         <div class="card-header" style="background:#2b5b84; color:white; display:flex; justify-content:space-between;">
             <span>Papan Pemuka Urusetia</span>
@@ -538,7 +562,7 @@
 <!-- ========================================== -->
 <!-- 4. DASHBOARD PELULUS -->
 <!-- ========================================== -->
-<div id="dashboard-pelulus" class="hidden" style="max-width: 1400px; margin: 30px auto; padding: 0 40px;">
+<div id="dashboard-pelulus" class="hidden">
     <div class="card">
         <div class="card-header" style="background:#15945b; color:white;">Senarai Menunggu Kelulusan</div>
         <div class="card-body">
@@ -549,6 +573,9 @@
     </div>
 </div>
 
+<!-- ========================================== -->
+<!-- PAPARAN BUTIRAN PENUH (HALAMAN PENUH) -->
+<!-- ========================================== -->
 <div id="modalUrusetia" class="hidden" style="width: 100%;">
     <div id="isiModalUrusetia" style="width: 100%;"></div>
 </div>
