@@ -202,6 +202,35 @@ async function sahkanUrusetia(id) {
     }
 }
 
+// ==========================================
+// FUNGSI AGIHAN KENDERAAN & PEMANDU (URUSETIA)
+// ==========================================
+async function agihKenderaan(id) {
+    // 1. Tarik nilai yang dipilih oleh Urusetia dari dropdown
+    const idKenderaan = document.getElementById(`kenderaan-${id}`).value;
+    const namaPemandu = document.getElementById(`pemandu-${id}`).value;
+    
+    // 2. Halang jika ada yang belum dipilih
+    if (!idKenderaan || !namaPemandu) {
+        alert("Sila pastikan bos telah memilih Pemandu DAN Kenderaan!");
+        return;
+    }
+
+    // 3. Hantar ke pangkalan data Supabase
+    const { error } = await supabaseClient.from('tempahan').update({ 
+        id_kenderaan: idKenderaan, 
+        nama_pemandu: namaPemandu, 
+        status: 'Selesai Diagih' 
+    }).eq('id', id);
+
+    // 4. Mesej berjaya dan 'refresh' jadual
+    if (error) {
+        alert("Ralat! Pastikan lajur 'nama_pemandu' wujud di Supabase. Ralat: " + error.message);
+    } else {
+        alert("Mantap bos! Pemandu dan Kenderaan telah berjaya diagihkan."); 
+        muatSenaraiUrusetia();
+    }
+}
 
 /* VMS - PAPARAN BUTIRAN PERMOHONAN KENDERAAN
    Reka bentuk baharu berdasarkan imej rujukan.
