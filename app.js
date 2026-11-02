@@ -58,6 +58,20 @@ async function semakPeranan() {
 }
 
 // ==========================================
+// FUNGSI TOGGLE BORANG BARU (PEMOHON)
+// ==========================================
+window.toggleBorangBaru = function() {
+    const borang = document.getElementById('ruangBorangPemohon');
+    if (borang.classList.contains('hidden')) {
+        borang.classList.remove('hidden');
+        // Scroll ke bawah dengan lancar untuk tunjuk borang
+        borang.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+    } else {
+        borang.classList.add('hidden');
+    }
+};
+
+// ==========================================
 // PEMOHON: HANTAR BORANG KE SUPABASE
 // ==========================================
 const vehicleForm = document.getElementById('vehicleForm');
@@ -114,6 +128,9 @@ if(vehicleForm) {
             if (insertError) throw insertError;
             alert("Permohonan berjaya dihantar!");
             vehicleForm.reset();
+            
+            // Sembunyikan borang semula selepas hantar & refresh jadual
+            document.getElementById('ruangBorangPemohon').classList.add('hidden');
             muatSejarahPemohon();
 
         } catch (error) {
@@ -140,18 +157,21 @@ async function muatSejarahPemohon() {
         .order('id', { ascending: false });
 
     if (error) { tbody.innerHTML = `<tr><td colspan="4" style="color:red;">Ralat: ${error.message}</td></tr>`; return; }
-    if (!sejarah || sejarah.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Tiada rekod permohonan setakat ini. Sila isi borang di bawah untuk permohonan baharu.</td></tr>`; return; }
+    if (!sejarah || sejarah.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Tiada rekod permohonan setakat ini. Sila klik "➕ Mohon Baru" untuk bermula.</td></tr>`; return; }
 
     let html = '';
     sejarah.forEach(t => {
         let badge = ``;
-        // Warna label status ikut keadaan
-        if(t.status === 'Menunggu Semakan') badge = `<span style="background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Menunggu Semakan</span>`;
-        else if(t.status === 'Menunggu Kelulusan') badge = `<span style="background:#e0e7ff; color:#3730a3; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Menunggu Kelulusan</span>`;
-        else if(t.status === 'Lulus') badge = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Lulus</span>`;
-        else if(t.status === 'Tolak') badge = `<span style="background:#fee2e2; color:#b91c1c; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Ditolak</span>`;
-        else if(t.status === 'Selesai Diagih') badge = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Kenderaan Diagih</span>`;
-        else badge = `<span>${t.status}</span>`;
+        // Peringkasan status untuk paparan awam (Pemohon)
+        if (t.status === 'Menunggu Semakan' || t.status === 'Menunggu Kelulusan') {
+            badge = `<span style="background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Dalam Proses</span>`;
+        } else if (t.status === 'Lulus' || t.status === 'Selesai Diagih') {
+            badge = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Lulus</span>`;
+        } else if (t.status === 'Tolak') {
+            badge = `<span style="background:#fee2e2; color:#b91c1c; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Tidak Diluluskan</span>`;
+        } else {
+            badge = `<span>${t.status}</span>`;
+        }
 
         // Format nombor rujukan cth: VMS-0045
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
@@ -228,6 +248,22 @@ async function muatSenaraiUrusetia() {
 }
 
 // ==========================================
+// FUNGSI PENGESAHAN URUSETIA (BAHAGIAN B)
+// ==========================================
+async function sahkanUrusetia(id) {
+    if(!confirm("Adakah anda pasti borang ini lengkap dan terdapat kenderaan/pemandu yang tersedia pada tarikh tersebut?")) return;
+    
+    const { error } = await supabaseClient.from('tempahan').update({ status: 'Menunggu Kelulusan' }).eq('id', id);
+    
+    if(error) {
+        alert("Ralat: " + error.message);
+    } else {
+        alert("Pengesahan berjaya! Permohonan telah dihantar kepada Pelulus.");
+        muatSenaraiUrusetia(); // Refresh jadual Urusetia
+    }
+}
+
+// ==========================================
 // FUNGSI AGIHAN KENDERAAN & PEMANDU (URUSETIA)
 // ==========================================
 async function agihKenderaan(id) {
@@ -256,23 +292,6 @@ async function agihKenderaan(id) {
         muatSenaraiUrusetia();
     }
 }
-
-// ==========================================
-// FUNGSI PENGESAHAN URUSETIA (BAHAGIAN B)
-// ==========================================
-async function sahkanUrusetia(id) {
-    if(!confirm("Adakah anda pasti borang ini lengkap dan terdapat kenderaan/pemandu yang tersedia pada tarikh tersebut?")) return;
-    
-    const { error } = await supabaseClient.from('tempahan').update({ status: 'Menunggu Kelulusan' }).eq('id', id);
-    
-    if(error) {
-        alert("Ralat: " + error.message);
-    } else {
-        alert("Pengesahan berjaya! Permohonan telah dihantar kepada Pelulus.");
-        muatSenaraiUrusetia(); // Refresh jadual Urusetia
-    }
-}
-
 
 /* VMS - PAPARAN BUTIRAN PERMOHONAN KENDERAAN
    Reka bentuk baharu berdasarkan imej rujukan.
@@ -1054,7 +1073,6 @@ async function sahkanUrusetia(id) {
     };
 
 })();
-
 
 // ==========================================
 // PELULUS: LULUS ATAU TOLAK PERMOHONAN
