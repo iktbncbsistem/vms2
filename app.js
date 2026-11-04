@@ -1233,8 +1233,20 @@ async function semakJadualAwam() {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">Mencari rekod jadual... ⏳</td></tr>';
     
     // Bina carian Supabase
-    let query = supabaseClient.from('tempahan').select('*').order('tarikh_pergi', {ascending: true});
-    if (tMula) query = query.gte('tarikh_pergi', tMula);
+// Hanya papar status Lulus / Selesai Diagih. Susun dari tarikh hari ini ke hadapan.
+    let query = supabaseClient.from('tempahan')
+        .select('*')
+        .in('status', ['Lulus', 'Selesai Diagih'])
+        .order('tarikh_pergi', {ascending: true});
+        
+    if (tMula) {
+        query = query.gte('tarikh_pergi', tMula);
+    } else {
+        // Papar perjalanan bermula hari ini secara lalai jika tiada carian
+        const today = new Date().toISOString().split('T')[0];
+        query = query.gte('tarikh_pergi', today);
+    }
+    if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
     if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
     
     const { data, error } = await query;
