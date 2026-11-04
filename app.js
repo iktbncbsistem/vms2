@@ -1321,3 +1321,4 @@ async function semakJadualAwam(mod = 'aktif') {
     }
     
     tbody.innerHTML = html;
+}
