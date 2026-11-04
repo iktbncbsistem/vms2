@@ -1229,7 +1229,8 @@ async function semakJadualAwam(mod = 'aktif') {
     const tAkhir = document.getElementById('cariTarikhAkhir').value;
     const tbody = document.getElementById('isiJadualAwam');
     
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">Memuatkan rekod... ⏳</td></tr>';
+    // Tukar colspan ke 8 mengikut jumlah lajur baharu
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px;">Memuatkan rekod... ⏳</td></tr>';
     
     const today = new Date().toISOString().split('T')[0];
     let query = supabaseClient.from('tempahan').select('*').order('tarikh_pergi', {ascending: true});
@@ -1246,11 +1247,12 @@ async function semakJadualAwam(mod = 'aktif') {
     }
     
     const { data, error } = await query;
-    if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`; return; }
+    if (error) { tbody.innerHTML = `<tr><td colspan="8" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`; return; }
     
+    // Tarik data senarai kenderaan untuk padankan Nombor Plat & Model
+    const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model');
+
     // TAPISAN PINTAR: 
-    // Papar jadual 'Lulus' kepada semua orang.
-    // Tetapi jika ada permohonan 'Dalam Proses' atau 'Ditolak', papar HANYA jika ia milik pengguna yang login.
     const dataDitapis = data.filter(t => {
         if (t.status === 'Lulus' || t.status === 'Selesai Diagih') return true;
         if (t.id_pemohon === currentUser.id) return true; 
@@ -1258,7 +1260,7 @@ async function semakJadualAwam(mod = 'aktif') {
     });
     
     if (!dataDitapis || dataDitapis.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Tiada rekod perjalanan ditemui pada julat tarikh ini.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">Tiada rekod perjalanan ditemui pada julat tarikh ini.</td></tr>`;
         return;
     }
     
@@ -1268,16 +1270,13 @@ async function semakJadualAwam(mod = 'aktif') {
     const jadualPemandu = {};
     dataDitapis.forEach((t, i) => {
         t.indexAsal = i; // Simpan index asal untuk butang 'Lihat Butiran'
-        // Jika pemandu belum ditetapkan, kumpul bawah 'Belum Diagih'
         const pemandu = t.nama_pemandu || '⏳ Belum Diagih (Menunggu Urusetia)';
         
-        if (!jadualPemandu[pemandu]) {
-            jadualPemandu[pemandu] = [];
-        }
+        if (!jadualPemandu[pemandu]) jadualPemandu[pemandu] = [];
         jadualPemandu[pemandu].push(t);
     });
 
-    // 2. Bina HTML dengan gabungan baris (rowspan) untuk pemandu
+    // 2. Bina HTML
     let html = '';
     
     for (const pemandu in jadualPemandu) {
@@ -1291,24 +1290,33 @@ async function semakJadualAwam(mod = 'aktif') {
             if (t.status === 'Lulus' || t.status === 'Selesai Diagih') { statusWarna = '#10b981'; labelStatus = 'Sedia'; }
             else if (t.status === 'Tolak') { statusWarna = '#ef4444'; labelStatus = 'Tidak Diluluskan'; }
 
+            // Padankan info kenderaan berdasarkan ID
+            let infoKenderaan = '-';
+            if (t.id_kenderaan && senaraiKenderaan) {
+                const kenderaan = senaraiKenderaan.find(k => k.id == t.id_kenderaan);
+                if (kenderaan) infoKenderaan = `<strong style="color:#0f172a;">${kenderaan.no_plat}</strong><br><small style="color:#64748b;">${kenderaan.model}</small>`;
+            }
+
             html += `<tr>`;
             
-            // Kolum Pemandu hanya dipaparkan pada baris pertama setiap kumpulan (Merge sel)
+            // Kolum Pemandu (Merge sel untuk baris pertama)
             if (index === 0) {
                 const stylePemandu = pemandu.includes('Belum Diagih') ? 'color:#ef4444; font-style:italic;' : 'color:#1e293b; font-weight:700;';
-                html += `<td rowspan="${jumlahRow}" style="${stylePemandu} vertical-align: top; background: #f8fafc; border-right: 1px solid #e2e8f0;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:20px;">👨‍✈️</span>
+                html += `<td rowspan="${jumlahRow}" style="${stylePemandu} vertical-align: top; background: #f8fafc; border-right: 1px solid #e2e8f0; min-width: 150px;">
+                    <div style="display:flex; align-items:flex-start; gap:8px;">
+                        <span style="font-size:18px;">👨‍✈️</span>
                         <span>${pemandu}</span>
                     </div>
                 </td>`;
             }
 
-            // Kolum-kolum lain
+            // Kolum-kolum lain yang telah dipisahkan
             html += `
                 <td><strong style="color:#102a43;">${t.tarikh_pergi}</strong><br><small style="color:#64748b;">VMS-${t.id.toString().padStart(4, '0')}</small></td>
+                <td>${infoKenderaan}</td>
                 <td>${t.destinasi || t.lokasi || '-'}</td>
-                <td>${t.masa_bertolak || '-'} <br><span style="font-size:11px; color:#94a3b8;">hingga</span><br> ${t.masa_balik || '-'}</td>
+                <td style="font-weight:600; color:#334155;">${t.masa_bertolak || '-'}</td>
+                <td style="font-weight:600; color:#334155;">${t.masa_balik || '-'}</td>
                 <td>
                     <div style="font-weight:600; margin-bottom:6px;">${t.nama_pemohon || '-'}</div>
                     <span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:4px 10px; border-radius:12px; font-size:11px;">${labelStatus}</span>
