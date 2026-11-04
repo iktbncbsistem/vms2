@@ -39,17 +39,22 @@ async function semakPeranan() {
     const { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();
     if (data) {
         document.getElementById('login-section').classList.add('hidden');
-        document.getElementById('sistem-tab-utama').classList.remove('hidden'); // Tunjuk tab utama
+        document.getElementById('sistem-tab-utama').classList.remove('hidden'); 
         
-        semakJadualAwam('aktif'); // Auto-load jadual semasa buka sistem
+        semakJadualAwam('aktif'); 
 
-        if (data.peranan === 'pemohon') {
-            document.getElementById('ruang-carian-jadual').classList.remove('hidden');
-            document.getElementById('btnMohonBaruAtas').classList.remove('hidden');
-            document.getElementById('dashboard-pemohon').classList.remove('hidden');
-            document.getElementById('applicantName').value = data.nama;
-        } 
-        else if (data.peranan === 'urusetia') {
+        // 1. Tunjuk Tab Mohon & Carian kepada SEMUA (kerana semua staf boleh memohon)
+        const btnTabMohon = document.getElementById('btnTabMohon');
+        const ruangCarian = document.getElementById('ruang-carian-jadual');
+        if(btnTabMohon) btnTabMohon.classList.remove('hidden');
+        if(ruangCarian) ruangCarian.classList.remove('hidden');
+        
+        // Auto-isi nama pemohon
+        const appNameField = document.getElementById('applicantName');
+        if(appNameField) appNameField.value = data.nama;
+
+        // 2. Tunjuk tab tindakan mengikut jawatan khas
+        if (data.peranan === 'urusetia') {
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
             muatSenaraiUrusetia();
         } else if (data.peranan === 'pelulus') {
@@ -60,7 +65,6 @@ async function semakPeranan() {
         alert("Profil anda tiada dalam pangkalan data. Sila hubungi Admin.");
     }
 }
-
 // ==========================================
 // FUNGSI TOGGLE TAB UTAMA
 // ==========================================
@@ -99,19 +103,20 @@ window.tukarTab = function(tabName) {
 window.muatSejarahPemohon = function() { semakJadualAwam('aktif'); };
 
 // ==========================================
-// FUNGSI TOGGLE BORANG BARU (PEMOHON)
+// FUNGSI TOGGLE BORANG BARU 
 // ==========================================
 window.toggleBorangBaru = function() {
-    const borang = document.getElementById('ruangBorangPemohon');
-    if (borang.classList.contains('hidden')) {
-        borang.classList.remove('hidden');
-        // Scroll ke bawah dengan lancar untuk tunjuk borang
-        borang.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
-    } else {
-        borang.classList.add('hidden');
+    const tabMohon = document.getElementById('tab-mohon-kenderaan');
+    
+    // Jika borang tersembunyi, buka tab borang (Fungsi butang ➕ Mohon Baru)
+    if (tabMohon && tabMohon.classList.contains('hidden')) {
+        tukarTab('mohon'); 
+    } 
+    // Jika borang sedang dibuka, kembali ke jadual (Fungsi butang ← Batal)
+    else {
+        tukarTab('jadual'); 
     }
 };
-
 // ==========================================
 // PEMOHON: HANTAR BORANG KE SUPABASE
 // ==========================================
