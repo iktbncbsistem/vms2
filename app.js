@@ -1263,28 +1263,61 @@ async function semakJadualAwam(mod = 'aktif') {
     }
     
     cacheUrusetia = dataDitapis; 
+    
+    // 1. Kumpulkan data mengikut Pemandu
+    const jadualPemandu = {};
+    dataDitapis.forEach((t, i) => {
+        t.indexAsal = i; // Simpan index asal untuk butang 'Lihat Butiran'
+        // Jika pemandu belum ditetapkan, kumpul bawah 'Belum Diagih'
+        const pemandu = t.nama_pemandu || '⏳ Belum Diagih (Menunggu Urusetia)';
+        
+        if (!jadualPemandu[pemandu]) {
+            jadualPemandu[pemandu] = [];
+        }
+        jadualPemandu[pemandu].push(t);
+    });
+
+    // 2. Bina HTML dengan gabungan baris (rowspan) untuk pemandu
     let html = '';
     
-    dataDitapis.forEach((t, i) => {
-        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
-        
-        let statusWarna = '#f59e0b'; // Oren (Proses)
-        let labelStatus = 'Dalam Proses';
-        
-        if (t.status === 'Lulus' || t.status === 'Selesai Diagih') { statusWarna = '#10b981'; labelStatus = 'Lulus'; }
-        else if (t.status === 'Tolak') { statusWarna = '#ef4444'; labelStatus = 'Tidak Diluluskan'; }
-        
-        html += `<tr>
-            <td><strong style="color:#102a43;">${noRujukan}</strong></td>
-            <td><strong style="color:#1e293b;">${t.tarikh_pergi}</strong></td>
-            <td>${t.masa_bertolak || '-'} hingga ${t.masa_balik || '-'}</td>
-            <td>${t.destinasi || t.lokasi || '-'}</td>
-            <td><span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:6px 12px; border-radius:20px; font-size:12px;">${labelStatus}</span></td>
-            <td style="text-align:right;">
-                <a class="air-link" onclick="paparButiran(${i})">Lihat Butiran ❯</a>
-            </td>
-        </tr>`;
-    });
+    for (const pemandu in jadualPemandu) {
+        const senaraiTrip = jadualPemandu[pemandu];
+        const jumlahRow = senaraiTrip.length;
+
+        senaraiTrip.forEach((t, index) => {
+            let statusWarna = '#f59e0b'; 
+            let labelStatus = 'Dalam Proses';
+            
+            if (t.status === 'Lulus' || t.status === 'Selesai Diagih') { statusWarna = '#10b981'; labelStatus = 'Sedia'; }
+            else if (t.status === 'Tolak') { statusWarna = '#ef4444'; labelStatus = 'Tidak Diluluskan'; }
+
+            html += `<tr>`;
+            
+            // Kolum Pemandu hanya dipaparkan pada baris pertama setiap kumpulan (Merge sel)
+            if (index === 0) {
+                const stylePemandu = pemandu.includes('Belum Diagih') ? 'color:#ef4444; font-style:italic;' : 'color:#1e293b; font-weight:700;';
+                html += `<td rowspan="${jumlahRow}" style="${stylePemandu} vertical-align: top; background: #f8fafc; border-right: 1px solid #e2e8f0;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:20px;">👨‍✈️</span>
+                        <span>${pemandu}</span>
+                    </div>
+                </td>`;
+            }
+
+            // Kolum-kolum lain
+            html += `
+                <td><strong style="color:#102a43;">${t.tarikh_pergi}</strong><br><small style="color:#64748b;">VMS-${t.id.toString().padStart(4, '0')}</small></td>
+                <td>${t.destinasi || t.lokasi || '-'}</td>
+                <td>${t.masa_bertolak || '-'} <br><span style="font-size:11px; color:#94a3b8;">hingga</span><br> ${t.masa_balik || '-'}</td>
+                <td>
+                    <div style="font-weight:600; margin-bottom:6px;">${t.nama_pemohon || '-'}</div>
+                    <span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:4px 10px; border-radius:12px; font-size:11px;">${labelStatus}</span>
+                </td>
+                <td style="text-align:right;">
+                    <a class="air-link" onclick="paparButiran(${t.indexAsal})">Butiran ❯</a>
+                </td>
+            </tr>`;
+        });
+    }
     
     tbody.innerHTML = html;
-}
