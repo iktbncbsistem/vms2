@@ -43,21 +43,22 @@ async function semakPeranan() {
         
         semakJadualAwam('aktif'); 
 
-        // 1. Tunjuk Tab Mohon & Carian kepada SEMUA (kerana semua staf boleh memohon)
-        const btnTabMohon = document.getElementById('btnTabMohon');
-        const ruangCarian = document.getElementById('ruang-carian-jadual');
-        if(btnTabMohon) btnTabMohon.classList.remove('hidden');
-        if(ruangCarian) ruangCarian.classList.remove('hidden');
-        
-        // Auto-isi nama pemohon
-        const appNameField = document.getElementById('applicantName');
-        if(appNameField) appNameField.value = data.nama;
-
-        // 2. Tunjuk tab tindakan mengikut jawatan khas
-        if (data.peranan === 'urusetia') {
+        // Tunjuk tab dan fungsi mengikut peranan masing-masing
+        if (data.peranan === 'pemohon') {
+            // HANYA PEMOHON yang nampak tab Mohon Kenderaan & kotak carian
+            const btnTabMohon = document.getElementById('btnTabMohon');
+            const ruangCarian = document.getElementById('ruang-carian-jadual');
+            if(btnTabMohon) btnTabMohon.classList.remove('hidden');
+            if(ruangCarian) ruangCarian.classList.remove('hidden');
+            
+            const appNameField = document.getElementById('applicantName');
+            if(appNameField) appNameField.value = data.nama;
+        } 
+        else if (data.peranan === 'urusetia') {
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
             muatSenaraiUrusetia();
-        } else if (data.peranan === 'pelulus') {
+        } 
+        else if (data.peranan === 'pelulus') {
             document.getElementById('btnTabPelulus').classList.remove('hidden');
             muatSenaraiPelulus();
         }
