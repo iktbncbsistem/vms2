@@ -260,69 +260,105 @@
 </div>
 
 <!-- ========================================== -->
-<!-- MODAL CARIAN JADUAL AWAM & PERMOHONAN -->
+<!-- SISTEM TAB UTAMA (JADUAL & TINDAKAN) -->
 <!-- ========================================== -->
-<div id="paparan-jadual-awam" class="hidden" style="max-width: 1400px; margin: 30px auto; padding: 0 40px;">
+<div id="sistem-tab-utama" class="hidden" style="max-width: 1400px; margin: 30px auto; padding: 0 40px;">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3 style="color: #102a43; margin: 0;">Jadual Pergerakan Kenderaan</h3>
-        <!-- Butang ini hanya muncul untuk Pemohon -->
-        <button id="btnMohonBaruAtas" onclick="toggleBorangBaru()" class="btn btn-primary hidden" style="padding: 8px 16px; font-size: 13px; font-weight: 700;">
-            ➕ Mohon Baru
+    <!-- Butang Tab (Dengan Curve) -->
+    <div style="display: flex; gap: 8px; margin-bottom: -1px; position: relative; z-index: 2;">
+        <button id="btnTabJadual" onclick="tukarTab('jadual')" style="background: white; border: 1px solid #cbd5e1; border-bottom: none; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 700; color: #1767c2; cursor: pointer; transition: 0.2s;">
+            📅 Jadual Pergerakan
+        </button>
+        <button id="btnTabUrusetia" onclick="tukarTab('urusetia')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
+            📥 Peti Tindakan Urusetia
+        </button>
+        <button id="btnTabPelulus" onclick="tukarTab('pelulus')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
+            ✅ Peti Tindakan Pelulus
         </button>
     </div>
-    
-    <!-- Kotak Carian Melintang (HANYA PEMOHON) -->
-    <div id="ruang-carian-jadual" class="air-search-bar hidden">
-        <div style="flex: 1; min-width: 150px;">
-            <label style="font-size:12px; color:#64748b; display:block; margin-bottom:5px; font-weight:600;">Dari Tarikh</label>
-            <input type="date" id="cariTarikhMula" class="air-search-input">
+
+    <!-- Bekas Kandungan Tab (Dengan Curve di hujung) -->
+    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 0 12px 12px 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+        
+        <!-- TAB 1: JADUAL AWAM -->
+        <div id="tab-jadual-awam">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: #102a43; margin: 0;">Jadual Pergerakan Kenderaan</h3>
+                <button id="btnMohonBaruAtas" onclick="toggleBorangBaru()" class="btn btn-primary hidden" style="padding: 8px 16px; font-size: 13px; font-weight: 700;">
+                    ➕ Mohon Baru
+                </button>
+            </div>
+            
+            <div id="ruang-carian-jadual" class="air-search-bar hidden">
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="font-size:12px; color:#64748b; display:block; margin-bottom:5px; font-weight:600;">Dari Tarikh</label>
+                    <input type="date" id="cariTarikhMula" class="air-search-input">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="font-size:12px; color:#64748b; display:block; margin-bottom:5px; font-weight:600;">Hingga Tarikh</label>
+                    <input type="date" id="cariTarikhAkhir" class="air-search-input">
+                </div>
+                <div style="flex: 0 0 auto; display:flex; gap: 10px; align-items:flex-end;">
+                    <button onclick="semakJadualAwam('aktif')" class="btn btn-success" style="padding:12px 16px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">📅 Perjalanan Aktif</button>
+                    <button onclick="semakJadualAwam('sejarah')" class="btn btn-outline" style="padding:12px 16px; background:white;">🕰️ Sejarah Lepas</button>
+                    <button onclick="semakJadualAwam('cari')" class="btn btn-danger" style="padding:12px 16px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">🔍 Cari</button>
+                </div>
+            </div>
+            
+            <div style="background:white; border-radius:12px; border:1px solid #e2e8f0; overflow-x:auto;">
+                <table class="air-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 18%;">Pemandu</th>
+                            <th>Tarikh</th>
+                            <th>Kenderaan</th>
+                            <th>Lokasi</th>
+                            <th>Masa Bertolak</th>
+                            <th>Masa Balik</th>
+                            <th>Pemohon</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="isiJadualAwam">
+                        <tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">Memuatkan jadual...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div style="flex: 1; min-width: 150px;">
-            <label style="font-size:12px; color:#64748b; display:block; margin-bottom:5px; font-weight:600;">Hingga Tarikh</label>
-            <input type="date" id="cariTarikhAkhir" class="air-search-input">
+
+        <!-- TAB 2: URUSETIA -->
+        <div id="tab-dashboard-urusetia" class="hidden">
+            <div style="background:#2b5b84; color:white; padding:14px 20px; border-radius:8px 8px 0 0; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
+                <span>📥 Senarai Tindakan & Pengesahan Urusetia</span>
+                <button class="btn btn-light" onclick="muatSenaraiUrusetia()" style="padding:4px 10px; font-size:12px;">🔄 Segarkan</button>
+            </div>
+            <div style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 8px 8px; padding:20px; background:white;">
+                <div class="table-responsive">
+                    <div id="senarai-tempahan-urusetia">Memuatkan data permohonan...</div>
+                </div>
+            </div>
         </div>
-        <div style="flex: 0 0 auto; display:flex; gap: 10px; align-items:flex-end;">
-            <button onclick="semakJadualAwam('aktif')" class="btn btn-success" style="padding:12px 16px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">
-                📅 Perjalanan Aktif
-            </button>
-            <button onclick="semakJadualAwam('sejarah')" class="btn btn-outline" style="padding:12px 16px; background:white;">
-                🕰️ Sejarah Lepas
-            </button>
-            <button onclick="semakJadualAwam('cari')" class="btn btn-danger" style="padding:12px 16px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">
-                🔍 Cari
-            </button>
+
+        <!-- TAB 3: PELULUS -->
+        <div id="tab-dashboard-pelulus" class="hidden">
+            <div style="background:#15945b; color:white; padding:14px 20px; border-radius:8px 8px 0 0; font-weight:600;">
+                ✅ Senarai Menunggu Kelulusan
+            </div>
+            <div style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 8px 8px; padding:20px; background:white;">
+                <div class="table-responsive">
+                    <div id="senarai-tempahan-pelulus">Memuatkan data kelulusan...</div>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <!-- Jadual Minimalis -->
-    <div style="background:white; border-radius:12px; border:1px solid #e2e8f0; overflow-x:auto;">
-        <table class="air-table">
-           <thead>
-                <tr>
-                    <th style="width: 18%;">Pemandu</th>
-                    <th>Tarikh</th>
-                    <th>Kenderaan</th>
-                    <th>Lokasi</th>
-                    <th>Masa Bertolak</th>
-                    <th>Masa Balik</th>
-                    <th>Pemohon</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="isiJadualAwam">
-                <tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Memuatkan jadual...</td></tr>
-            </tbody>
-        </table>
+
     </div>
 </div>
+
 <!-- ========================================== -->
-<!-- 2. DASHBOARD PEMOHON -->
+<!-- DASHBOARD PEMOHON (RUANG BORANG) -->
 <!-- ========================================== -->
 <div id="dashboard-pemohon" class="hidden">
 
-   
-    
     <!-- RUANG BORANG (DISOROKKAN SECARA DEFAULT) -->
     <div id="ruangBorangPemohon" class="hidden" style="margin-top: 30px;">
         
@@ -584,37 +620,6 @@
             </div>
         </form>
     </div> <!-- TAMAT RUANG BORANG -->
-</div>
-
-<!-- ========================================== -->
-<!-- 3. DASHBOARD URUSETIA -->
-<!-- ========================================== -->
-<div id="dashboard-urusetia" class="hidden">
-    <div class="card">
-        <div class="card-header" style="background:#2b5b84; color:white; display:flex; justify-content:space-between;">
-            <span>Papan Pemuka Urusetia</span>
-            <button class="btn btn-light" onclick="muatSenaraiUrusetia()" style="padding:4px 10px; font-size:12px;">🔄 Segarkan</button>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <div id="senarai-tempahan-urusetia">Memuatkan data permohonan...</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ========================================== -->
-<!-- 4. DASHBOARD PELULUS -->
-<!-- ========================================== -->
-<div id="dashboard-pelulus" class="hidden">
-    <div class="card">
-        <div class="card-header" style="background:#15945b; color:white;">Senarai Menunggu Kelulusan</div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <div id="senarai-tempahan-pelulus">Memuatkan data kelulusan...</div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- ========================================== -->
