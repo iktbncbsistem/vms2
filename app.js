@@ -1340,13 +1340,26 @@ async function semakJadualAwam(mod = 'aktif') {
                 </td>`;
             }
 
-            // Kolum-kolum lain yang telah dipisahkan
+            // Ambil tarikh mohon (created_at dari Supabase). Jika tiada, letak '-'
+            const tarikhMohon = t.created_at ? t.created_at.split('T')[0] : '-';
+            const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+
+            // Kolum-kolum lain yang telah digabungkan masa dan tarikh
             html += `
-                <td><strong style="color:#102a43;">${t.tarikh_pergi}</strong><br><small style="color:#64748b;">VMS-${t.id.toString().padStart(4, '0')}</small></td>
+                <td><strong style="color:#102a43;">${tarikhMohon}</strong><br><small style="color:#64748b;">${noRujukan}</small></td>
                 <td>${infoKenderaan}</td>
                 <td>${t.destinasi || t.lokasi || '-'}</td>
-                <td style="font-weight:600; color:#334155;">${t.masa_bertolak || '-'}</td>
-                <td style="font-weight:600; color:#334155;">${t.masa_balik || '-'}</td>
+                
+                <td>
+                    <strong style="color:#334155;">${t.masa_bertolak || '-'}</strong><br>
+                    <small style="color:#94a3b8;">${t.tarikh_pergi || '-'}</small>
+                </td>
+                
+                <td>
+                    <strong style="color:#334155;">${t.masa_balik || '-'}</strong><br>
+                    <small style="color:#94a3b8;">${t.tarikh_balik || '-'}</small>
+                </td>
+                
                 <td>
                     <div style="font-weight:600; margin-bottom:6px;">${t.nama_pemohon || '-'}</div>
                     <span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:4px 10px; border-radius:12px; font-size:11px;">${labelStatus}</span>
