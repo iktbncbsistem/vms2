@@ -38,6 +38,7 @@ window.onload = async function() {
 async function semakPeranan() {
     const { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();
     if (data) {
+        document.getElementById('paparan-jadual-awam').classList.remove('hidden');
         document.getElementById('login-section').classList.add('hidden');
         if (data.peranan === 'pemohon') {
             document.getElementById('dashboard-pemohon').classList.remove('hidden');
@@ -1213,4 +1214,58 @@ if (btnReview) {
     btnReview.addEventListener('click', function() {
         alert("Fungsi 'Semak Semula' akan memaparkan ringkasan penuh untuk disemak oleh pemohon sebelum dihantar. (Fungsi ini sedang dibangunkan)");
     });
+}
+
+// ==========================================
+// FUNGSI CARIAN JADUAL AWAM (ALA AIRPAZ/AIRASIA)
+// ==========================================
+async function semakJadualAwam() {
+    const tMula = document.getElementById('cariTarikhMula').value;
+    const tAkhir = document.getElementById('cariTarikhAkhir').value;
+    const tbody = document.getElementById('isiJadualAwam');
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">Mencari rekod jadual... ⏳</td></tr>';
+    
+    // Bina carian Supabase
+    let query = supabaseClient.from('tempahan').select('*').order('tarikh_pergi', {ascending: true});
+    if (tMula) query = query.gte('tarikh_pergi', tMula);
+    if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
+    
+    const { data, error } = await query;
+    
+    if (error) {
+        tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`;
+        return;
+    }
+    
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Tiada pergerakan kenderaan pada tarikh tersebut. Kenderaan tersedia!</td></tr>`;
+        return;
+    }
+    
+    // Simpan dalam cache supaya modal 'Butiran Penuh' boleh baca data ini
+    cacheUrusetia = data; 
+    
+    let html = '';
+    data.forEach((t, i) => {
+        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+        
+        // Ringkasan Warna Status
+        let statusWarna = '#f59e0b'; // Oren (Proses)
+        if (t.status === 'Lulus' || t.status === 'Selesai Diagih') statusWarna = '#10b981'; // Hijau
+        else if (t.status === 'Tolak') statusWarna = '#ef4444'; // Merah
+        
+        html += `<tr>
+            <td><strong style="color:#ef4444;">${noRujukan}</strong></td>
+            <td><strong style="color:#1e293b;">${t.tarikh_pergi}</strong></td>
+            <td>${t.masa_bertolak || '-'} hingga ${t.masa_balik || '-'}</td>
+            <td>${t.destinasi || t.lokasi || '-'}</td>
+            <td><span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:6px 12px; border-radius:20px; font-size:12px;">${t.status}</span></td>
+            <td style="text-align:right;">
+                <a class="air-link" onclick="paparButiran(${i})">Lihat Butiran ❯</a>
+            </td>
+        </tr>`;
+    });
+    
+    tbody.innerHTML = html;
 }
