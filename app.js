@@ -39,20 +39,16 @@ async function semakPeranan() {
     const { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();
     if (data) {
         document.getElementById('login-section').classList.add('hidden');
-        
-        // 1. Tunjuk Jadual Awam kepada SEMUA peranan & auto-load data perjalanan
         document.getElementById('paparan-jadual-awam').classList.remove('hidden');
-        semakJadualAwam(); 
+        
+        semakJadualAwam('aktif'); // Auto-load jadual semasa buka sistem
 
         if (data.peranan === 'pemohon') {
-            // 2. Buka kotak carian HANYA untuk Pemohon
             document.getElementById('ruang-carian-jadual').classList.remove('hidden');
-            
+            document.getElementById('btnMohonBaruAtas').classList.remove('hidden');
             document.getElementById('dashboard-pemohon').classList.remove('hidden');
             document.getElementById('applicantName').value = data.nama;
-            muatSejarahPemohon();
         } 
-        
         else if (data.peranan === 'urusetia') {
             document.getElementById('dashboard-urusetia').classList.remove('hidden');
             muatSenaraiUrusetia();
@@ -64,6 +60,9 @@ async function semakPeranan() {
         alert("Profil anda tiada dalam pangkalan data. Sila hubungi Admin.");
     }
 }
+
+// Redirect fungsi lama ke fungsi baru (supaya masa hantar borang dia refresh jadual atas)
+window.muatSejarahPemohon = function() { semakJadualAwam('aktif'); };
 // ==========================================
 // FUNGSI TOGGLE BORANG BARU (PEMOHON)
 // ==========================================
@@ -1223,62 +1222,64 @@ if (btnReview) {
 }
 
 // ==========================================
-// FUNGSI CARIAN JADUAL AWAM (ALA AIRPAZ/AIRASIA)
+// FUNGSI CARIAN JADUAL AWAM & PERMOHONAN SAYA
 // ==========================================
-async function semakJadualAwam() {
+async function semakJadualAwam(mod = 'aktif') {
     const tMula = document.getElementById('cariTarikhMula').value;
     const tAkhir = document.getElementById('cariTarikhAkhir').value;
     const tbody = document.getElementById('isiJadualAwam');
     
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">Mencari rekod jadual... ⏳</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">Memuatkan rekod... ⏳</td></tr>';
     
-    // Bina carian Supabase
-// Hanya papar status Lulus / Selesai Diagih. Susun dari tarikh hari ini ke hadapan.
-    let query = supabaseClient.from('tempahan')
-        .select('*')
-        .in('status', ['Lulus', 'Selesai Diagih'])
-        .order('tarikh_pergi', {ascending: true});
-        
-    if (tMula) {
-        query = query.gte('tarikh_pergi', tMula);
+    const today = new Date().toISOString().split('T')[0];
+    let query = supabaseClient.from('tempahan').select('*').order('tarikh_pergi', {ascending: true});
+    
+    // Tapis berdasarkan butang yang ditekan
+    if (mod === 'sejarah') {
+        query = query.lt('tarikh_pergi', today);
+    } else if (mod === 'cari' && (tMula || tAkhir)) {
+        if (tMula) query = query.gte('tarikh_pergi', tMula);
+        if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
     } else {
-        // Papar perjalanan bermula hari ini secara lalai jika tiada carian
-        const today = new Date().toISOString().split('T')[0];
+        // Lalai (Aktif): Dari tarikh hari ini dan ke hadapan
         query = query.gte('tarikh_pergi', today);
     }
-    if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
-    if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
     
     const { data, error } = await query;
+    if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`; return; }
     
-    if (error) {
-        tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`;
+    // TAPISAN PINTAR: 
+    // Papar jadual 'Lulus' kepada semua orang.
+    // Tetapi jika ada permohonan 'Dalam Proses' atau 'Ditolak', papar HANYA jika ia milik pengguna yang login.
+    const dataDitapis = data.filter(t => {
+        if (t.status === 'Lulus' || t.status === 'Selesai Diagih') return true;
+        if (t.id_pemohon === currentUser.id) return true; 
+        return false;
+    });
+    
+    if (!dataDitapis || dataDitapis.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Tiada rekod perjalanan ditemui pada julat tarikh ini.</td></tr>`;
         return;
     }
     
-    if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Tiada pergerakan kenderaan pada tarikh tersebut. Kenderaan tersedia!</td></tr>`;
-        return;
-    }
-    
-    // Simpan dalam cache supaya modal 'Butiran Penuh' boleh baca data ini
-    cacheUrusetia = data; 
-    
+    cacheUrusetia = dataDitapis; 
     let html = '';
-    data.forEach((t, i) => {
+    
+    dataDitapis.forEach((t, i) => {
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
         
-        // Ringkasan Warna Status
         let statusWarna = '#f59e0b'; // Oren (Proses)
-        if (t.status === 'Lulus' || t.status === 'Selesai Diagih') statusWarna = '#10b981'; // Hijau
-        else if (t.status === 'Tolak') statusWarna = '#ef4444'; // Merah
+        let labelStatus = 'Dalam Proses';
+        
+        if (t.status === 'Lulus' || t.status === 'Selesai Diagih') { statusWarna = '#10b981'; labelStatus = 'Lulus'; }
+        else if (t.status === 'Tolak') { statusWarna = '#ef4444'; labelStatus = 'Tidak Diluluskan'; }
         
         html += `<tr>
-            <td><strong style="color:#ef4444;">${noRujukan}</strong></td>
+            <td><strong style="color:#102a43;">${noRujukan}</strong></td>
             <td><strong style="color:#1e293b;">${t.tarikh_pergi}</strong></td>
             <td>${t.masa_bertolak || '-'} hingga ${t.masa_balik || '-'}</td>
             <td>${t.destinasi || t.lokasi || '-'}</td>
-            <td><span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:6px 12px; border-radius:20px; font-size:12px;">${t.status}</span></td>
+            <td><span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:6px 12px; border-radius:20px; font-size:12px;">${labelStatus}</span></td>
             <td style="text-align:right;">
                 <a class="air-link" onclick="paparButiran(${i})">Lihat Butiran ❯</a>
             </td>
