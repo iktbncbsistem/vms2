@@ -38,9 +38,16 @@ window.onload = async function() {
 async function semakPeranan() {
     const { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();
     if (data) {
-        document.getElementById('paparan-jadual-awam').classList.remove('hidden');
         document.getElementById('login-section').classList.add('hidden');
+        
+        // 1. Tunjuk Jadual Awam kepada SEMUA peranan & auto-load data perjalanan
+        document.getElementById('paparan-jadual-awam').classList.remove('hidden');
+        semakJadualAwam(); 
+
         if (data.peranan === 'pemohon') {
+            // 2. Buka kotak carian HANYA untuk Pemohon
+            document.getElementById('ruang-carian-jadual').classList.remove('hidden');
+            
             document.getElementById('dashboard-pemohon').classList.remove('hidden');
             document.getElementById('applicantName').value = data.nama;
             muatSejarahPemohon();
@@ -57,7 +64,6 @@ async function semakPeranan() {
         alert("Profil anda tiada dalam pangkalan data. Sila hubungi Admin.");
     }
 }
-
 // ==========================================
 // FUNGSI TOGGLE BORANG BARU (PEMOHON)
 // ==========================================
