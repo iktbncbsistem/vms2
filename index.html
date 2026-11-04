@@ -260,6 +260,49 @@
 </div>
 
 <!-- ========================================== -->
+<!-- MODAL CARIAN JADUAL AWAM (SEMUA PERANAN) -->
+<!-- ========================================== -->
+<div id="paparan-jadual-awam" class="hidden" style="max-width: 1400px; margin: 30px auto; padding: 0 40px;">
+    
+    <h3 style="color: #102a43; margin-bottom: 15px;">Semak Jadual Pergerakan Kenderaan</h3>
+    
+    <!-- Kotak Carian Melintang -->
+    <div class="air-search-bar">
+        <div style="flex: 1; min-width: 200px;">
+            <label style="font-size:12px; color:#64748b; display:block; margin-bottom:5px; font-weight:600;">Dari Tarikh</label>
+            <input type="date" id="cariTarikhMula" class="air-search-input">
+        </div>
+        <div style="flex: 1; min-width: 200px;">
+            <label style="font-size:12px; color:#64748b; display:block; margin-bottom:5px; font-weight:600;">Hingga Tarikh</label>
+            <input type="date" id="cariTarikhAkhir" class="air-search-input">
+        </div>
+        <div style="flex: 0 0 150px; display:flex; align-items:flex-end;">
+            <button onclick="semakJadualAwam()" style="width:100%; padding:13px; background:#ef4444; color:white; border:none; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">
+                🔍 Cari
+            </button>
+        </div>
+    </div>
+    
+    <!-- Jadual Minimalis (Tanpa Garisan Tepi) -->
+    <div style="background:white; border-radius:12px; border:1px solid #e2e8f0; overflow-x:auto;">
+        <table class="air-table">
+            <thead>
+                <tr>
+                    <th>No. Rujukan</th>
+                    <th>Tarikh Pergi</th>
+                    <th>Masa</th>
+                    <th>Destinasi / Lokasi</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="isiJadualAwam">
+                <tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Sila pilih tarikh dan klik "Cari" untuk melihat pergerakan kenderaan.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+    <!-- ========================================== -->
 <!-- 2. DASHBOARD PEMOHON -->
 <!-- ========================================== -->
 <div id="dashboard-pemohon" class="hidden">
