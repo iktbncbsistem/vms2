@@ -205,7 +205,11 @@ if(vehicleForm) {
             vehicleForm.reset();
             
             // Sembunyikan borang semula selepas hantar & refresh jadual
-            document.getElementById('ruangBorangPemohon').classList.add('hidden');
+            // Sembunyikan borang secara selamat
+const ruangBorang = document.getElementById('ruangBorangPemohon');
+if (ruangBorang) {
+    ruangBorang.classList.add('hidden');
+}
             muatSejarahPemohon();
 
         } catch (error) {
