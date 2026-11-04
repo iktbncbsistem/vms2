@@ -191,7 +191,7 @@ if(vehicleForm) {
                 destinasi: document.getElementById('location').value,
                 lokasi: document.getElementById('location').value, // backup column
                 tarikh_pergi: document.getElementById('tripDate').value,
-                tarikh_balik: document.getElementById('tripDate').value,
+                tarikh_balik: document.getElementById('returnDate').value,                
                 masa_bertolak: document.getElementById('departTime').value,
                 masa_balik: document.getElementById('returnTime').value,
                 fail_surat: fileUrl,
