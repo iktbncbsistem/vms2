@@ -1148,3 +1148,69 @@ async function updateStatus(id, statusBaru) {
         if(currentUser) semakPeranan(); // Refresh data pada papan pemuka
     }
 }
+// ==========================================
+// FUNGSI BUTANG TAMBAH PENUMPANG & PERALATAN
+// ==========================================
+
+// 1. Fungsi susun semula nombor Bilangan (1, 2, 3...)
+window.kemaskiniBil = function(tableId) {
+    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+    rows.forEach((row, index) => {
+        row.cells[0].innerText = index + 1;
+    });
+};
+
+// 2. Butang Tambah Penumpang
+const btnAddPassenger = document.getElementById('btnAddPassenger');
+if (btnAddPassenger) {
+    btnAddPassenger.addEventListener('click', function() {
+        const tbody = document.querySelector('#tblPassengers tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="text-align:center; font-weight:600;"></td>
+            <td><input type="text" placeholder="Nama Penuh" required></td>
+            <td><input type="text" placeholder="No. K/P" required></td>
+            <td><input type="tel" placeholder="No. Telefon" required></td>
+            <td><input type="text" placeholder="Bahagian" required></td>
+            <td style="text-align:center;"><button type="button" class="btn-delete" onclick="this.closest('tr').remove(); kemaskiniBil('tblPassengers')" title="Padam">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+        kemaskiniBil('tblPassengers');
+    });
+}
+
+// 3. Butang Tambah Peralatan
+const btnAddEquipment = document.getElementById('btnAddEquipment');
+if (btnAddEquipment) {
+    btnAddEquipment.addEventListener('click', function() {
+        const tbody = document.querySelector('#tblEquipment tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="text-align:center; font-weight:600;"></td>
+            <td><input type="text" placeholder="Nama Peralatan" required></td>
+            <td><input type="number" placeholder="Kuantiti" min="1" required></td>
+            <td><input type="text" placeholder="Unit (Cth: Kotak)" required></td>
+            <td><input type="text" placeholder="Catatan"></td>
+            <td style="text-align:center;"><button type="button" class="btn-delete" onclick="this.closest('tr').remove(); kemaskiniBil('tblEquipment')" title="Padam">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+        kemaskiniBil('tblEquipment');
+    });
+}
+
+// ==========================================
+// FUNGSI BUTANG SIMPAN DRAF & SEMAK SEMULA
+// ==========================================
+const btnDraft = document.getElementById('btnDraft');
+if (btnDraft) {
+    btnDraft.addEventListener('click', function() {
+        alert("Fungsi 'Simpan Draf' akan membolehkan permohonan disambung semula pada masa lain. (Fungsi ini sedang dibangunkan)");
+    });
+}
+
+const btnReview = document.getElementById('btnReview');
+if (btnReview) {
+    btnReview.addEventListener('click', function() {
+        alert("Fungsi 'Semak Semula' akan memaparkan ringkasan penuh untuk disemak oleh pemohon sebelum dihantar. (Fungsi ini sedang dibangunkan)");
+    });
+}
