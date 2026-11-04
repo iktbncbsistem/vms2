@@ -67,16 +67,21 @@ async function semakPeranan() {
     }
 }
 // ==========================================
-// FUNGSI TOGGLE TAB UTAMA
+// FUNGSI TOGGLE TAB UTAMA (KALIS RALAT)
 // ==========================================
 window.tukarTab = function(tabName) {
-    document.getElementById('tab-jadual-awam').classList.add('hidden');
-    document.getElementById('tab-dashboard-urusetia').classList.add('hidden');
-    document.getElementById('tab-dashboard-pelulus').classList.add('hidden');
+    // 1. Sembunyikan SEMUA tab dengan selamat (kalau wujud baru hide)
+    const semuaTab = ['tab-jadual-awam', 'tab-mohon-kenderaan', 'dashboard-pemohon', 'tab-dashboard-urusetia', 'tab-dashboard-pelulus'];
+    semuaTab.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
 
-    const butangSemua = [document.getElementById('btnTabJadual'), document.getElementById('btnTabUrusetia'), document.getElementById('btnTabPelulus')];
-    butangSemua.forEach(btn => {
-        if(btn) {
+    // 2. Reset warna SEMUA butang tab dengan selamat
+    const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabPelulus'];
+    semuaButang.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
             btn.style.background = '#f1f5f9';
             btn.style.color = '#64748b';
             btn.style.fontWeight = '600';
@@ -84,22 +89,45 @@ window.tukarTab = function(tabName) {
         }
     });
 
-    let tabPilihan = '';
-    let btnPilihan = null;
+    // 3. Tentukan tab mana nak buka
+    let idTabBuka = '';
+    let idBtnBuka = '';
 
-    if (tabName === 'jadual') { tabPilihan = 'tab-jadual-awam'; btnPilihan = document.getElementById('btnTabJadual'); }
-    else if (tabName === 'urusetia') { tabPilihan = 'tab-dashboard-urusetia'; btnPilihan = document.getElementById('btnTabUrusetia'); }
-    else if (tabName === 'pelulus') { tabPilihan = 'tab-dashboard-pelulus'; btnPilihan = document.getElementById('btnTabPelulus'); }
+    if (tabName === 'jadual') { 
+        idTabBuka = 'tab-jadual-awam'; 
+        idBtnBuka = 'btnTabJadual'; 
+    }
+    else if (tabName === 'mohon') {
+        // Semak jika guna ID baharu atau lama
+        idTabBuka = document.getElementById('tab-mohon-kenderaan') ? 'tab-mohon-kenderaan' : 'dashboard-pemohon';
+        idBtnBuka = 'btnTabMohon';
+    }
+    else if (tabName === 'urusetia') { 
+        idTabBuka = 'tab-dashboard-urusetia'; 
+        idBtnBuka = 'btnTabUrusetia'; 
+    }
+    else if (tabName === 'pelulus') { 
+        idTabBuka = 'tab-dashboard-pelulus'; 
+        idBtnBuka = 'btnTabPelulus'; 
+    }
 
-    document.getElementById(tabPilihan).classList.remove('hidden');
-    if(btnPilihan) {
-        btnPilihan.style.background = 'white';
-        btnPilihan.style.color = '#1767c2';
-        btnPilihan.style.fontWeight = '700';
-        btnPilihan.style.borderBottom = 'none'; // Cantum dengan kotak bawah
+    // 4. Buka tab dan warnakan butang
+    const tabDibuka = document.getElementById(idTabBuka);
+    if (tabDibuka) {
+        tabDibuka.classList.remove('hidden');
+        // Pastikan ruang borang dipaparkan jika guna HTML struktur lama
+        const borang = document.getElementById('ruangBorangPemohon');
+        if (borang) borang.classList.remove('hidden');
+    }
+
+    const btnDibuka = document.getElementById(idBtnBuka);
+    if (btnDibuka) {
+        btnDibuka.style.background = 'white';
+        btnDibuka.style.color = '#1767c2';
+        btnDibuka.style.fontWeight = '700';
+        btnDibuka.style.borderBottom = 'none';
     }
 };
-
 // Redirect fungsi lama ke fungsi baru (supaya masa hantar borang dia refresh jadual atas)
 window.muatSejarahPemohon = function() { semakJadualAwam('aktif'); };
 
