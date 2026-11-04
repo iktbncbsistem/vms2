@@ -39,7 +39,7 @@ async function semakPeranan() {
     const { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();
     if (data) {
         document.getElementById('login-section').classList.add('hidden');
-        document.getElementById('paparan-jadual-awam').classList.remove('hidden');
+        document.getElementById('sistem-tab-utama').classList.remove('hidden'); // Tunjuk tab utama
         
         semakJadualAwam('aktif'); // Auto-load jadual semasa buka sistem
 
@@ -50,10 +50,10 @@ async function semakPeranan() {
             document.getElementById('applicantName').value = data.nama;
         } 
         else if (data.peranan === 'urusetia') {
-            document.getElementById('dashboard-urusetia').classList.remove('hidden');
+            document.getElementById('btnTabUrusetia').classList.remove('hidden');
             muatSenaraiUrusetia();
         } else if (data.peranan === 'pelulus') {
-            document.getElementById('dashboard-pelulus').classList.remove('hidden');
+            document.getElementById('btnTabPelulus').classList.remove('hidden');
             muatSenaraiPelulus();
         }
     } else {
@@ -61,8 +61,43 @@ async function semakPeranan() {
     }
 }
 
+// ==========================================
+// FUNGSI TOGGLE TAB UTAMA
+// ==========================================
+window.tukarTab = function(tabName) {
+    document.getElementById('tab-jadual-awam').classList.add('hidden');
+    document.getElementById('tab-dashboard-urusetia').classList.add('hidden');
+    document.getElementById('tab-dashboard-pelulus').classList.add('hidden');
+
+    const butangSemua = [document.getElementById('btnTabJadual'), document.getElementById('btnTabUrusetia'), document.getElementById('btnTabPelulus')];
+    butangSemua.forEach(btn => {
+        if(btn) {
+            btn.style.background = '#f1f5f9';
+            btn.style.color = '#64748b';
+            btn.style.fontWeight = '600';
+            btn.style.borderBottom = '1px solid #cbd5e1';
+        }
+    });
+
+    let tabPilihan = '';
+    let btnPilihan = null;
+
+    if (tabName === 'jadual') { tabPilihan = 'tab-jadual-awam'; btnPilihan = document.getElementById('btnTabJadual'); }
+    else if (tabName === 'urusetia') { tabPilihan = 'tab-dashboard-urusetia'; btnPilihan = document.getElementById('btnTabUrusetia'); }
+    else if (tabName === 'pelulus') { tabPilihan = 'tab-dashboard-pelulus'; btnPilihan = document.getElementById('btnTabPelulus'); }
+
+    document.getElementById(tabPilihan).classList.remove('hidden');
+    if(btnPilihan) {
+        btnPilihan.style.background = 'white';
+        btnPilihan.style.color = '#1767c2';
+        btnPilihan.style.fontWeight = '700';
+        btnPilihan.style.borderBottom = 'none'; // Cantum dengan kotak bawah
+    }
+};
+
 // Redirect fungsi lama ke fungsi baru (supaya masa hantar borang dia refresh jadual atas)
 window.muatSejarahPemohon = function() { semakJadualAwam('aktif'); };
+
 // ==========================================
 // FUNGSI TOGGLE BORANG BARU (PEMOHON)
 // ==========================================
@@ -148,49 +183,6 @@ if(vehicleForm) {
     });
 }
 
-// ==========================================
-// FUNGSI SEJARAH PEMOHON
-// ==========================================
-async function muatSejarahPemohon() {
-    const tbody = document.getElementById('isiSejarahPemohon');
-    if(!tbody) return;
-
-    // Tarik data hanya untuk pengguna yang sedang log masuk
-    const { data: sejarah, error } = await supabaseClient
-        .from('tempahan')
-        .select('id, tarikh_pergi, destinasi, lokasi, status')
-        .eq('id_pemohon', currentUser.id)
-        .order('id', { ascending: false });
-
-    if (error) { tbody.innerHTML = `<tr><td colspan="4" style="color:red;">Ralat: ${error.message}</td></tr>`; return; }
-    if (!sejarah || sejarah.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Tiada rekod permohonan setakat ini. Sila klik "➕ Mohon Baru" untuk bermula.</td></tr>`; return; }
-
-    let html = '';
-    sejarah.forEach(t => {
-        let badge = ``;
-        // Peringkasan status untuk paparan awam (Pemohon)
-        if (t.status === 'Menunggu Semakan' || t.status === 'Menunggu Kelulusan') {
-            badge = `<span style="background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Dalam Proses</span>`;
-        } else if (t.status === 'Lulus' || t.status === 'Selesai Diagih') {
-            badge = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Lulus</span>`;
-        } else if (t.status === 'Tolak') {
-            badge = `<span style="background:#fee2e2; color:#b91c1c; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">Tidak Diluluskan</span>`;
-        } else {
-            badge = `<span>${t.status}</span>`;
-        }
-
-        // Format nombor rujukan cth: VMS-0045
-        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
-
-        html += `<tr>
-            <td><strong>${noRujukan}</strong></td>
-            <td>${t.destinasi || t.lokasi || '-'}</td>
-            <td>${t.tarikh_pergi}</td>
-            <td style="text-align: right;">${badge}</td>
-        </tr>`;
-    });
-    tbody.innerHTML = html;
-}
 
 // ==========================================
 // URUSETIA: PAPAR & AGIH KENDERAAN
@@ -1047,15 +1039,15 @@ async function agihKenderaan(id) {
 
         const isiModal = document.getElementById('isiModalUrusetia');
         const modal = document.getElementById('modalUrusetia');
-        const jadualUrusetia = document.getElementById('dashboard-urusetia');
+        const tabUtama = document.getElementById('sistem-tab-utama'); // Dikemas kini
 
         if (!isiModal || !modal) return;
 
         isiModal.innerHTML = modalHtml;
         
-        // 1. Sembunyikan jadual Urusetia sepenuhnya
-        if(jadualUrusetia) {
-            jadualUrusetia.classList.add('hidden');
+        // 1. Sembunyikan jadual Urusetia / Tab Utama sepenuhnya
+        if(tabUtama) {
+            tabUtama.classList.add('hidden');
         }
         
         // 2. Tunjuk borang premium sebagai halaman penuh
@@ -1072,7 +1064,7 @@ async function agihKenderaan(id) {
                 // Sembunyikan borang
                 modal.classList.add('hidden');
                 // Tunjukkan jadual semula
-                if(jadualUrusetia) jadualUrusetia.classList.remove('hidden');
+                if(tabUtama) tabUtama.classList.remove('hidden');
                 window.scrollTo(0, 0);
             });
         }
