@@ -1503,7 +1503,7 @@ async function muatTetapan() {
             });
             tbodyK.innerHTML = htmlK;
         } else {
-            tbodyK.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Tiada rekod kenderaan.</td></tr>';
+            tbodyK.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">Tiada rekod kenderaan.</td></tr>';
         }
     }
 }
