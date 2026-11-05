@@ -173,7 +173,31 @@
     .btn-light { background: #e2e8f0; color: #475569; }
     .btn-light:hover { background: #cbd5e1; }
     .btn:disabled { opacity: 0.7; cursor: not-allowed; }
-
+/* Butang Ikon Tindakan Bersih Tanpa Kotak */
+    .btn-action-icon {
+        background: transparent !important;
+        border: none !important;
+        padding: 2px 4px;
+        font-size: 16px;
+        cursor: pointer;
+        line-height: 1;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-action-icon:hover {
+        transform: scale(1.25);
+        opacity: 0.75;
+    }
+    .btn-action-icon.edit {
+        color: #2563eb;
+        margin-right: 2px;
+    }
+    .btn-action-icon.delete {
+        color: #ef4444;
+        font-weight: bold;
+    }
     /* Action Bar (Bottom) */
     .bottom-actions { display: flex; justify-content: flex-end; align-items: center; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); position: sticky; bottom: 20px; z-index: 10; border: 1px solid #e2e8f0; }
     .actions-right { display: flex; gap: 12px; }
