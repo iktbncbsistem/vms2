@@ -1488,8 +1488,12 @@ async function muatTetapan() {
         if(kData && kData.length > 0) {
             let htmlK = '';
             kData.forEach(k => {
-                htmlK += `<tr><td><strong>${k.no_plat}</strong></td><td>${k.model}</td>
-                          <td style="text-align:center;"><button class="btn-delete" onclick="padamKenderaan(${k.id})" title="Padam">✕</button></td></tr>`;
+                htmlK += `<tr>
+                            <td><strong>${k.jenis_kenderaan || '-'}</strong></td>
+                            <td>${k.model}</td>
+                            <td><span style="color:#1e293b; font-weight:600;">${k.no_plat}</span></td>
+                            <td style="text-align:center;"><button class="btn-delete" onclick="padamKenderaan(${k.id})" title="Padam">✕</button></td>
+                          </tr>`;
             });
             tbodyK.innerHTML = htmlK;
         } else {
@@ -1517,12 +1521,19 @@ window.padamPemandu = async function(id) {
 
 window.tambahKenderaan = async function() {
     const plat = document.getElementById('platKenderaanBaru').value.trim();
-    const model = document.getElementById('modelKenderaanBaru').value.trim();
-    if(!plat || !model) return alert('Sila masukkan No. Plat dan Model!');
+    const model = document.getElementById('modelKenderaanBaru').value.trim(); // Ini Keluaran
+    const jenis = document.getElementById('jenisKenderaanBaru').value.trim(); // Ini Kategori
+
+    if(!plat || !model || !jenis) return alert('Sila masukkan Kategori, Keluaran, dan No. Plat!');
     
-    const { error } = await supabaseClient.from('kenderaan').insert([{ no_plat: plat, model: model }]);
+    const { error } = await supabaseClient.from('kenderaan').insert([{ no_plat: plat, model: model, jenis_kenderaan: jenis }]);
     if(error) alert('Ralat: ' + error.message);
-    else { document.getElementById('platKenderaanBaru').value = ''; document.getElementById('modelKenderaanBaru').value = ''; muatTetapan(); }
+    else { 
+        document.getElementById('platKenderaanBaru').value = ''; 
+        document.getElementById('modelKenderaanBaru').value = ''; 
+        document.getElementById('jenisKenderaanBaru').value = ''; 
+        muatTetapan(); 
+    }
 };
 
 window.padamKenderaan = async function(id) {
