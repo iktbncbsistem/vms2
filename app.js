@@ -1344,7 +1344,7 @@ async function semakJadualAwam(mod = 'aktif') {
     const tAkhir = document.getElementById('cariTarikhAkhir').value;
     const tbody = document.getElementById('isiJadualAwam');
     
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px;">Memuatkan rekod... ⏳</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px;">Memuatkan rekod... ⏳</td></tr>';
     
     const today = new Date().toISOString().split('T')[0];
     let query = supabaseClient.from('tempahan').select('*').order('tarikh_pergi', {ascending: true});
@@ -1359,7 +1359,7 @@ async function semakJadualAwam(mod = 'aktif') {
     }
     
     const { data, error } = await query;
-    if (error) { tbody.innerHTML = `<tr><td colspan="8" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`; return; }
+    if (error) { tbody.innerHTML = `<tr><td colspan="9" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`; return; }
     
     const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model');
 
@@ -1438,6 +1438,11 @@ async function semakJadualAwam(mod = 'aktif') {
                     <div style="font-weight:600; margin-bottom:6px;">${t.nama_pemohon || '-'}</div>
                     <span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:4px 10px; border-radius:12px; font-size:11px;">${labelStatus}</span>
                 </td>
+
+                <td style="color:#64748b; font-size:12px; max-width: 150px;">
+                    ${t.catatan || t.tujuan || '-'}
+                </td>
+                
                 <td style="text-align:right;">
                     <a class="air-link" onclick="paparButiran(${t.indexAsal})">Butiran ❯</a>
                 </td>
