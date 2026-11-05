@@ -536,9 +536,19 @@
                     <div class="card" style="box-shadow:none; border-color:#e2e8f0;">
                         <div class="card-header" style="background:#f8fafc; color:#1e293b; border-bottom:1px solid #e2e8f0;">🚘 Senarai Kenderaan</div>
                         <div class="card-body" style="padding:15px;">
-                            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                           <div style="display:flex; gap:10px; margin-bottom:15px;">
     <input type="text" id="platKenderaanBaru" placeholder="No. Plat" style="flex:1;">
     <input type="text" id="modelKenderaanBaru" placeholder="Model" style="flex:2;">
+    
+    <!-- Input Jenis Kenderaan (Boleh taip atau pilih) -->
+    <input type="text" id="jenisKenderaanBaru" list="senaraiJenis" placeholder="Jenis (Cth: Sedan)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
+    <datalist id="senaraiJenis">
+        <option value="Sedan"></option>
+        <option value="Van"></option>
+        <option value="SUV"></option>
+        <option value="Bas"></option>
+    </datalist>
+    
     <button type="button" class="btn btn-primary" onclick="tambahKenderaan()">Tambah</button>
 </div>
                             <div class="table-responsive">
