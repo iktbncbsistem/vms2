@@ -603,6 +603,37 @@ body {
                 </div>
             </div>
         </div>
+
+<!-- TAB 5: TETAPAN PENGGUNA (URUSETIA SAHAJA) -->
+        <div id="tab-tetapan-pengguna" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div>
+                    <h3 style="margin: 0; color: #102a43;">👥 Pengurusan & Peranan Pengguna</h3>
+                    <p style="color: #64748b; font-size: 13px; margin: 4px 0 0 0;">Urusetia boleh mengaktifkan akaun baharu dan menetapkan peranan akses sistem.</p>
+                </div>
+                <button type="button" class="btn btn-outline" onclick="muatSenaraiPengguna()" style="padding: 6px 12px; font-size: 12px;">🔄 Segarkan</button>
+            </div>
+
+            <div class="table-responsive" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <table class="vms-table" style="min-width: 100%;">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px; text-align: center;">Bil</th>
+                            <th>Nama Pengguna</th>
+                            <th>Emel / ID</th>
+                            <th>Status / Peranan Semasa</th>
+                            <th style="width: 320px; text-align: center;">Tindakan Urusetia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jadualTetapanPengguna">
+                        <tr><td colspan="5" style="text-align: center; padding: 25px; color: #64748b;">Memuatkan senarai pengguna...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        
         <!-- TAB 4: PELULUS -->
         <div id="tab-dashboard-pelulus" class="hidden">
             <div style="background:#15945b; color:white; padding:14px 20px; border-radius:8px 8px 0 0; font-weight:600;">
