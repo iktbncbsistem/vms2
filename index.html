@@ -536,29 +536,44 @@
                     <div class="card" style="box-shadow:none; border-color:#e2e8f0;">
                         <div class="card-header" style="background:#f8fafc; color:#1e293b; border-bottom:1px solid #e2e8f0;">🚘 Senarai Kenderaan</div>
                         <div class="card-body" style="padding:15px;">
-                           <div style="display:flex; gap:10px; margin-bottom:15px;">
-    <input type="text" id="platKenderaanBaru" placeholder="No. Plat" style="flex:1;">
-    <input type="text" id="modelKenderaanBaru" placeholder="Model" style="flex:2;">
-    
-    <!-- Input Jenis Kenderaan (Boleh taip atau pilih) -->
-    <input type="text" id="jenisKenderaanBaru" list="senaraiJenis" placeholder="Jenis (Cth: Sedan)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
-    <datalist id="senaraiJenis">
-        <option value="Sedan"></option>
-        <option value="Van"></option>
-        <option value="SUV"></option>
-        <option value="Bas"></option>
-    </datalist>
-    
-    <button type="button" class="btn btn-primary" onclick="tambahKenderaan()">Tambah</button>
-</div>
+                            
+                            <!-- Ruangan Input Disusun Semula -->
+                            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                                <!-- 1. Kategori (Boleh taip atau pilih) -->
+                                <input type="text" id="jenisKenderaanBaru" list="senaraiJenis" placeholder="Kategori (Cth: Bas, Van)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
+                                <datalist id="senaraiJenis">
+                                    <option value="Bas"></option>
+                                    <option value="Van"></option>
+                                    <option value="Kereta"></option>
+                                    <option value="SUV"></option>
+                                </datalist>
+                                
+                                <!-- 2. Keluaran -->
+                                <input type="text" id="modelKenderaanBaru" placeholder="Keluaran (Cth: Scania, Hiace)" style="flex:1.5; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
+                                
+                                <!-- 3. No Plat -->
+                                <input type="text" id="platKenderaanBaru" placeholder="No. Plat" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
+                                
+                                <button type="button" class="btn btn-primary" onclick="tambahKenderaan()">Tambah</button>
+                            </div>
+                            
+                            <!-- Jadual Disusun Semula -->
                             <div class="table-responsive">
                                 <table class="vms-table" style="min-width:100%;">
-    <thead><tr><th>No. Plat</th><th>Model</th><th>Jenis</th><th style="width:50px;"></th></tr></thead>
-    <tbody id="jadualTetapanKenderaan">
-        <tr><td colspan="4" style="text-align:center;">Memuatkan...</td></tr>
-    </tbody>
-</table>
+                                    <thead>
+                                        <tr>
+                                            <th>Kategori</th>
+                                            <th>Keluaran</th>
+                                            <th>No. Plat</th>
+                                            <th style="width:50px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="jadualTetapanKenderaan">
+                                        <tr><td colspan="4" style="text-align:center;">Memuatkan...</td></tr>
+                                    </tbody>
+                                </table>
                             </div>
+                            
                         </div>
                     </div>
                 </div>
