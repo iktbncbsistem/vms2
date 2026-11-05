@@ -66,18 +66,19 @@ async function semakPeranan() {
         alert("Profil anda tiada dalam pangkalan data. Sila hubungi Admin.");
     }
 }
+
 // ==========================================
 // FUNGSI TOGGLE TAB UTAMA (KALIS RALAT)
 // ==========================================
 window.tukarTab = function(tabName) {
-    // 1. Sembunyikan SEMUA tab dengan selamat (kalau wujud baru hide)
+    // 1. Sembunyikan SEMUA tab dengan selamat
     const semuaTab = ['tab-jadual-awam', 'tab-mohon-kenderaan', 'dashboard-pemohon', 'tab-dashboard-urusetia', 'tab-dashboard-pelulus'];
     semuaTab.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
 
-    // 2. Reset warna SEMUA butang tab dengan selamat
+    // 2. Reset warna SEMUA butang tab
     const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabPelulus'];
     semuaButang.forEach(id => {
         const btn = document.getElementById(id);
@@ -98,9 +99,10 @@ window.tukarTab = function(tabName) {
         idBtnBuka = 'btnTabJadual'; 
     }
     else if (tabName === 'mohon') {
-        // Semak jika guna ID baharu atau lama
         idTabBuka = document.getElementById('tab-mohon-kenderaan') ? 'tab-mohon-kenderaan' : 'dashboard-pemohon';
         idBtnBuka = 'btnTabMohon';
+        // MUAT DRAF APABILA BUKA TAB BORANG!
+        muatDraf(); 
     }
     else if (tabName === 'urusetia') { 
         idTabBuka = 'tab-dashboard-urusetia'; 
@@ -115,7 +117,6 @@ window.tukarTab = function(tabName) {
     const tabDibuka = document.getElementById(idTabBuka);
     if (tabDibuka) {
         tabDibuka.classList.remove('hidden');
-        // Pastikan ruang borang dipaparkan jika guna HTML struktur lama
         const borang = document.getElementById('ruangBorangPemohon');
         if (borang) borang.classList.remove('hidden');
     }
@@ -128,24 +129,9 @@ window.tukarTab = function(tabName) {
         btnDibuka.style.borderBottom = 'none';
     }
 };
-// Redirect fungsi lama ke fungsi baru (supaya masa hantar borang dia refresh jadual atas)
+
 window.muatSejarahPemohon = function() { semakJadualAwam('aktif'); };
 
-// ==========================================
-// FUNGSI TOGGLE BORANG BARU 
-// ==========================================
-window.toggleBorangBaru = function() {
-    const tabMohon = document.getElementById('tab-mohon-kenderaan');
-    
-    // Jika borang tersembunyi, buka tab borang (Fungsi butang ➕ Mohon Baru)
-    if (tabMohon && tabMohon.classList.contains('hidden')) {
-        tukarTab('mohon'); 
-    } 
-    // Jika borang sedang dibuka, kembali ke jadual (Fungsi butang ← Batal)
-    else {
-        tukarTab('jadual'); 
-    }
-};
 // ==========================================
 // PEMOHON: HANTAR BORANG KE SUPABASE
 // ==========================================
@@ -169,16 +155,22 @@ if(vehicleForm) {
                 fileUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fileName).data.publicUrl;
             }
 
-            // Kumpul Data Penumpang & Peralatan (JSON)
+            // Kumpul Data Penumpang (4 lajur)
             const passengers = [];
             document.querySelectorAll('#tblPassengers tbody tr').forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs[0].value.trim()) passengers.push({ nama: inputs[0].value, kp: inputs[1].value, bahagian: inputs[2].value });
+                if (inputs.length >= 4 && inputs[0].value.trim()) {
+                    passengers.push({ nama: inputs[0].value, kp: inputs[1].value, telefon: inputs[2].value, bahagian: inputs[3].value });
+                }
             });
+            
+            // Kumpul Data Peralatan (4 lajur)
             const equipments = [];
             document.querySelectorAll('#tblEquipment tbody tr').forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs[0].value.trim()) equipments.push({ nama: inputs[0].value, kuantiti: inputs[1].value, catatan: inputs[2].value });
+                if (inputs.length >= 4 && inputs[0].value.trim()) {
+                    equipments.push({ nama: inputs[0].value, kuantiti: inputs[1].value, unit: inputs[2].value, catatan: inputs[3].value });
+                }
             });
 
             // Hantar ke Database
@@ -204,12 +196,13 @@ if(vehicleForm) {
             alert("Permohonan berjaya dihantar!");
             vehicleForm.reset();
             
-            // Sembunyikan borang semula selepas hantar & refresh jadual
-            // Sembunyikan borang secara selamat
-const ruangBorang = document.getElementById('ruangBorangPemohon');
-if (ruangBorang) {
-    ruangBorang.classList.add('hidden');
-}
+            // BUANG DRAF BILA DAH BERJAYA HANTAR
+            if(currentUser) {
+                localStorage.removeItem('vms_draft_' + currentUser.id);
+            }
+            
+            // Kembali ke jadual
+            tukarTab('jadual');
             muatSejarahPemohon();
 
         } catch (error) {
@@ -303,24 +296,20 @@ async function sahkanUrusetia(id) {
 // FUNGSI AGIHAN KENDERAAN & PEMANDU (URUSETIA)
 // ==========================================
 async function agihKenderaan(id) {
-    // 1. Tarik nilai yang dipilih oleh Urusetia dari dropdown
     const idKenderaan = document.getElementById(`kenderaan-${id}`).value;
     const namaPemandu = document.getElementById(`pemandu-${id}`).value;
     
-    // 2. Halang jika ada yang belum dipilih
     if (!idKenderaan || !namaPemandu) {
         alert("Sila pastikan bos telah memilih Pemandu DAN Kenderaan!");
         return;
     }
 
-    // 3. Hantar ke pangkalan data Supabase
     const { error } = await supabaseClient.from('tempahan').update({ 
         id_kenderaan: idKenderaan, 
         nama_pemandu: namaPemandu, 
         status: 'Selesai Diagih' 
     }).eq('id', id);
 
-    // 4. Mesej berjaya dan 'refresh' jadual
     if (error) {
         alert("Ralat! Pastikan lajur 'nama_pemandu' wujud di Supabase. Ralat: " + error.message);
     } else {
@@ -329,10 +318,7 @@ async function agihKenderaan(id) {
     }
 }
 
-/* VMS - PAPARAN BUTIRAN PERMOHONAN KENDERAAN
-   Reka bentuk baharu berdasarkan imej rujukan.
-   Fungsi data dan nama medan asal dikekalkan.
-*/
+/* VMS - PAPARAN BUTIRAN PERMOHONAN KENDERAAN */
 (function () {
     'use strict';
 
@@ -917,6 +903,7 @@ async function agihKenderaan(id) {
                                 <th>Bil</th>
                                 <th>Nama Penumpang</th>
                                 <th>No. K/P</th>
+                                <th>Telefon</th>
                                 <th>Bahagian</th>
                             </tr>
                         </thead>
@@ -926,6 +913,7 @@ async function agihKenderaan(id) {
                                     <td>${i + 1}</td>
                                     <td><strong>${vmsEscape(p.nama)}</strong></td>
                                     <td>${vmsEscape(p.kp)}</td>
+                                    <td>${vmsEscape(p.telefon)}</td>
                                     <td>${vmsEscape(p.bahagian)}</td>
                                 </tr>
                             `).join('')}
@@ -1077,31 +1065,23 @@ async function agihKenderaan(id) {
 
         const isiModal = document.getElementById('isiModalUrusetia');
         const modal = document.getElementById('modalUrusetia');
-        const tabUtama = document.getElementById('sistem-tab-utama'); // Dikemas kini
+        const tabUtama = document.getElementById('sistem-tab-utama'); 
 
         if (!isiModal || !modal) return;
 
         isiModal.innerHTML = modalHtml;
         
-        // 1. Sembunyikan jadual Urusetia / Tab Utama sepenuhnya
-        if(tabUtama) {
-            tabUtama.classList.add('hidden');
-        }
-        
-        // 2. Tunjuk borang premium sebagai halaman penuh
+        if(tabUtama) tabUtama.classList.add('hidden');
         modal.classList.remove('hidden');
         window.scrollTo(0, 0);
 
-        // 3. FUNGSI KEMBALI KE SENARAI
         const btnTutup = document.getElementById('btnTutupVms');
         if (btnTutup) {
             btnTutup.innerHTML = '← &nbsp; Kembali ke Senarai';
-            btnTutup.style.background = '#1767c2'; // Warna biru supaya lebih menyerlah
+            btnTutup.style.background = '#1767c2'; 
             
             btnTutup.addEventListener('click', function() {
-                // Sembunyikan borang
                 modal.classList.add('hidden');
-                // Tunjukkan jadual semula
                 if(tabUtama) tabUtama.classList.remove('hidden');
                 window.scrollTo(0, 0);
             });
@@ -1148,7 +1128,6 @@ async function muatSenaraiPelulus() {
         
     tempahan.forEach((t, index) => {
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
-        // Simpan dalam cacheUrusetia supaya butiran penuh boleh diguna pakai oleh Pelulus juga
         cacheUrusetia[index] = t; 
 
         html += `<tr>
@@ -1181,14 +1160,13 @@ async function updateStatus(id, statusBaru) {
         alert("Ralat mengemas kini status: " + error.message);
     } else {
         alert(`Berjaya! Permohonan telah dikemas kini kepada status: ${statusBaru}`);
-        if(currentUser) semakPeranan(); // Refresh data pada papan pemuka
+        if(currentUser) semakPeranan(); 
     }
 }
 // ==========================================
 // FUNGSI BUTANG TAMBAH PENUMPANG & PERALATAN
 // ==========================================
 
-// 1. Fungsi susun semula nombor Bilangan (1, 2, 3...)
 window.kemaskiniBil = function(tableId) {
     const rows = document.querySelectorAll(`#${tableId} tbody tr`);
     rows.forEach((row, index) => {
@@ -1196,7 +1174,6 @@ window.kemaskiniBil = function(tableId) {
     });
 };
 
-// 2. Butang Tambah Penumpang
 const btnAddPassenger = document.getElementById('btnAddPassenger');
 if (btnAddPassenger) {
     btnAddPassenger.addEventListener('click', function() {
@@ -1215,7 +1192,6 @@ if (btnAddPassenger) {
     });
 }
 
-// 3. Butang Tambah Peralatan
 const btnAddEquipment = document.getElementById('btnAddEquipment');
 if (btnAddEquipment) {
     btnAddEquipment.addEventListener('click', function() {
@@ -1235,13 +1211,122 @@ if (btnAddEquipment) {
 }
 
 // ==========================================
-// FUNGSI BUTANG SIMPAN DRAF & SEMAK SEMULA
+// FUNGSI SIMPAN DRAF (LOCAL STORAGE)
 // ==========================================
 const btnDraft = document.getElementById('btnDraft');
 if (btnDraft) {
     btnDraft.addEventListener('click', function() {
-        alert("Fungsi 'Simpan Draf' akan membolehkan permohonan disambung semula pada masa lain. (Fungsi ini sedang dibangunkan)");
+        if (!currentUser) return alert("Sila log masuk dahulu.");
+
+        // Kumpul data input asas
+        const draftData = {
+            phone: document.getElementById('phone') ? document.getElementById('phone').value : '',
+            department: document.getElementById('department') ? document.getElementById('department').value : '',
+            purpose: document.getElementById('purpose') ? document.getElementById('purpose').value : '',
+            tripDate: document.getElementById('tripDate') ? document.getElementById('tripDate').value : '',
+            returnDate: document.getElementById('returnDate') ? document.getElementById('returnDate').value : '',
+            departTime: document.getElementById('departTime') ? document.getElementById('departTime').value : '',
+            returnTime: document.getElementById('returnTime') ? document.getElementById('returnTime').value : '',
+            location: document.getElementById('location') ? document.getElementById('location').value : '',
+            tripPurpose: document.getElementById('tripPurpose') ? document.getElementById('tripPurpose').value : '',
+            passengerCount: document.getElementById('passengerCount') ? document.getElementById('passengerCount').value : '1'
+        };
+
+        const checkedDriver = document.querySelector('input[name="driver"]:checked');
+        if (checkedDriver) draftData.driver = checkedDriver.value;
+
+        // Kumpul senarai penumpang
+        const passengers = [];
+        document.querySelectorAll('#tblPassengers tbody tr').forEach(tr => {
+            const inputs = tr.querySelectorAll('input');
+            if (inputs.length >= 4) {
+                passengers.push({ nama: inputs[0].value, kp: inputs[1].value, telefon: inputs[2].value, bahagian: inputs[3].value });
+            }
+        });
+        draftData.passengers = passengers;
+
+        // Kumpul senarai peralatan
+        const equipments = [];
+        document.querySelectorAll('#tblEquipment tbody tr').forEach(tr => {
+            const inputs = tr.querySelectorAll('input');
+            if (inputs.length >= 4) {
+                equipments.push({ nama: inputs[0].value, kuantiti: inputs[1].value, unit: inputs[2].value, catatan: inputs[3].value });
+            }
+        });
+        draftData.equipments = equipments;
+
+        // Simpan ke Local Storage pelayar bos
+        localStorage.setItem('vms_draft_' + currentUser.id, JSON.stringify(draftData));
+        
+        alert("✅ Draf berjaya disimpan!\nAnda boleh sambung isi borang ini pada bila-bila masa (dari peranti ini).\n\nNota: Lampiran surat rasmi perlu dimuat naik semula semasa penghantaran.");
     });
+}
+
+// Fungsi Automatik Muat Draf (Dipanggil bila buka tab 'Mohon')
+function muatDraf() {
+    if (!currentUser) return;
+    const saved = localStorage.getItem('vms_draft_' + currentUser.id);
+    if (saved) {
+        try {
+            const draftData = JSON.parse(saved);
+            
+            if(document.getElementById('phone') && draftData.phone) document.getElementById('phone').value = draftData.phone;
+            if(document.getElementById('department') && draftData.department) document.getElementById('department').value = draftData.department;
+            if(document.getElementById('purpose') && draftData.purpose) document.getElementById('purpose').value = draftData.purpose;
+            if(document.getElementById('tripDate') && draftData.tripDate) document.getElementById('tripDate').value = draftData.tripDate;
+            if(document.getElementById('returnDate') && draftData.returnDate) document.getElementById('returnDate').value = draftData.returnDate;
+            if(document.getElementById('departTime') && draftData.departTime) document.getElementById('departTime').value = draftData.departTime;
+            if(document.getElementById('returnTime') && draftData.returnTime) document.getElementById('returnTime').value = draftData.returnTime;
+            if(document.getElementById('location') && draftData.location) document.getElementById('location').value = draftData.location;
+            if(document.getElementById('tripPurpose') && draftData.tripPurpose) document.getElementById('tripPurpose').value = draftData.tripPurpose;
+            if(document.getElementById('passengerCount') && draftData.passengerCount) document.getElementById('passengerCount').value = draftData.passengerCount;
+            
+            if (draftData.driver) {
+                const radio = document.querySelector(`input[name="driver"][value="${draftData.driver}"]`);
+                if (radio) radio.checked = true;
+            }
+
+            // Muat semula jadual penumpang
+            const tbodyP = document.querySelector('#tblPassengers tbody');
+            if (tbodyP && draftData.passengers && draftData.passengers.length > 0) {
+                tbodyP.innerHTML = '';
+                draftData.passengers.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="text-align:center; font-weight:600;"></td>
+                        <td><input type="text" placeholder="Nama Penuh" required value="${p.nama}"></td>
+                        <td><input type="text" placeholder="No. K/P" required value="${p.kp}"></td>
+                        <td><input type="tel" placeholder="No. Telefon" required value="${p.telefon}"></td>
+                        <td><input type="text" placeholder="Bahagian" required value="${p.bahagian}"></td>
+                        <td style="text-align:center;"><button type="button" class="btn-delete" onclick="this.closest('tr').remove(); kemaskiniBil('tblPassengers')" title="Padam">✕</button></td>
+                    `;
+                    tbodyP.appendChild(tr);
+                });
+                kemaskiniBil('tblPassengers');
+            }
+
+            // Muat semula jadual peralatan
+            const tbodyE = document.querySelector('#tblEquipment tbody');
+            if (tbodyE && draftData.equipments && draftData.equipments.length > 0) {
+                tbodyE.innerHTML = '';
+                draftData.equipments.forEach(e => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="text-align:center; font-weight:600;"></td>
+                        <td><input type="text" placeholder="Nama Peralatan" required value="${e.nama}"></td>
+                        <td><input type="number" placeholder="Kuantiti" min="1" required value="${e.kuantiti}"></td>
+                        <td><input type="text" placeholder="Unit (Cth: Kotak)" required value="${e.unit}"></td>
+                        <td><input type="text" placeholder="Catatan" value="${e.catatan}"></td>
+                        <td style="text-align:center;"><button type="button" class="btn-delete" onclick="this.closest('tr').remove(); kemaskiniBil('tblEquipment')" title="Padam">✕</button></td>
+                    `;
+                    tbodyE.appendChild(tr);
+                });
+                kemaskiniBil('tblEquipment');
+            }
+        } catch (e) {
+            console.error("Ralat memuatkan draf:", e);
+        }
+    }
 }
 
 const btnReview = document.getElementById('btnReview');
@@ -1259,30 +1344,25 @@ async function semakJadualAwam(mod = 'aktif') {
     const tAkhir = document.getElementById('cariTarikhAkhir').value;
     const tbody = document.getElementById('isiJadualAwam');
     
-    // Tukar colspan ke 8 mengikut jumlah lajur baharu
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px;">Memuatkan rekod... ⏳</td></tr>';
     
     const today = new Date().toISOString().split('T')[0];
     let query = supabaseClient.from('tempahan').select('*').order('tarikh_pergi', {ascending: true});
     
-    // Tapis berdasarkan butang yang ditekan
     if (mod === 'sejarah') {
         query = query.lt('tarikh_pergi', today);
     } else if (mod === 'cari' && (tMula || tAkhir)) {
         if (tMula) query = query.gte('tarikh_pergi', tMula);
         if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
     } else {
-        // Lalai (Aktif): Dari tarikh hari ini dan ke hadapan
         query = query.gte('tarikh_pergi', today);
     }
     
     const { data, error } = await query;
     if (error) { tbody.innerHTML = `<tr><td colspan="8" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`; return; }
     
-    // Tarik data senarai kenderaan untuk padankan Nombor Plat & Model
     const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model');
 
-    // TAPISAN PINTAR: 
     const dataDitapis = data.filter(t => {
         if (t.status === 'Lulus' || t.status === 'Selesai Diagih') return true;
         if (t.id_pemohon === currentUser.id) return true; 
@@ -1296,17 +1376,15 @@ async function semakJadualAwam(mod = 'aktif') {
     
     cacheUrusetia = dataDitapis; 
     
-    // 1. Kumpulkan data mengikut Pemandu
     const jadualPemandu = {};
     dataDitapis.forEach((t, i) => {
-        t.indexAsal = i; // Simpan index asal untuk butang 'Lihat Butiran'
+        t.indexAsal = i; 
         const pemandu = t.nama_pemandu || '⏳ Belum Diagih (Menunggu Urusetia)';
         
         if (!jadualPemandu[pemandu]) jadualPemandu[pemandu] = [];
         jadualPemandu[pemandu].push(t);
     });
 
-    // 2. Bina HTML
     let html = '';
     
     for (const pemandu in jadualPemandu) {
@@ -1320,7 +1398,6 @@ async function semakJadualAwam(mod = 'aktif') {
             if (t.status === 'Lulus' || t.status === 'Selesai Diagih') { statusWarna = '#10b981'; labelStatus = 'Sedia'; }
             else if (t.status === 'Tolak') { statusWarna = '#ef4444'; labelStatus = 'Tidak Diluluskan'; }
 
-            // Padankan info kenderaan berdasarkan ID
             let infoKenderaan = '-';
             if (t.id_kenderaan && senaraiKenderaan) {
                 const kenderaan = senaraiKenderaan.find(k => k.id == t.id_kenderaan);
@@ -1329,7 +1406,6 @@ async function semakJadualAwam(mod = 'aktif') {
 
             html += `<tr>`;
             
-            // Kolum Pemandu (Merge sel untuk baris pertama)
             if (index === 0) {
                 const stylePemandu = pemandu.includes('Belum Diagih') ? 'color:#ef4444; font-style:italic;' : 'color:#1e293b; font-weight:700;';
                 html += `<td rowspan="${jumlahRow}" style="${stylePemandu} vertical-align: top; background: #f8fafc; border-right: 1px solid #e2e8f0; min-width: 150px;">
@@ -1340,11 +1416,9 @@ async function semakJadualAwam(mod = 'aktif') {
                 </td>`;
             }
 
-            // Ambil tarikh mohon (created_at dari Supabase). Jika tiada, letak '-'
             const tarikhMohon = t.created_at ? t.created_at.split('T')[0] : '-';
             const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
 
-            // Kolum-kolum lain yang telah digabungkan masa dan tarikh
             html += `
                 <td><strong style="color:#102a43;">${tarikhMohon}</strong><br><small style="color:#64748b;">${noRujukan}</small></td>
                 <td>${infoKenderaan}</td>
