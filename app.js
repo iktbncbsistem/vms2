@@ -1471,7 +1471,10 @@ async function muatTetapan() {
             pData.forEach(p => {
                 let badge = p.kategori === 'Gantian' ? '<span style="background:#fef3c7; color:#d97706; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Gantian</span>' : '<span style="background:#f1f5f9; color:#475569; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Tetap</span>';
                 htmlP += `<tr><td><strong>${p.nama}</strong></td><td>${badge}</td>
-                          <td style="text-align:center;"><button class="btn-delete" onclick="padamPemandu(${p.id})" title="Padam">✕</button></td></tr>`;
+                          <td style="text-align:center; white-space:nowrap;">
+                            <button class="btn-edit" onclick="editPemandu(${p.id}, '${p.nama}', '${p.kategori}')" title="Edit">✏️</button>
+                            <button class="btn-delete" onclick="padamPemandu(${p.id})" title="Padam">✕</button>
+                          </td></tr>`;
             });
             tbodyP.innerHTML = htmlP;
         } else {
@@ -1492,7 +1495,10 @@ async function muatTetapan() {
                             <td><strong>${k.jenis_kenderaan || '-'}</strong></td>
                             <td>${k.model}</td>
                             <td><span style="color:#1e293b; font-weight:600;">${k.no_plat}</span></td>
-                            <td style="text-align:center;"><button class="btn-delete" onclick="padamKenderaan(${k.id})" title="Padam">✕</button></td>
+                            <td style="text-align:center; white-space:nowrap;">
+                              <button class="btn-edit" onclick="editKenderaan(${k.id}, '${k.jenis_kenderaan || ''}', '${k.model}', '${k.no_plat}')" title="Edit">✏️</button>
+                              <button class="btn-delete" onclick="padamKenderaan(${k.id})" title="Padam">✕</button>
+                            </td>
                           </tr>`;
             });
             tbodyK.innerHTML = htmlK;
