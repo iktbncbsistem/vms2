@@ -259,6 +259,10 @@
         <button id="btnTabUrusetia" onclick="tukarTab('urusetia')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
             📥 Peti Tindakan Urusetia
         </button>
+        <button id="btnTabTetapan" onclick="tukarTab('tetapan')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
+            ⚙️ Tetapan Sistem
+        </button>
+        
         <button id="btnTabPelulus" onclick="tukarTab('pelulus')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
             ✅ Peti Tindakan Pelulus
         </button>
@@ -512,6 +516,59 @@
     </div>
 </div>
 
+    <!-- TAB TETAPAN (URUSETIA SAHAJA) -->
+        <div id="tab-tetapan-urusetia" class="hidden">
+            <div style="background:#475569; color:white; padding:14px 20px; border-radius:8px 8px 0 0; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
+                <span>⚙️ Tetapan Pemandu & Kenderaan</span>
+            </div>
+            <div style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 8px 8px; padding:20px; background:white;">
+                <p style="color:#64748b; font-size:13px; margin-top:0;">Urus senarai pemandu dan kenderaan yang akan dipaparkan dalam sistem (Fungsi UI sedang dibangunkan).</p>
+                
+                <div class="form-grid">
+                    <!-- Senarai Pemandu -->
+                    <div class="card" style="box-shadow:none; border-color:#e2e8f0;">
+                        <div class="card-header" style="background:#f8fafc; color:#1e293b; border-bottom:1px solid #e2e8f0;">👨‍✈️ Senarai Pemandu</div>
+                        <div class="card-body" style="padding:15px;">
+                            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                                <input type="text" id="namaPemanduBaru" placeholder="Nama Pemandu Baru" style="flex:1;">
+                                <button type="button" class="btn btn-primary" onclick="alert('Fungsi simpan pemandu ke Supabase sedang dibangunkan')">Tambah</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="vms-table" style="min-width:100%;">
+                                    <thead><tr><th>Nama Pemandu</th><th style="width:50px;"></th></tr></thead>
+                                    <tbody id="jadualTetapanPemandu">
+                                        <tr><td>Rohaizan bin Mohd Fuzi</td><td style="text-align:center;"><button class="btn-delete" title="Padam">✕</button></td></tr>
+                                        <tr><td>Mohamad Khairoul Azuan</td><td style="text-align:center;"><button class="btn-delete" title="Padam">✕</button></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Senarai Kenderaan -->
+                    <div class="card" style="box-shadow:none; border-color:#e2e8f0;">
+                        <div class="card-header" style="background:#f8fafc; color:#1e293b; border-bottom:1px solid #e2e8f0;">🚘 Senarai Kenderaan</div>
+                        <div class="card-body" style="padding:15px;">
+                            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                                <input type="text" id="platKenderaanBaru" placeholder="No. Plat" style="flex:1;">
+                                <input type="text" id="modelKenderaanBaru" placeholder="Model" style="flex:2;">
+                                <button type="button" class="btn btn-primary" onclick="alert('Fungsi simpan kenderaan ke Supabase sedang dibangunkan')">Tambah</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="vms-table" style="min-width:100%;">
+                                    <thead><tr><th>No. Plat</th><th>Model</th><th style="width:50px;"></th></tr></thead>
+                                    <tbody id="jadualTetapanKenderaan">
+                                        <tr><td>VAA 1234</td><td>Proton Perdana</td><td style="text-align:center;"><button class="btn-delete" title="Padam">✕</button></td></tr>
+                                        <tr><td>VBB 5678</td><td>Toyota Innova</td><td style="text-align:center;"><button class="btn-delete" title="Padam">✕</button></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
 <!-- ========================================== -->
 <!-- PAPARAN BUTIRAN PENUH (HALAMAN PENUH) -->
 <!-- ========================================== -->
