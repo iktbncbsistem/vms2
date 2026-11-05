@@ -37,15 +37,20 @@ window.onload = async function() {
 
 async function semakPeranan() {
     const { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();
+    
     if (data) {
         document.getElementById('login-section').classList.add('hidden');
-        document.getElementById('sistem-tab-utama').classList.remove('hidden'); 
-        
-        semakJadualAwam('aktif'); 
-if (data.peranan === 'tidak_aktif' || !data.peranan) {
+        document.getElementById('sistem-tab-utama').classList.remove('hidden');
+
+        semakJadualAwam('aktif');
+
+        // 1. Sekatan akaun tidak aktif / baharu (Tapis awal-awal)
+        if (data.peranan === 'tidak_aktif' || !data.peranan) {
             alert("Akaun anda belum diaktifkan. Sila maklumkan kepada Urusetia untuk pengaktifan peranan.");
             return;
         }
+
+        // 2. Semakan peranan lain
         if (data.peranan === 'pemohon') {
             const btnTabMohon = document.getElementById('btnTabMohon');
             const ruangCarian = document.getElementById('ruang-carian-jadual');
@@ -55,7 +60,7 @@ if (data.peranan === 'tidak_aktif' || !data.peranan) {
             const appNameField = document.getElementById('applicantName');
             if(appNameField) appNameField.value = data.nama;
         } 
-        } else if (data.peranan === 'urusetia') {
+        else if (data.peranan === 'urusetia') {
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
             
             // Buka akses tab tetapan kepada Urusetia
@@ -66,13 +71,12 @@ if (data.peranan === 'tidak_aktif' || !data.peranan) {
             if(btnTabPengguna) btnTabPengguna.classList.remove('hidden');
             
             muatSenaraiUrusetia();
-        }
+        } 
         else if (data.peranan === 'pelulus') {
-            document.getElementById('btnTabPelulus').classList.remove('hidden');
+            const btnTabPelulus = document.getElementById('btnTabPelulus');
+            if(btnTabPelulus) btnTabPelulus.classList.remove('hidden');
             muatSenaraiPelulus();
         }
-
-    
     } else {
         alert("Profil anda tiada dalam pangkalan data. Sila hubungi Admin.");
     }
