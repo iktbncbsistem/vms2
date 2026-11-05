@@ -43,9 +43,7 @@ async function semakPeranan() {
         
         semakJadualAwam('aktif'); 
 
-        // Tunjuk tab dan fungsi mengikut peranan masing-masing
         if (data.peranan === 'pemohon') {
-            // HANYA PEMOHON yang nampak tab Mohon Kenderaan & kotak carian
             const btnTabMohon = document.getElementById('btnTabMohon');
             const ruangCarian = document.getElementById('ruang-carian-jadual');
             if(btnTabMohon) btnTabMohon.classList.remove('hidden');
@@ -54,9 +52,13 @@ async function semakPeranan() {
             const appNameField = document.getElementById('applicantName');
             if(appNameField) appNameField.value = data.nama;
         } 
-      else if (data.peranan === 'urusetia') {
+        else if (data.peranan === 'urusetia') {
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
-            document.getElementById('btnTabTetapan').classList.remove('hidden'); // KOD BAHARU: Buka akses tab tetapan
+            
+            // BUKA AKSES TAB TETAPAN KEPADA URUSETIA
+            const btnTabTetapan = document.getElementById('btnTabTetapan');
+            if(btnTabTetapan) btnTabTetapan.classList.remove('hidden');
+            
             muatSenaraiUrusetia();
         } 
         else if (data.peranan === 'pelulus') {
@@ -72,14 +74,12 @@ async function semakPeranan() {
 // FUNGSI TOGGLE TAB UTAMA (KALIS RALAT)
 // ==========================================
 window.tukarTab = function(tabName) {
-    // 1. Sembunyikan SEMUA tab dengan selamat
     const semuaTab = ['tab-jadual-awam', 'tab-mohon-kenderaan', 'dashboard-pemohon', 'tab-dashboard-urusetia', 'tab-tetapan-urusetia', 'tab-dashboard-pelulus'];
     semuaTab.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
 
-    // 2. Reset warna SEMUA butang tab
     const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabTetapan', 'btnTabPelulus'];
     semuaButang.forEach(id => {
         const btn = document.getElementById(id);
@@ -91,33 +91,29 @@ window.tukarTab = function(tabName) {
         }
     });
 
-    // 3. Tentukan tab mana nak buka
     let idTabBuka = '';
     let idBtnBuka = '';
 
     if (tabName === 'jadual') { 
-        idTabBuka = 'tab-jadual-awam'; 
-        idBtnBuka = 'btnTabJadual'; 
+        idTabBuka = 'tab-jadual-awam'; idBtnBuka = 'btnTabJadual'; 
     }
     else if (tabName === 'mohon') {
         idTabBuka = document.getElementById('tab-mohon-kenderaan') ? 'tab-mohon-kenderaan' : 'dashboard-pemohon';
         idBtnBuka = 'btnTabMohon';
-        muatDraf(); 
+        if(typeof muatDraf === 'function') muatDraf(); 
     }
     else if (tabName === 'urusetia') { 
-        idTabBuka = 'tab-dashboard-urusetia'; 
-        idBtnBuka = 'btnTabUrusetia'; 
+        idTabBuka = 'tab-dashboard-urusetia'; idBtnBuka = 'btnTabUrusetia'; 
+        muatSenaraiUrusetia(); // Refresh jadual agihan
     }
     else if (tabName === 'tetapan') { 
-        idTabBuka = 'tab-tetapan-urusetia'; 
-        idBtnBuka = 'btnTabTetapan'; 
+        idTabBuka = 'tab-tetapan-urusetia'; idBtnBuka = 'btnTabTetapan'; 
+        if(typeof muatTetapan === 'function') muatTetapan(); // Tarik data dari Supabase
     }
     else if (tabName === 'pelulus') { 
-        idTabBuka = 'tab-dashboard-pelulus'; 
-        idBtnBuka = 'btnTabPelulus'; 
+        idTabBuka = 'tab-dashboard-pelulus'; idBtnBuka = 'btnTabPelulus'; 
     }
 
-    // 4. Buka tab dan warnakan butang
     const tabDibuka = document.getElementById(idTabBuka);
     if (tabDibuka) {
         tabDibuka.classList.remove('hidden');
@@ -133,7 +129,6 @@ window.tukarTab = function(tabName) {
         btnDibuka.style.borderBottom = 'none';
     }
 };
-
 window.muatSejarahPemohon = function() { semakJadualAwam('aktif'); };
 
 // ==========================================
@@ -224,20 +219,22 @@ if(vehicleForm) {
 // ==========================================
 async function muatSenaraiUrusetia() {
     const div = document.getElementById('senarai-tempahan-urusetia');
+    if(!div) return;
     div.innerHTML = "Memuatkan data...";
 
     const { data: tempahan, error } = await supabaseClient.from('tempahan').select('*').in('status', ['Menunggu Semakan', 'Lulus']).order('id', {ascending: false});
     if (error) return div.innerHTML = "Ralat: " + error.message;
     if (!tempahan || tempahan.length === 0) return div.innerHTML = "<p>Tiada permohonan baharu.</p>";
 
-    cacheUrusetia = tempahan; // Simpan untuk modal
+    cacheUrusetia = tempahan; 
+    
+    // Tarik data Pemandu & Kenderaan secara DINAMIK dari Supabase!
     const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
+    const { data: pemanduList } = await supabaseClient.from('pemandu').select('*');
 
-    // Tambah lajur No. Rujukan
     let html = `<table style="min-width: 900px;"><tr><th>No. Rujukan</th><th>Pemohon & Lokasi</th><th>Tarikh Perjalanan</th><th>Status</th><th>Tindakan Urusetia</th></tr>`;
     
     tempahan.forEach((t, index) => {
-        // Format No Rujukan
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
 
         html += `<tr>
@@ -249,7 +246,6 @@ async function muatSenaraiUrusetia() {
                 <button class="btn btn-light" onclick="paparButiran(${index})" style="margin-bottom:8px; font-size:12px; width:100%;">🔍 Butiran Penuh</button><br>
         `;
 
-        // FLOW BAHAGIAN B: Semakan Pegawai Mengurus (Dikemas kini)
         if (t.status === 'Menunggu Semakan') {
             html += `
                 <div style="display: flex; flex-direction: column; gap: 5px;">
@@ -257,16 +253,20 @@ async function muatSenaraiUrusetia() {
                     <button class="btn btn-danger" onclick="updateStatus(${t.id}, 'Tolak')" style="font-size:12px; width:100%;">❌ Tolak (Tidak Lengkap)</button>
                 </div>
             `;
-        
-        // FLOW BAHAGIAN C: Arahan Pemandu & Kenderaan (Selepas Diluluskan)
         } else if (t.status === 'Lulus') {
+            // Dropdown Pemandu (Dinamik)
             html += `
                 <select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
-                    <option value="">-- Pilih Pemandu --</option>
-                    <option value="Rohaizan bin Mohd Fuzi">Rohaizan bin Mohd Fuzi</option>
-                    <option value="Mohamad Khairoul Azuan">Mohamad Khairoul Azuan</option>
-                    <option value="Pemandu Gantian">Pemandu Gantian</option>
-                </select><br>
+                    <option value="">-- Pilih Pemandu --</option>`;
+            if (pemanduList) {
+                pemanduList.forEach(p => {
+                    const labelNama = p.kategori === 'Gantian' ? `${p.nama} (Gantian)` : p.nama;
+                    html += `<option value="${labelNama}">${labelNama}</option>`;
+                });
+            }
+            
+            // Dropdown Kenderaan (Dinamik)
+            html += `</select><br>
                 <select id="kenderaan-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
                     <option value="">-- Pilih Kenderaan --</option>`;
             if (kenderaanList) {
@@ -1456,3 +1456,78 @@ async function semakJadualAwam(mod = 'aktif') {
     
     tbody.innerHTML = html;
 }
+// ==========================================
+// FUNGSI PENGURUSAN TETAPAN (URUSETIA SAHAJA)
+// ==========================================
+async function muatTetapan() {
+    // 1. Muat Pemandu
+    const tbodyP = document.getElementById('jadualTetapanPemandu');
+    if(tbodyP) tbodyP.innerHTML = '<tr><td colspan="3" style="text-align:center;">Memuatkan...</td></tr>';
+    
+    const { data: pData } = await supabaseClient.from('pemandu').select('*').order('id', {ascending: true});
+    if(tbodyP) {
+        if(pData && pData.length > 0) {
+            let htmlP = '';
+            pData.forEach(p => {
+                let badge = p.kategori === 'Gantian' ? '<span style="background:#fef3c7; color:#d97706; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Gantian</span>' : '<span style="background:#f1f5f9; color:#475569; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Tetap</span>';
+                htmlP += `<tr><td><strong>${p.nama}</strong></td><td>${badge}</td>
+                          <td style="text-align:center;"><button class="btn-delete" onclick="padamPemandu(${p.id})" title="Padam">✕</button></td></tr>`;
+            });
+            tbodyP.innerHTML = htmlP;
+        } else {
+            tbodyP.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Tiada rekod pemandu.</td></tr>';
+        }
+    }
+
+    // 2. Muat Kenderaan
+    const tbodyK = document.getElementById('jadualTetapanKenderaan');
+    if(tbodyK) tbodyK.innerHTML = '<tr><td colspan="3" style="text-align:center;">Memuatkan...</td></tr>';
+    
+    const { data: kData } = await supabaseClient.from('kenderaan').select('*').order('id', {ascending: true});
+    if(tbodyK) {
+        if(kData && kData.length > 0) {
+            let htmlK = '';
+            kData.forEach(k => {
+                htmlK += `<tr><td><strong>${k.no_plat}</strong></td><td>${k.model}</td>
+                          <td style="text-align:center;"><button class="btn-delete" onclick="padamKenderaan(${k.id})" title="Padam">✕</button></td></tr>`;
+            });
+            tbodyK.innerHTML = htmlK;
+        } else {
+            tbodyK.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Tiada rekod kenderaan.</td></tr>';
+        }
+    }
+}
+
+window.tambahPemandu = async function() {
+    const nama = document.getElementById('namaPemanduBaru').value.trim();
+    const kategori = document.getElementById('kategoriPemanduBaru').value;
+    if(!nama) return alert('Sila masukkan nama pemandu!');
+    
+    const { error } = await supabaseClient.from('pemandu').insert([{ nama: nama, kategori: kategori }]);
+    if(error) alert('Ralat: ' + error.message);
+    else { document.getElementById('namaPemanduBaru').value = ''; muatTetapan(); }
+};
+
+window.padamPemandu = async function(id) {
+    if(!confirm('Adakah anda pasti mahu memadam pemandu ini?')) return;
+    const { error } = await supabaseClient.from('pemandu').delete().eq('id', id);
+    if(error) alert('Ralat: ' + error.message);
+    else muatTetapan();
+};
+
+window.tambahKenderaan = async function() {
+    const plat = document.getElementById('platKenderaanBaru').value.trim();
+    const model = document.getElementById('modelKenderaanBaru').value.trim();
+    if(!plat || !model) return alert('Sila masukkan No. Plat dan Model!');
+    
+    const { error } = await supabaseClient.from('kenderaan').insert([{ no_plat: plat, model: model }]);
+    if(error) alert('Ralat: ' + error.message);
+    else { document.getElementById('platKenderaanBaru').value = ''; document.getElementById('modelKenderaanBaru').value = ''; muatTetapan(); }
+};
+
+window.padamKenderaan = async function(id) {
+    if(!confirm('Adakah anda pasti mahu memadam kenderaan ini?')) return;
+    const { error } = await supabaseClient.from('kenderaan').delete().eq('id', id);
+    if(error) alert('Ralat: ' + error.message);
+    else muatTetapan();
+};
