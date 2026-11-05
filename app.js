@@ -1469,12 +1469,18 @@ async function muatTetapan() {
         if(pData && pData.length > 0) {
             let htmlP = '';
             pData.forEach(p => {
-                let badge = p.kategori === 'Gantian' ? '<span style="background:#fef3c7; color:#d97706; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Gantian</span>' : '<span style="background:#f1f5f9; color:#475569; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Tetap</span>';
-                htmlP += `<tr><td><strong>${p.nama}</strong></td><td>${badge}</td>
-                          <td style="text-align:center; white-space:nowrap;">
-                            <button class="btn-edit" onclick="editPemandu(${p.id}, '${p.nama}', '${p.kategori}')" title="Edit">✏️</button>
-                            <button class="btn-delete" onclick="padamPemandu(${p.id})" title="Padam">✕</button>
-                          </td></tr>`;
+                let badge = p.kategori === 'Gantian' 
+                    ? '<span style="background:#fef3c7; color:#d97706; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Gantian</span>' 
+                    : '<span style="background:#f1f5f9; color:#475569; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Tetap</span>';
+                
+                htmlP += `<tr>
+                            <td><strong>${p.nama}</strong></td>
+                            <td>${badge}</td>
+                            <td style="text-align:center; white-space:nowrap;">
+                                <button type="button" onclick="editPemandu(${p.id}, '${(p.nama || '').replace(/'/g, "\\'")}', '${p.kategori || 'Tetap'}')" title="Kemaskini" style="background:none; border:none; cursor:pointer; font-size:15px; padding:2px 4px; margin:0 3px;">✏️</button>
+                                <button type="button" onclick="padamPemandu(${p.id})" title="Padam" style="background:none; border:none; cursor:pointer; font-size:15px; padding:2px 4px; margin:0 3px; color:#ef4444; font-weight:bold;">✕</button>
+                            </td>
+                          </tr>`;
             });
             tbodyP.innerHTML = htmlP;
         } else {
@@ -1484,7 +1490,7 @@ async function muatTetapan() {
 
     // 2. Muat Kenderaan
     const tbodyK = document.getElementById('jadualTetapanKenderaan');
-    if(tbodyK) tbodyK.innerHTML = '<tr><td colspan="3" style="text-align:center;">Memuatkan...</td></tr>';
+    if(tbodyK) tbodyK.innerHTML = '<tr><td colspan="4" style="text-align:center;">Memuatkan...</td></tr>';
     
     const { data: kData } = await supabaseClient.from('kenderaan').select('*').order('id', {ascending: true});
     if(tbodyK) {
@@ -1496,8 +1502,8 @@ async function muatTetapan() {
                             <td>${k.model}</td>
                             <td><span style="color:#1e293b; font-weight:600;">${k.no_plat}</span></td>
                             <td style="text-align:center; white-space:nowrap;">
-                              <button class="btn-edit" onclick="editKenderaan(${k.id}, '${k.jenis_kenderaan || ''}', '${k.model}', '${k.no_plat}')" title="Edit">✏️</button>
-                              <button class="btn-delete" onclick="padamKenderaan(${k.id})" title="Padam">✕</button>
+                                <button type="button" onclick="editKenderaan(${k.id}, '${(k.jenis_kenderaan || '').replace(/'/g, "\\'")}', '${(k.model || '').replace(/'/g, "\\'")}', '${(k.no_plat || '').replace(/'/g, "\\'")}')" title="Kemaskini" style="background:none; border:none; cursor:pointer; font-size:15px; padding:2px 4px; margin:0 3px;">✏️</button>
+                                <button type="button" onclick="padamKenderaan(${k.id})" title="Padam" style="background:none; border:none; cursor:pointer; font-size:15px; padding:2px 4px; margin:0 3px; color:#ef4444; font-weight:bold;">✕</button>
                             </td>
                           </tr>`;
             });
@@ -1508,6 +1514,9 @@ async function muatTetapan() {
     }
 }
 
+// ==========================================
+// FUNGSI TAMBAH & PADAM
+// ==========================================
 window.tambahPemandu = async function() {
     const nama = document.getElementById('namaPemanduBaru').value.trim();
     const kategori = document.getElementById('kategoriPemanduBaru').value;
@@ -1527,8 +1536,8 @@ window.padamPemandu = async function(id) {
 
 window.tambahKenderaan = async function() {
     const plat = document.getElementById('platKenderaanBaru').value.trim();
-    const model = document.getElementById('modelKenderaanBaru').value.trim(); // Ini Keluaran
-    const jenis = document.getElementById('jenisKenderaanBaru').value.trim(); // Ini Kategori
+    const model = document.getElementById('modelKenderaanBaru').value.trim();
+    const jenis = document.getElementById('jenisKenderaanBaru').value.trim();
 
     if(!plat || !model || !jenis) return alert('Sila masukkan Kategori, Keluaran, dan No. Plat!');
     
@@ -1546,5 +1555,51 @@ window.padamKenderaan = async function(id) {
     if(!confirm('Adakah anda pasti mahu memadam kenderaan ini?')) return;
     const { error } = await supabaseClient.from('kenderaan').delete().eq('id', id);
     if(error) alert('Ralat: ' + error.message);
+    else muatTetapan();
+};
+
+// ==========================================
+// FUNGSI KEMASKINI (EDIT)
+// ==========================================
+window.editPemandu = async function(id, namaAsal, kategoriAsal) {
+    const namaBaru = prompt("Kemaskini Nama Pemandu:", namaAsal);
+    if (namaBaru === null) return;
+    if (!namaBaru.trim()) return alert("Nama tidak boleh kosong!");
+
+    const kategoriBaru = prompt("Kemaskini Kategori (Taip: Tetap atau Gantian):", kategoriAsal || 'Tetap');
+    if (kategoriBaru === null) return;
+
+    const { error } = await supabaseClient
+        .from('pemandu')
+        .update({ nama: namaBaru.trim(), kategori: kategoriBaru.trim() })
+        .eq('id', id);
+
+    if (error) alert("Ralat: " + error.message);
+    else muatTetapan();
+};
+
+window.editKenderaan = async function(id, jenisAsal, modelAsal, platAsal) {
+    const jenisBaru = prompt("Kemaskini Kategori Kenderaan (Cth: Bas, Van, Kereta, SUV):", jenisAsal || '');
+    if (jenisBaru === null) return;
+    if (!jenisBaru.trim()) return alert("Kategori tidak boleh kosong!");
+
+    const modelBaru = prompt("Kemaskini Keluaran / Model (Cth: Scania, Hiace):", modelAsal || '');
+    if (modelBaru === null) return;
+    if (!modelBaru.trim()) return alert("Keluaran tidak boleh kosong!");
+
+    const platBaru = prompt("Kemaskini No. Plat:", platAsal || '');
+    if (platBaru === null) return;
+    if (!platBaru.trim()) return alert("No. Plat tidak boleh kosong!");
+
+    const { error } = await supabaseClient
+        .from('kenderaan')
+        .update({ 
+            jenis_kenderaan: jenisBaru.trim(), 
+            model: modelBaru.trim(), 
+            no_plat: platBaru.trim() 
+        })
+        .eq('id', id);
+
+    if (error) alert("Ralat: " + error.message);
     else muatTetapan();
 };
