@@ -513,10 +513,14 @@
                     <div class="card" style="box-shadow:none; border-color:#e2e8f0;">
                         <div class="card-header" style="background:#f8fafc; color:#1e293b; border-bottom:1px solid #e2e8f0;">👨‍✈️ Senarai Pemandu</div>
                         <div class="card-body" style="padding:15px;">
-                            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                                <input type="text" id="namaPemanduBaru" placeholder="Nama Pemandu Baru" style="flex:1;">
-                                <button type="button" class="btn btn-primary" onclick="alert('Fungsi simpan pemandu ke Supabase sedang dibangunkan')">Tambah</button>
-                            </div>
+                           <div style="display:flex; gap:10px; margin-bottom:15px;">
+    <input type="text" id="namaPemanduBaru" placeholder="Nama Pemandu" style="flex:2;">
+    <select id="kategoriPemanduBaru" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
+        <option value="Tetap">Tetap</option>
+        <option value="Gantian">Gantian</option>
+    </select>
+    <button type="button" class="btn btn-primary" onclick="tambahPemandu()">Tambah</button>
+</div>
                             <div class="table-responsive">
                                 <table class="vms-table" style="min-width:100%;">
                                     <thead><tr><th>Nama Pemandu</th><th style="width:50px;"></th></tr></thead>
@@ -534,10 +538,10 @@
                         <div class="card-header" style="background:#f8fafc; color:#1e293b; border-bottom:1px solid #e2e8f0;">🚘 Senarai Kenderaan</div>
                         <div class="card-body" style="padding:15px;">
                             <div style="display:flex; gap:10px; margin-bottom:15px;">
-                                <input type="text" id="platKenderaanBaru" placeholder="No. Plat" style="flex:1;">
-                                <input type="text" id="modelKenderaanBaru" placeholder="Model" style="flex:2;">
-                                <button type="button" class="btn btn-primary" onclick="alert('Fungsi simpan kenderaan ke Supabase sedang dibangunkan')">Tambah</button>
-                            </div>
+    <input type="text" id="platKenderaanBaru" placeholder="No. Plat" style="flex:1;">
+    <input type="text" id="modelKenderaanBaru" placeholder="Model" style="flex:2;">
+    <button type="button" class="btn btn-primary" onclick="tambahKenderaan()">Tambah</button>
+</div>
                             <div class="table-responsive">
                                 <table class="vms-table" style="min-width:100%;">
                                     <thead><tr><th>No. Plat</th><th>Model</th><th style="width:50px;"></th></tr></thead>
