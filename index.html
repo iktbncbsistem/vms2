@@ -310,18 +310,11 @@
 
         <!-- TAB 2: BORANG MOHON KENDERAAN (PEMOHON SAHAJA) -->
         <div id="tab-mohon-kenderaan" class="hidden">
-            <div class="stepper-container" style="margin: -30px -30px 30px -30px; border-radius: 0 12px 0 0;">
-                <div class="stepper">
-                    <div class="step active"><div class="circle">1</div><div class="label">Maklumat Pemohon</div></div>
-                    <div class="step"><div class="circle">2</div><div class="label">Jadual Perjalanan</div></div>
-                    <div class="step"><div class="circle">3</div><div class="label">Senarai Penumpang</div></div>
-                    <div class="step"><div class="circle">4</div><div class="label">Peralatan / Kelengkapan</div></div>
-                    <div class="step"><div class="circle">5</div><div class="label">Pengesahan & Kelulusan</div></div>
-                </div>
-            </div>
-
-            <form id="vehicleForm">
-                <div class="container">
+            
+            <form id="vehicleForm" style="margin-top: 10px;">
+                <!-- Override grid asal supaya form guna 100% lebar tanpa sidebar -->
+                <div class="container" style="grid-template-columns: 1fr; padding: 0;">
+                    
                     <div class="form-sections">
                         <!-- A. Maklumat Pemohon -->
                         <div class="card">
@@ -376,14 +369,14 @@
                                 B. Jadual Perjalanan
                             </div>
                             <div class="card-body form-grid">
-                             <div class="form-group">
-                                <label>Tarikh Pergi <span class="req">*</span></label>
-                                <input type="date" id="tripDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Tarikh Pulang <span class="req">*</span></label>
-                                <input type="date" id="returnDate" required>
-                            </div>
+                                <div class="form-group">
+                                    <label>Tarikh Pergi <span class="req">*</span></label>
+                                    <input type="date" id="tripDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tarikh Pulang <span class="req">*</span></label>
+                                    <input type="date" id="returnDate" required>
+                                </div>
                                 <div class="form-group">
                                     <label>Masa Bertolak <span class="req">*</span></label>
                                     <input type="time" id="departTime" required>
@@ -470,98 +463,22 @@
                             </div>
                         </div>
 
-                        <!-- E. Pengesahan -->
-                        <div class="card">
-                            <div class="card-header" style="border-radius: 8px;">
-                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                                E. Pengesahan dan Kelulusan
-                            </div>
-                            <div class="card-body" style="padding: 15px 24px;">
-                                <div style="display: flex; gap: 10px; color: var(--text-muted); font-size: 13px;">
-                                    <span style="font-size: 18px;">ⓘ</span> 
-                                    <div>
-                                        Bahagian ini akan diisi oleh <strong>Pegawai Kenderaan</strong> dan <strong>Pegawai Bertanggungjawab</strong>.<br>
-                                        Status permohonan akan dimaklumkan kepada pemohon melalui sistem.
-                                    </div>
+                        <!-- E. Pengesahan & Butang Hantar -->
+                        <div class="bottom-actions" style="margin-top: 30px; margin-bottom: 0;">
+                            <div style="display: flex; gap: 10px; color: var(--text-muted); font-size: 13px; max-width: 60%;">
+                                <span style="font-size: 18px; color: #b45309;">!</span> 
+                                <div>
+                                    Sila pastikan semua maklumat diisi dengan lengkap berserta lampiran <strong>Surat Arahan Tugas Rasmi</strong> sebelum menghantar permohonan.
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Bottom Actions -->
-                        <div class="bottom-actions">
-                            <div class="actions-right" style="width: 100%; justify-content: flex-end;">
+                            
+                            <div class="actions-right">
                                 <button type="button" class="btn btn-outline" id="btnDraft">💾 Simpan Draf</button>
-                                <button type="button" class="btn btn-primary" id="btnReview">👁️ Semak Semula</button>
                                 <button type="submit" class="btn btn-success" id="btnSubmit">➤ Hantar Permohonan</button>
                             </div>
                         </div>
+                        
                     </div>
-
-                    <!-- Right Column: Sidebar -->
-                    <aside class="sidebar">
-                        <div class="card">
-                            <div class="card-header" style="background: white; color: #1e293b; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
-                                Ringkasan Permohonan
-                            </div>
-                            <div class="card-body" style="padding: 15px 20px;">
-                                <div class="summary-item">
-                                    <div class="summary-icon">👤</div>
-                                    <div class="summary-content">
-                                        <small>Nama Pemohon</small>
-                                        <strong id="sumName">-</strong>
-                                    </div>
-                                </div>
-                                <div class="summary-item">
-                                    <div class="summary-icon">🏢</div>
-                                    <div class="summary-content">
-                                        <small>Bahagian / Cawangan</small>
-                                        <strong id="sumDept">-</strong>
-                                    </div>
-                                </div>
-                                <div class="summary-item">
-                                    <div class="summary-icon">🎯</div>
-                                    <div class="summary-content">
-                                        <small>Tujuan Permohonan</small>
-                                        <strong id="sumPurpose">-</strong>
-                                    </div>
-                                </div>
-                                <div class="summary-item">
-                                    <div class="summary-icon">📅</div>
-                                    <div class="summary-content">
-                                        <small>Tarikh Perjalanan</small>
-                                        <strong id="sumDate">-</strong>
-                                    </div>
-                                </div>
-                                <div class="summary-item">
-                                    <div class="summary-icon">👥</div>
-                                    <div class="summary-content">
-                                        <small>Jumlah Penumpang</small>
-                                        <strong id="sumCount">-</strong>
-                                    </div>
-                                </div>
-                                <div class="info-box">
-                                    <span style="color:#b45309; font-weight:bold;">!</span> 
-                                    Sila pastikan semua maklumat diisi dengan lengkap dan tepat sebelum menghantar permohonan.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header" style="background: white; color: #1e293b; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
-                                ⓘ Maklumat Penting
-                            </div>
-                            <div class="card-body" style="padding: 20px; display:flex; flex-direction:column; gap:15px;">
-                                <div style="display:flex; gap:12px; font-size:12px; color:var(--text-main);">
-                                    <span style="font-size:16px; color:var(--primary);">📄</span>
-                                    Sertakan Surat Arahan Tugas Rasmi.
-                                </div>
-                                <div style="display:flex; gap:12px; font-size:12px; color:var(--text-main);">
-                                    <span style="font-size:16px; color:var(--primary);">📤</span>
-                                    Format fail: PDF, JPG atau PNG (maksimum 5MB).
-                                </div>
-                            </div>
-                        </div>
-                    </aside>
                 </div>
             </form>
         </div> <!-- TAMAT TAB MOHON KENDERAAN -->
