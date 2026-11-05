@@ -54,8 +54,9 @@ async function semakPeranan() {
             const appNameField = document.getElementById('applicantName');
             if(appNameField) appNameField.value = data.nama;
         } 
-        else if (data.peranan === 'urusetia') {
+      else if (data.peranan === 'urusetia') {
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
+            document.getElementById('btnTabTetapan').classList.remove('hidden'); // KOD BAHARU: Buka akses tab tetapan
             muatSenaraiUrusetia();
         } 
         else if (data.peranan === 'pelulus') {
@@ -67,19 +68,19 @@ async function semakPeranan() {
     }
 }
 
-// ==========================================
+    // ==========================================
 // FUNGSI TOGGLE TAB UTAMA (KALIS RALAT)
 // ==========================================
 window.tukarTab = function(tabName) {
     // 1. Sembunyikan SEMUA tab dengan selamat
-    const semuaTab = ['tab-jadual-awam', 'tab-mohon-kenderaan', 'dashboard-pemohon', 'tab-dashboard-urusetia', 'tab-dashboard-pelulus'];
+    const semuaTab = ['tab-jadual-awam', 'tab-mohon-kenderaan', 'dashboard-pemohon', 'tab-dashboard-urusetia', 'tab-tetapan-urusetia', 'tab-dashboard-pelulus'];
     semuaTab.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
 
     // 2. Reset warna SEMUA butang tab
-    const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabPelulus'];
+    const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabTetapan', 'btnTabPelulus'];
     semuaButang.forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
@@ -101,12 +102,15 @@ window.tukarTab = function(tabName) {
     else if (tabName === 'mohon') {
         idTabBuka = document.getElementById('tab-mohon-kenderaan') ? 'tab-mohon-kenderaan' : 'dashboard-pemohon';
         idBtnBuka = 'btnTabMohon';
-        // MUAT DRAF APABILA BUKA TAB BORANG!
         muatDraf(); 
     }
     else if (tabName === 'urusetia') { 
         idTabBuka = 'tab-dashboard-urusetia'; 
         idBtnBuka = 'btnTabUrusetia'; 
+    }
+    else if (tabName === 'tetapan') { 
+        idTabBuka = 'tab-tetapan-urusetia'; 
+        idBtnBuka = 'btnTabTetapan'; 
     }
     else if (tabName === 'pelulus') { 
         idTabBuka = 'tab-dashboard-pelulus'; 
