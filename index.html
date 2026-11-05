@@ -286,8 +286,14 @@ body {
         <button id="btnTabUrusetia" onclick="tukarTab('urusetia')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
             📥 Peti Tindakan Urusetia
         </button>
+        <!-- Tukar nama tab ini -->
         <button id="btnTabTetapan" onclick="tukarTab('tetapan')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
-            ⚙️ Tetapan Sistem
+            ⚙️ Tetapan Pemandu & Kenderaan
+        </button>
+
+        <!-- Tambah tab baharu ini -->
+        <button id="btnTabPengguna" onclick="tukarTab('pengguna')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
+            👥 Tetapan Pengguna
         </button>
         
         <button id="btnTabPelulus" onclick="tukarTab('pelulus')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
@@ -529,10 +535,8 @@ body {
         </div>
 <!-- TAB TETAPAN (URUSETIA SAHAJA) -->
         <div id="tab-tetapan-urusetia" class="hidden">
-            <div style="background:#475569; color:white; padding:14px 20px; border-radius:8px 8px 0 0; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
-                <span>⚙️ Tetapan Pemandu & Kenderaan</span>
-            </div>
-            <div style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 8px 8px; padding:20px; background:white;">
+            
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:20px; background:white;">
                 <p style="color:#64748b; font-size:13px; margin-top:0;">Urus senarai pemandu dan kenderaan yang akan dipaparkan dalam sistem (Fungsi UI sedang dibangunkan).</p>
                 
                 <div class="form-grid">
