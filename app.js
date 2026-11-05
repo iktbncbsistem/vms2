@@ -42,7 +42,10 @@ async function semakPeranan() {
         document.getElementById('sistem-tab-utama').classList.remove('hidden'); 
         
         semakJadualAwam('aktif'); 
-
+if (data.peranan === 'tidak_aktif' || !data.peranan) {
+            alert("Akaun anda belum diaktifkan. Sila maklumkan kepada Urusetia untuk pengaktifan peranan.");
+            return;
+        }
         if (data.peranan === 'pemohon') {
             const btnTabMohon = document.getElementById('btnTabMohon');
             const ruangCarian = document.getElementById('ruang-carian-jadual');
@@ -52,19 +55,24 @@ async function semakPeranan() {
             const appNameField = document.getElementById('applicantName');
             if(appNameField) appNameField.value = data.nama;
         } 
-        else if (data.peranan === 'urusetia') {
+        } else if (data.peranan === 'urusetia') {
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
             
-            // BUKA AKSES TAB TETAPAN KEPADA URUSETIA
+            // Buka akses tab tetapan kepada Urusetia
             const btnTabTetapan = document.getElementById('btnTabTetapan');
             if(btnTabTetapan) btnTabTetapan.classList.remove('hidden');
             
+            const btnTabPengguna = document.getElementById('btnTabPengguna');
+            if(btnTabPengguna) btnTabPengguna.classList.remove('hidden');
+            
             muatSenaraiUrusetia();
-        } 
+        }
         else if (data.peranan === 'pelulus') {
             document.getElementById('btnTabPelulus').classList.remove('hidden');
             muatSenaraiPelulus();
         }
+
+    
     } else {
         alert("Profil anda tiada dalam pangkalan data. Sila hubungi Admin.");
     }
@@ -74,13 +82,21 @@ async function semakPeranan() {
 // FUNGSI TOGGLE TAB UTAMA (KALIS RALAT)
 // ==========================================
 window.tukarTab = function(tabName) {
-    const semuaTab = ['tab-jadual-awam', 'tab-mohon-kenderaan', 'dashboard-pemohon', 'tab-dashboard-urusetia', 'tab-tetapan-urusetia', 'tab-dashboard-pelulus'];
+    const semuaTab = [
+        'tab-jadual-awam', 
+        'tab-mohon-kenderaan', 
+        'dashboard-pemohon', 
+        'tab-dashboard-urusetia', 
+        'tab-tetapan-urusetia', 
+        'tab-tetapan-pengguna', 
+        'tab-dashboard-pelulus'
+    ];
     semuaTab.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
 
-    const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabTetapan', 'btnTabPelulus'];
+    const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabTetapan', 'btnTabPengguna', 'btnTabPelulus'];
     semuaButang.forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
@@ -104,11 +120,15 @@ window.tukarTab = function(tabName) {
     }
     else if (tabName === 'urusetia') { 
         idTabBuka = 'tab-dashboard-urusetia'; idBtnBuka = 'btnTabUrusetia'; 
-        muatSenaraiUrusetia(); // Refresh jadual agihan
+        muatSenaraiUrusetia();
     }
     else if (tabName === 'tetapan') { 
         idTabBuka = 'tab-tetapan-urusetia'; idBtnBuka = 'btnTabTetapan'; 
-        if(typeof muatTetapan === 'function') muatTetapan(); // Tarik data dari Supabase
+        if(typeof muatTetapan === 'function') muatTetapan();
+    }
+    else if (tabName === 'pengguna') { 
+        idTabBuka = 'tab-tetapan-pengguna'; idBtnBuka = 'btnTabPengguna'; 
+        muatSenaraiPengguna();
     }
     else if (tabName === 'pelulus') { 
         idTabBuka = 'tab-dashboard-pelulus'; idBtnBuka = 'btnTabPelulus'; 
@@ -1615,3 +1635,82 @@ window.editKenderaan = async function(id, jenisAsal, modelAsal, platAsal) {
     if (error) alert("Ralat: " + error.message);
     else muatTetapan();
 };
+// ==========================================
+// FUNGSI PENGURUSAN PENGGUNA (URUSETIA SAHAJA)
+// ==========================================
+async function muatSenaraiPengguna() {
+    const tbody = document.getElementById('jadualTetapanPengguna');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 25px;">Memuatkan senarai pengguna... ⏳</td></tr>';
+
+    const { data: users, error } = await supabaseClient
+        .from('profil')
+        .select('*')
+        .order('nama', { ascending: true });
+
+    if (error) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red; padding: 20px;">Ralat: ${error.message}</td></tr>`;
+        return;
+    }
+
+    if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #64748b;">Tiada rekod pengguna dijumpai.</td></tr>';
+        return;
+    }
+
+    let html = '';
+    users.forEach((u, i) => {
+        const perananSemasa = u.peranan || 'tidak_aktif';
+
+        // Lencana status peranan
+        let badge = '<span style="background:#fee2e2; color:#b91c1c; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Akaun Tidak Aktif</span>';
+        if (perananSemasa === 'pemohon') {
+            badge = '<span style="background:#dbeafe; color:#1d4ed8; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Pemohon</span>';
+        } else if (perananSemasa === 'urusetia') {
+            badge = '<span style="background:#ffedd5; color:#c2410c; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Urusetia</span>';
+        } else if (perananSemasa === 'pelulus') {
+            badge = '<span style="background:#dcfce7; color:#15803d; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Pelulus</span>';
+        }
+
+        html += `
+            <tr>
+                <td style="text-align: center; font-weight: 600;">${i + 1}</td>
+                <td><strong>${u.nama || '-'}</strong></td>
+                <td style="color: #64748b; font-size: 13px;">${u.email || u.id}</td>
+                <td>${badge}</td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                        <select id="select-role-${u.id}" style="padding: 6px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <option value="tidak_aktif" ${perananSemasa === 'tidak_aktif' ? 'selected' : ''}>Akaun Tidak Aktif</option>
+                            <option value="pemohon" ${perananSemasa === 'pemohon' ? 'selected' : ''}>Pemohon</option>
+                            <option value="urusetia" ${perananSemasa === 'urusetia' ? 'selected' : ''}>Urusetia</option>
+                            <option value="pelulus" ${perananSemasa === 'pelulus' ? 'selected' : ''}>Pelulus</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="simpanPerananUser('${u.id}')" style="padding: 6px 14px; font-size: 12px;">Simpan</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+window.simpanPerananUser = async function(userId) {
+    const selectElem = document.getElementById(`select-role-${userId}`);
+    if (!selectElem) return;
+    const perananBaru = selectElem.value;
+
+    const { error } = await supabaseClient
+        .from('profil')
+        .update({ peranan: perananBaru })
+        .eq('id', userId);
+
+    if (error) {
+        alert("Ralat mengemaskini peranan: " + error.message);
+    } else {
+        alert("Peranan pengguna berjaya dikemaskini!");
+        muatSenaraiPengguna();
+    }
+};
+
