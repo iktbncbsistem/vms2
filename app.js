@@ -270,7 +270,10 @@ async function muatSenaraiUrusetia() {
                 <select id="kenderaan-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
                     <option value="">-- Pilih Kenderaan --</option>`;
             if (kenderaanList) {
-                kenderaanList.forEach(k => html += `<option value="${k.id}">${k.no_plat} - ${k.model}</option>`);
+               kenderaanList.forEach(k => {
+    const labelKategori = k.jenis_kenderaan ? `[${k.jenis_kenderaan}] ` : '';
+    html += `<option value="${k.id}">${labelKategori}${k.model} (${k.no_plat})</option>`;
+});
             }
             html += `</select><br>
                 <button class="btn btn-success" onclick="agihKenderaan(${t.id})" style="font-size:12px; width:100%;">Sahkan Agihan</button>`;
@@ -1365,7 +1368,7 @@ async function semakJadualAwam(mod = 'aktif') {
     const { data, error } = await query;
     if (error) { tbody.innerHTML = `<tr><td colspan="9" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`; return; }
     
-    const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model');
+    const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model, jenis_kenderaan');
 
     const dataDitapis = data.filter(t => {
         if (t.status === 'Lulus' || t.status === 'Selesai Diagih') return true;
@@ -1405,7 +1408,16 @@ async function semakJadualAwam(mod = 'aktif') {
             let infoKenderaan = '-';
             if (t.id_kenderaan && senaraiKenderaan) {
                 const kenderaan = senaraiKenderaan.find(k => k.id == t.id_kenderaan);
-                if (kenderaan) infoKenderaan = `<strong style="color:#0f172a;">${kenderaan.no_plat}</strong><br><small style="color:#64748b;">${kenderaan.model}</small>`;
+                if (kenderaan) {
+                    const badgeKategori = kenderaan.jenis_kenderaan 
+                        ? `<span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; display:inline-block; margin-bottom:2px;">${kenderaan.jenis_kenderaan}</span><br>` 
+                        : '';
+                    infoKenderaan = `
+                        ${badgeKategori}
+                        <strong>${kenderaan.model || '-'}</strong><br>
+                        <small style="color:#475569; font-weight:600;">${kenderaan.no_plat || '-'}</small>
+                    `;
+                }
             }
 
             html += `<tr>`;
