@@ -102,7 +102,7 @@ window.tukarTab = function(tabName) {
         if (el) el.classList.add('hidden');
     });
 
-    const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabTetapan', 'btnTabPengguna', 'btnTabPelulus'];
+    const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabTetapan', 'btnTabPengguna', 'btnTabPelulus', 'btnTabLokasi'];
     semuaButang.forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
