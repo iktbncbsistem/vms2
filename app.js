@@ -50,7 +50,8 @@ async function semakPeranan() {
             return;
         }
 
-        // 2. Semakan peranan lain
+
+// 2. Semakan peranan lain
         if (data.peranan === 'pemohon') {
             const btnTabMohon = document.getElementById('btnTabMohon');
             const ruangCarian = document.getElementById('ruang-carian-jadual');
@@ -59,7 +60,10 @@ async function semakPeranan() {
             
             const appNameField = document.getElementById('applicantName');
             if(appNameField) appNameField.value = data.nama;
-        } 
+
+            // Panggil fungsi tarik data bahagian ke dalam borang
+            muatDropdownBahagian();
+        }
         else if (data.peranan === 'urusetia') {
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
             
@@ -1829,3 +1833,31 @@ window.editBahagian = async function(id, namaLama) {
         muatSenaraiBahagian(); // Refresh jadual terus
     }
 };
+// ==========================================
+// FUNGSI MUAT DROPDOWN BORANG PEMOHON
+// ==========================================
+async function muatDropdownBahagian() {
+    const dropdown = document.getElementById('pilihanBahagian');
+    if (!dropdown) return;
+
+    // Tarik senarai bahagian dari Supabase
+    const { data, error } = await supabaseClient
+        .from('bahagian')
+        .select('nama_bahagian')
+        .order('nama_bahagian', { ascending: true });
+
+    if (error) {
+        console.error("Ralat memuatkan dropdown bahagian:", error.message);
+        return;
+    }
+
+    // Kosongkan dan letak pilihan lalai (default)
+    dropdown.innerHTML = '<option value="">Sila pilih bahagian / cawangan</option>';
+
+    // Masukkan data dari pangkalan data ke dalam dropdown
+    if (data && data.length > 0) {
+        data.forEach(b => {
+            dropdown.innerHTML += `<option value="${b.nama_bahagian}">${b.nama_bahagian}</option>`;
+        });
+    }
+}
