@@ -212,8 +212,8 @@ if(vehicleForm) {
                 id_pemohon: currentUser.id,
                 nama_pemohon: document.getElementById('applicantName').value,
                 no_telefon: document.getElementById('phone').value,
-                bahagian: document.getElementById('department').value,
-                tujuan: document.getElementById('purpose').value,
+                bahagian: document.getElementById('pilihanBahagian').value,
+            tujuan: document.getElementById('tujuanPermohonan').value,
                 destinasi: document.getElementById('location').value,
                 lokasi: document.getElementById('location').value, // backup column
                 tarikh_pergi: document.getElementById('tripDate').value,
