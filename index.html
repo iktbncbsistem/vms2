@@ -485,7 +485,21 @@ body {
                                         </tbody>
                                     </table>
                                 </div>
-                                <button type="button" class="btn btn-primary" id="btnAddPassenger" style="margin-top:10px;">+ Tambah Penumpang</button>
+                                <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
+                                    <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
+                                    <button type="button" class="btn btn-primary" id="btnAddEquipment">+ Tambah Peralatan</button>
+                                    <label class="btn btn-outline" style="margin: 0; cursor: pointer; font-size: 12px; padding: 8px 12px;">
+                                        📎 Muat Naik Senarai
+                                        <input type="file" id="failSenaraiPeralatan" class="hidden" accept=".pdf,.xlsx,.xls,.doc,.docx,.jpg,.png" onchange="document.getElementById('namaFailPeralatan').innerText = this.files[0] ? this.files[0].name : '';">
+                                    </label>
+                                </div>
+                                <div id="namaFailPeralatan" style="font-size: 12px; color: #15945b; margin-top: 5px; font-weight: 600;"></div>
+                                    <label class="btn btn-outline" style="margin: 0; cursor: pointer; font-size: 12px; padding: 8px 12px;">
+                                        📎 Muat Naik Senarai
+                                        <input type="file" id="failSenaraiPenumpang" class="hidden" accept=".pdf,.xlsx,.xls,.doc,.docx,.jpg,.png" onchange="document.getElementById('namaFailPenumpang').innerText = this.files[0] ? this.files[0].name : '';">
+                                    </label>
+                                </div>
+                                <div id="namaFailPenumpang" style="font-size: 12px; color: #15945b; margin-top: 5px; font-weight: 600;"></div>
                             </div>
                         </div>
 
