@@ -295,6 +295,10 @@ body {
         <button id="btnTabPengguna" onclick="tukarTab('pengguna')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
             👥 Tetapan Pengguna
         </button>
+
+        <button id="btnTabLokasi" onclick="tukarTab('lokasi')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s; margin-left: 5px;">
+    📍 Tetapan Lokasi
+</button>
         
         <button id="btnTabPelulus" onclick="tukarTab('pelulus')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
             ✅ Peti Tindakan Pelulus
@@ -636,7 +640,31 @@ body {
             </div>
         </div>
 
-
+<!-- TAB TETAPAN LOKASI (URUSETIA SAHAJA) -->
+<div id="tab-tetapan-lokasi" class="hidden" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; background: white;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div>
+            <h3 style="margin: 0; color: #102a43;">📍 Pengurusan Senarai Lokasi</h3>
+            <p style="color: #64748b; font-size: 13px; margin: 4px 0 0 0;">Urus senarai lokasi yang akan dipaparkan dalam borang permohonan.</p>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="tambahLokasi()">+ Tambah Lokasi</button>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="vms-table" style="min-width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 50px; text-align: center;">Bil</th>
+                    <th>Nama Lokasi</th>
+                    <th style="width: 150px; text-align: center;">Tindakan</th>
+                </tr>
+            </thead>
+            <tbody id="jadualTetapanLokasi">
+                <tr><td colspan="3" style="text-align: center; padding: 25px; color: #64748b;">(Fungsi pangkalan data lokasi sedang dibangunkan)</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
         
         <!-- TAB 4: PELULUS -->
         <div id="tab-dashboard-pelulus" class="hidden">
