@@ -1817,6 +1817,24 @@ window.padamBahagian = async function(id) {
         if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
     }
 };
+window.tambahBahagian = async function() {
+    const namaBaharu = prompt("Masukkan nama Bahagian / Cawangan baharu:");
+    
+    // Jika pengguna tekan cancel atau biarkan kosong
+    if (!namaBaharu || namaBaharu.trim() === "") return; 
+
+    const { error } = await supabaseClient
+        .from('bahagian')
+        .insert([{ nama_bahagian: namaBaharu.trim() }]);
+
+    if (error) {
+        alert("Ralat menambah bahagian: " + error.message);
+    } else {
+        muatSenaraiBahagian(); // Refresh jadual terus
+        if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian(); // Refresh dropdown borang
+    }
+};
+
 // ==========================================
 // FUNGSI MUAT DROPDOWN BORANG PEMOHON
 // ==========================================
