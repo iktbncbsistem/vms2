@@ -1768,7 +1768,10 @@ async function muatSenaraiBahagian() {
                 <td style="text-align: center; font-weight: 600;">${i + 1}</td>
                 <td><strong>${b.nama_bahagian}</strong></td>
                 <td style="text-align: center;">
-                    <button class="btn btn-outline" onclick="padamBahagian('${b.id}')" style="padding: 4px 10px; font-size: 12px; color: #dc2626; border-color: #dc2626;">❌ Padam</button>
+                    <div style="display: flex; gap: 15px; justify-content: center; align-items: center;">
+                        <button onclick="editBahagian('${b.id}', '${b.nama_bahagian}')" style="background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 0; transition: transform 0.2s;" title="Kemaskini" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">✏️</button>
+                        <button onclick="padamBahagian('${b.id}')" style="background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 0; transition: transform 0.2s;" title="Padam" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">❌</button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -1805,6 +1808,23 @@ window.padamBahagian = async function(id) {
 
     if (error) {
         alert("Ralat memadam bahagian: " + error.message);
+    } else {
+        muatSenaraiBahagian(); // Refresh jadual terus
+    }
+};
+window.editBahagian = async function(id, namaLama) {
+    const namaBaru = prompt("Kemaskini nama Bahagian / Cawangan:", namaLama);
+    
+    // Jika pengguna tekan cancel, biarkan kosong, atau tiada perubahan nama
+    if (!namaBaru || namaBaru.trim() === "" || namaBaru.trim() === namaLama) return;
+
+    const { error } = await supabaseClient
+        .from('bahagian')
+        .update({ nama_bahagian: namaBaru.trim() })
+        .eq('id', id);
+
+    if (error) {
+        alert("Ralat mengemaskini bahagian: " + error.message);
     } else {
         muatSenaraiBahagian(); // Refresh jadual terus
     }
