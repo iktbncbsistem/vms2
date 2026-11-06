@@ -69,7 +69,8 @@ async function semakPeranan() {
             
             const btnTabPengguna = document.getElementById('btnTabPengguna');
             if(btnTabPengguna) btnTabPengguna.classList.remove('hidden');
-            
+            const btnTabLokasi = document.getElementById('btnTabLokasi');
+if(btnTabLokasi) btnTabLokasi.classList.remove('hidden');
             muatSenaraiUrusetia();
         } 
         else if (data.peranan === 'pelulus') {
@@ -93,7 +94,8 @@ window.tukarTab = function(tabName) {
         'tab-dashboard-urusetia', 
         'tab-tetapan-urusetia', 
         'tab-tetapan-pengguna', 
-        'tab-dashboard-pelulus'
+        'tab-dashboard-pelulus',
+        'tab-tetapan-lokasi'
     ];
     semuaTab.forEach(id => {
         const el = document.getElementById(id);
@@ -137,7 +139,10 @@ window.tukarTab = function(tabName) {
     else if (tabName === 'pelulus') { 
         idTabBuka = 'tab-dashboard-pelulus'; idBtnBuka = 'btnTabPelulus'; 
     }
-
+else if (tabName === 'lokasi') {
+    idTabBuka = 'tab-tetapan-lokasi'; 
+    idBtnBuka = 'btnTabLokasi'; 
+}
     const tabDibuka = document.getElementById(idTabBuka);
     if (tabDibuka) {
         tabDibuka.classList.remove('hidden');
