@@ -20,24 +20,23 @@ function tambahBaris(tableId) {
 async function loginGoogle() {
     await supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
 }
-
 async function logout() {
     await supabaseClient.auth.signOut();
     location.reload();
 }
-
 window.onload = async function() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         currentUser = session.user;
         document.getElementById('btnLogout').classList.remove('hidden');
         semakPeranan();
+    } else {
+        // LETAK KOD DI SINI JIKA TIADA SESI (BELUM LOG MASUK)
+        document.getElementById('login-section').classList.remove('hidden');
     }
 };
-
 async function semakPeranan() {
-    const { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();
-    
+    const { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();    
     if (data) {
         document.getElementById('login-section').classList.add('hidden');
         document.getElementById('sistem-tab-utama').classList.remove('hidden');
