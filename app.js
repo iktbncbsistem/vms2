@@ -142,6 +142,7 @@ window.tukarTab = function(tabName) {
 else if (tabName === 'bahagian') {
         idTabBuka = 'tab-tetapan-bahagian';
         idBtnBuka = 'btnTabBahagian';
+        muatSenaraiBahagian();
     }
     const tabDibuka = document.getElementById(idTabBuka);
     if (tabDibuka) {
@@ -1737,3 +1738,74 @@ window.semakTujuanLain = function(nilai) {
     }
 };
 
+// ==========================================
+// FUNGSI PENGURUSAN BAHAGIAN / CAWANGAN
+// ==========================================
+async function muatSenaraiBahagian() {
+    const tbody = document.getElementById('jadualTetapanBahagian');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 25px;">Memuatkan senarai bahagian... ⏳</td></tr>';
+
+    const { data: bahagianData, error } = await supabaseClient
+        .from('bahagian')
+        .select('*')
+        .order('nama_bahagian', { ascending: true });
+
+    if (error) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red; padding: 20px;">Ralat: ${error.message}</td></tr>`;
+        return;
+    }
+
+    if (!bahagianData || bahagianData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #64748b;">Tiada rekod bahagian dijumpai. Sila klik butang + Tambah Bahagian.</td></tr>';
+        return;
+    }
+
+    let html = '';
+    bahagianData.forEach((b, i) => {
+        html += `
+            <tr>
+                <td style="text-align: center; font-weight: 600;">${i + 1}</td>
+                <td><strong>${b.nama_bahagian}</strong></td>
+                <td style="text-align: center;">
+                    <button class="btn btn-outline" onclick="padamBahagian('${b.id}')" style="padding: 4px 10px; font-size: 12px; color: #dc2626; border-color: #dc2626;">❌ Padam</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+window.tambahBahagian = async function() {
+    const namaBaharu = prompt("Masukkan nama Bahagian / Cawangan baharu:");
+    
+    // Jika pengguna tekan cancel atau biarkan kosong
+    if (!namaBaharu || namaBaharu.trim() === "") return; 
+
+    const { error } = await supabaseClient
+        .from('bahagian')
+        .insert([{ nama_bahagian: namaBaharu.trim() }]);
+
+    if (error) {
+        alert("Ralat menambah bahagian: " + error.message);
+    } else {
+        alert("Bahagian baharu berjaya ditambah!");
+        muatSenaraiBahagian(); // Refresh jadual terus
+    }
+};
+
+window.padamBahagian = async function(id) {
+    if (!confirm("Adakah anda pasti mahu memadam bahagian ini?")) return;
+
+    const { error } = await supabaseClient
+        .from('bahagian')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        alert("Ralat memadam bahagian: " + error.message);
+    } else {
+        muatSenaraiBahagian(); // Refresh jadual terus
+    }
+};
