@@ -186,22 +186,16 @@ if(vehicleForm) {
         btnSubmit.disabled = true;
 
         try {
-            // Upload Fail Surat
             // Upload Fail Surat (Dengan Compression)
             let fileUpload = document.getElementById('fileUpload').files[0];
             let fileUrl = null;
             if (fileUpload) {
-                fileUpload = await mampatkanGambar(fileUpload); // Panggil fungsi mampat
+                fileUpload = await mampatkanGambar(fileUpload);
                 const fileName = `surat_${Date.now()}_${Math.floor(Math.random()*1000)}.${fileUpload.name.split('.').pop()}`;
                 const { error: uploadError } = await supabaseClient.storage.from('dokumen_sokongan').upload(fileName, fileUpload);
                 if (uploadError) throw uploadError;
                 fileUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fileName).data.publicUrl;
             }
-                const { error: uploadError } = await supabaseClient.storage.from('dokumen_sokongan').upload(fileName, fileUpload);
-                if (uploadError) throw uploadError;
-                fileUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fileName).data.publicUrl;
-            }
-
             // Kumpul Data Penumpang (4 lajur)
             const passengers = [];
             document.querySelectorAll('#tblPassengers tbody tr').forEach(tr => {
