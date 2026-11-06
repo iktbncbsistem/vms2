@@ -28,6 +28,13 @@ window.onload = async function() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         currentUser = session.user;
+        
+        // KOD AUTOMASI: Simpan e-mel & masa log masuk terkini ke jadual profil
+        await supabaseClient.from('profil').update({
+            email: currentUser.email,
+            log_terakhir: new Date().toISOString()
+        }).eq('id', currentUser.id);
+
         document.getElementById('btnLogout').classList.remove('hidden');
         semakPeranan();
     } else {
