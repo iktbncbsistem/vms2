@@ -41,6 +41,8 @@ async function semakPeranan() {
     if (data) {
         document.getElementById('login-section').classList.add('hidden');
         document.getElementById('sistem-tab-utama').classList.remove('hidden');
+        const headerUtama = document.getElementById('header-utama');
+        if(headerUtama) headerUtama.classList.remove('hidden');
 
         semakJadualAwam('aktif');
 
