@@ -187,10 +187,16 @@ if(vehicleForm) {
 
         try {
             // Upload Fail Surat
-            const fileUpload = document.getElementById('fileUpload').files[0];
+            // Upload Fail Surat (Dengan Compression)
+            let fileUpload = document.getElementById('fileUpload').files[0];
             let fileUrl = null;
             if (fileUpload) {
-                const fileName = `surat_${Date.now()}.${fileUpload.name.split('.').pop()}`;
+                fileUpload = await mampatkanGambar(fileUpload); // Panggil fungsi mampat
+                const fileName = `surat_${Date.now()}_${Math.floor(Math.random()*1000)}.${fileUpload.name.split('.').pop()}`;
+                const { error: uploadError } = await supabaseClient.storage.from('dokumen_sokongan').upload(fileName, fileUpload);
+                if (uploadError) throw uploadError;
+                fileUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fileName).data.publicUrl;
+            }
                 const { error: uploadError } = await supabaseClient.storage.from('dokumen_sokongan').upload(fileName, fileUpload);
                 if (uploadError) throw uploadError;
                 fileUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fileName).data.publicUrl;
@@ -1885,5 +1891,53 @@ function formatMasaLogin(tarikh) {
     return d.toLocaleString('ms-MY', { 
         day: '2-digit', month: 'short', year: 'numeric', 
         hour: '2-digit', minute: '2-digit', hour12: true 
+    });
+}
+// ==========================================
+// FUNGSI COMPRESS GAMBAR (JIMAT STORAGE)
+// ==========================================
+async function mampatkanGambar(file) {
+    // Hanya proses jika fail adalah gambar. Jika PDF/Word/Excel, pulangkan fail asal.
+    if (!file || !file.type.match(/image.*/)) {
+        return file; 
+    }
+
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1200;
+                const MAX_HEIGHT = 1200;
+                let width = img.width;
+                let height = img.height;
+
+                // Kira nisbah untuk kecilkan gambar
+                if (width > height && width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                } else if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Tukar kepada JPEG dengan kualiti 70% (0.7)
+                canvas.toBlob((blob) => {
+                    const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    resolve(newFile);
+                }, 'image/jpeg', 0.7);
+            };
+        };
     });
 }
