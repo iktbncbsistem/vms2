@@ -1699,12 +1699,12 @@ async function muatSenaraiPengguna() {
             <tr>
                 <td style="text-align: center; font-weight: 600;">${i + 1}</td>
                 <td><strong>${u.nama || '-'}</strong></td>
-                <td style="color: #64748b; font-size: 13px;">${u.email || '-'}</td>
+               <td style="color: #64748b; font-size: 13px;">${u.email || u.emel || '-'}</td>
                 <td style="color: #64748b; font-size: 13px;">${formatMasaLogin(u.last_sign_in_at || u.log_terakhir)}</td>
                 <td>${badge}</td>
                 <td style="text-align: center;">
                     <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
-                        <select id="select-role-${u.id}" style="padding: 6px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <select id="select-role-${u.id}" style="width: 130px; padding: 6px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
                             <option value="tidak_aktif" ${perananSemasa === 'tidak_aktif' ? 'selected' : ''}>Akaun Tidak Aktif</option>
                             <option value="pemohon" ${perananSemasa === 'pemohon' ? 'selected' : ''}>Pemohon</option>
                             <option value="urusetia" ${perananSemasa === 'urusetia' ? 'selected' : ''}>Urusetia</option>
