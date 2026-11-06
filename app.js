@@ -1223,10 +1223,10 @@ if (btnAddPassenger) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="text-align:center; font-weight:600;"></td>
-            <td><input type="text" placeholder="Nama Penuh" required></td>
-            <td><input type="text" placeholder="No. K/P" required></td>
-            <td><input type="tel" placeholder="No. Telefon" required></td>
-            <td><input type="text" placeholder="Bahagian" required></td>
+            <td><input type="text" placeholder="Nama Penuh" class="form-control" name="nama_penumpang[]" oninput="this.value = this.value.toUpperCase();" style="text-transform: uppercase; width: 100%;"></td>
+            <td><input type="text" placeholder="No. K/P" class="form-control" name="kp_penumpang[]" maxlength="14" oninput="this.value = this.value.replace(/[^0-9-]/g, '');" style="width: 100%;"></td>
+            <td><input type="tel" placeholder="No. Telefon" class="form-control" name="tel_penumpang[]" style="width: 100%;"></td>
+            <td><input type="text" placeholder="Bahagian" class="form-control" name="bahagian_penumpang[]" oninput="this.value = this.value.toUpperCase();" style="text-transform: uppercase; width: 100%;"></td>
             <td style="text-align:center;"><button type="button" class="btn-delete" onclick="this.closest('tr').remove(); kemaskiniBil('tblPassengers')" title="Padam">✕</button></td>
         `;
         tbody.appendChild(tr);
