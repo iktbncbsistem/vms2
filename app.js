@@ -1677,7 +1677,7 @@ async function muatSenaraiPengguna() {
     }
 
     if (!users || users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #64748b;">Tiada rekod pengguna dijumpai.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #64748b;">Tiada rekod pengguna dijumpai.</td></tr>';
         return;
     }
 
