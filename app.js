@@ -1718,3 +1718,17 @@ window.simpanPerananUser = async function(userId) {
     }
 };
 
+// ==========================================
+// FUNGSI SEMAK TUJUAN LAIN-LAIN
+// ==========================================
+window.semakTujuanLain = function(nilai) {
+    const inputLain = document.getElementById('inputTujuanLain');
+    if (nilai === 'Lain-lain') {
+        inputLain.classList.remove('hidden');
+        inputLain.focus();
+    } else {
+        inputLain.classList.add('hidden');
+        inputLain.value = ''; // Kosongkan semula jika batal pilih
+    }
+};
+
