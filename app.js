@@ -1650,6 +1650,14 @@ window.editKenderaan = async function(id, jenisAsal, modelAsal, platAsal) {
     if (error) alert("Ralat: " + error.message);
     else muatTetapan();
 };
+function formatMasaLogin(tarikh) {
+    if (!tarikh) return '<span style="color: #94a3b8; font-style: italic; font-size: 12px;">Belum log masuk</span>';
+    const d = new Date(tarikh);
+    return d.toLocaleString('ms-MY', { 
+        day: '2-digit', month: 'short', year: 'numeric', 
+        hour: '2-digit', minute: '2-digit', hour12: true 
+    });
+}
 // ==========================================
 // FUNGSI PENGURUSAN PENGGUNA (URUSETIA SAHAJA)
 // ==========================================
@@ -1691,7 +1699,8 @@ async function muatSenaraiPengguna() {
             <tr>
                 <td style="text-align: center; font-weight: 600;">${i + 1}</td>
                 <td><strong>${u.nama || '-'}</strong></td>
-                <td style="color: #64748b; font-size: 13px;">${u.email || u.id}</td>
+                <td style="color: #64748b; font-size: 13px;">${u.email || '-'}</td>
+                <td style="color: #64748b; font-size: 13px;">${formatMasaLogin(u.last_sign_in_at || u.log_terakhir)}</td>
                 <td>${badge}</td>
                 <td style="text-align: center;">
                     <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
