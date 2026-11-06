@@ -1744,7 +1744,7 @@ window.semakTujuanLain = function(nilai) {
 };
 
 // ==========================================
-// FUNGSI PENGURUSAN BAHAGIAN / CAWANGAN
+// FUNGSI PENGURUSAN BAHAGIAN (BERASASKAN ID)
 // ==========================================
 async function muatSenaraiBahagian() {
     const tbody = document.getElementById('jadualTetapanBahagian');
@@ -1754,7 +1754,7 @@ async function muatSenaraiBahagian() {
     const { data: bahagianData, error } = await supabaseClient
         .from('bahagian')
         .select('*')
-        .order('nama_bahagian', { ascending: true });
+        .order('id', { ascending: true });
 
     if (error) {
         tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red; padding: 20px;">Ralat: ${error.message}</td></tr>`;
@@ -1785,21 +1785,20 @@ async function muatSenaraiBahagian() {
     tbody.innerHTML = html;
 }
 
-window.tambahBahagian = async function() {
-    const namaBaharu = prompt("Masukkan nama Bahagian / Cawangan baharu:");
-    
-    // Jika pengguna tekan cancel atau biarkan kosong
-    if (!namaBaharu || namaBaharu.trim() === "") return; 
+window.editBahagian = async function(id, namaLama) {
+    const namaBaru = prompt("Kemaskini nama Bahagian / Cawangan:", namaLama);
+    if (!namaBaru || namaBaru.trim() === "" || namaBaru.trim() === namaLama) return;
 
     const { error } = await supabaseClient
         .from('bahagian')
-        .insert([{ nama_bahagian: namaBaharu.trim() }]);
+        .update({ nama_bahagian: namaBaru.trim() })
+        .eq('id', id);
 
     if (error) {
-        alert("Ralat menambah bahagian: " + error.message);
+        alert("Ralat mengemaskini bahagian: " + error.message);
     } else {
-        alert("Bahagian baharu berjaya ditambah!");
-        muatSenaraiBahagian(); // Refresh jadual terus
+        muatSenaraiBahagian();
+        if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
     }
 };
 
@@ -1814,24 +1813,8 @@ window.padamBahagian = async function(id) {
     if (error) {
         alert("Ralat memadam bahagian: " + error.message);
     } else {
-        muatSenaraiBahagian(); // Refresh jadual terus
-    }
-};
-window.editBahagian = async function(id, namaLama) {
-    const namaBaru = prompt("Kemaskini nama Bahagian / Cawangan:", namaLama);
-    
-    // Jika pengguna tekan cancel, biarkan kosong, atau tiada perubahan nama
-    if (!namaBaru || namaBaru.trim() === "" || namaBaru.trim() === namaLama) return;
-
-    const { error } = await supabaseClient
-        .from('bahagian')
-        .update({ nama_bahagian: namaBaru.trim() })
-        .eq('id', id);
-
-    if (error) {
-        alert("Ralat mengemaskini bahagian: " + error.message);
-    } else {
-        muatSenaraiBahagian(); // Refresh jadual terus
+        muatSenaraiBahagian();
+        if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
     }
 };
 // ==========================================
