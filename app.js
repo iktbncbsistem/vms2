@@ -69,8 +69,8 @@ async function semakPeranan() {
             
             const btnTabPengguna = document.getElementById('btnTabPengguna');
             if(btnTabPengguna) btnTabPengguna.classList.remove('hidden');
-            const btnTabLokasi = document.getElementById('btnTabLokasi');
-if(btnTabLokasi) btnTabLokasi.classList.remove('hidden');
+            const btnTabBahagian = document.getElementById('btnTabBahagian');
+        if(btnTabBahagian) btnTabBahagian.classList.remove('hidden');
             muatSenaraiUrusetia();
         } 
         else if (data.peranan === 'pelulus') {
@@ -95,14 +95,14 @@ window.tukarTab = function(tabName) {
         'tab-tetapan-urusetia', 
         'tab-tetapan-pengguna', 
         'tab-dashboard-pelulus',
-        'tab-tetapan-lokasi'
+        'tab-tetapan-bahagian'
     ];
     semuaTab.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
 
-    const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabTetapan', 'btnTabPengguna', 'btnTabPelulus', 'btnTabLokasi'];
+    const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabTetapan', 'btnTabPengguna', 'btnTabPelulus', 'btnTabBahagian'];
     semuaButang.forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
@@ -139,10 +139,10 @@ window.tukarTab = function(tabName) {
     else if (tabName === 'pelulus') { 
         idTabBuka = 'tab-dashboard-pelulus'; idBtnBuka = 'btnTabPelulus'; 
     }
-else if (tabName === 'lokasi') {
-    idTabBuka = 'tab-tetapan-lokasi'; 
-    idBtnBuka = 'btnTabLokasi'; 
-}
+else if (tabName === 'bahagian') {
+        idTabBuka = 'tab-tetapan-bahagian';
+        idBtnBuka = 'btnTabBahagian';
+    }
     const tabDibuka = document.getElementById(idTabBuka);
     if (tabDibuka) {
         tabDibuka.classList.remove('hidden');
