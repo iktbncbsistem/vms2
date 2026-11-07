@@ -371,15 +371,6 @@ async function agihKenderaan(id) {
 (function () {
     'use strict';
 
-    
-        `;
-
-        const style = document.createElement('style');
-        style.id = 'vms-official-sheet-style';
-        style.textContent = css;
-        document.head.appendChild(style);
-    }
-
     function vmsEscape(value) {
         return String(value ?? '-').replace(/[&<>"']/g, function (char) {
             return {
@@ -401,25 +392,25 @@ async function agihKenderaan(id) {
             return;
         }
        
-       const noRujukan = 'VMS-' + String(t.id ?? Number(index) + 1).padStart(4, '0');       
+        const noRujukan = 'VMS-' + String(t.id ?? Number(index) + 1).padStart(4, '0');       
         const tarikhDihantar = t.created_at ? new Date(t.created_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
 
         // Senarai Penumpang Table
         const penumpang = Array.isArray(t.senarai_penumpang) ? t.senarai_penumpang : [];
         let rowsPenumpang = '';
-if (penumpang.length > 0) {
-        rowsPenumpang = penumpang.map((p, i) => `
-            <tr>
-                <td style="text-align:center; width: 40px;">${i + 1}</td>
-                <td><strong>${vmsEscape(p.nama)}</strong></td>
-                <td style="text-align:center;">${vmsEscape(p.kp)}</td>
-                <td style="text-align:center;">${vmsEscape(p.telefon)}</td>
-                <td>${vmsEscape(p.bahagian)}</td>
-            </tr>
-        `).join('');
-    } else {
-        rowsPenumpang = `<tr><td colspan="5" style="text-align:center; color:#64748b; font-style:italic; padding:10px;">Tiada penumpang berdaftar (atau butiran dalam lampiran).</td></tr>`;
-    }
+        if (penumpang.length > 0) {
+            rowsPenumpang = penumpang.map((p, i) => `
+                <tr>
+                    <td style="text-align:center; width: 40px;">${i + 1}</td>
+                    <td><strong>${vmsEscape(p.nama)}</strong></td>
+                    <td style="text-align:center;">${vmsEscape(p.kp)}</td>
+                    <td style="text-align:center;">${vmsEscape(p.telefon)}</td>
+                    <td>${vmsEscape(p.bahagian)}</td>
+                </tr>
+            `).join('');
+        } else {
+            rowsPenumpang = `<tr><td colspan="5" style="text-align:center; color:#64748b; font-style:italic; padding:10px;">Tiada penumpang berdaftar (atau butiran dalam lampiran).</td></tr>`;
+        }
 
         // Senarai Peralatan Table
         const alatan = Array.isArray(t.senarai_peralatan) ? t.senarai_peralatan : [];
@@ -626,7 +617,6 @@ if (penumpang.length > 0) {
         }
     };
 })();
-
 // ==========================================
 // PELULUS: LULUS ATAU TOLAK PERMOHONAN
 // ==========================================
