@@ -24,7 +24,6 @@ async function logout() {
     await supabaseClient.auth.signOut();
     location.reload();
 }
-
 window.onload = async function() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
@@ -37,101 +36,84 @@ window.onload = async function() {
 };
 
 async function semakPeranan() {
-    // 1. Semak profil pengguna dalam pangkalan data
-    let { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();    
-    
-    // 2. Jika profil TIADA (pengguna baharu), daftar secara automatik!
-    if (!data) {
-        const { error: insertErr } = await supabaseClient.from('profil').insert([{
-            id: currentUser.id,
-            email: currentUser.email,
-            nama: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
-            peranan: 'tidak_aktif',
-            log_terakhir: new Date().toISOString()
-        }]);
+    try {
+        // 1. Semak profil pengguna dalam pangkalan data
+        let { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();    
+        
+        // 2. Jika profil TIADA (pengguna baharu), daftar secara automatik!
+        if (!data) {
+            const { error: insertErr } = await supabaseClient.from('profil').insert([{
+                id: currentUser.id,
+                email: currentUser.email,
+                nama: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
+                peranan: 'tidak_aktif',
+                log_terakhir: new Date().toISOString()
+            }]);
 
-        // Jika Supabase menghalang pendaftaran, paparkan ralat
-        if (insertErr) {
-            console.error("Ralat pendaftaran automatik:", insertErr);
-            alert("Gagal daftar pengguna baharu ke Supabase.\nRalat: " + insertErr.message + "\n\n(Penting: Bos perlu ke Supabase > Table Editor > 'profil' dan pastikan polisi RLS membenarkan operasi INSERT)");
+            // Jika Supabase menghalang pendaftaran (Isu RLS)
+            if (insertErr) {
+                console.error("Ralat pendaftaran automatik:", insertErr);
+                alert("Gagal mendaftar! Sila pastikan sistem RLS (Row Level Security) di Supabase untuk jadual 'profil' telah dimatikan (Disable RLS) atau dibenarkan fungsi INSERT.");
+                return;
+            }
+            
+            // Tetapkan data lalai sementara
+            data = { peranan: 'tidak_aktif', nama: currentUser.user_metadata?.full_name || currentUser.email };
+        } else {
+            // Jika profil wujud, kemas kini masa log masuk
+            await supabaseClient.from('profil').update({
+                email: currentUser.email,
+                log_terakhir: new Date().toISOString()
+            }).eq('id', currentUser.id);
+        }
+
+        // 3. Paparan UI selepas disahkan berjaya
+        document.getElementById('skrin-login').classList.add('hidden');
+        document.getElementById('sistem-tab-utama').classList.remove('hidden');
+        const headerUtama = document.getElementById('header-utama');
+        if (headerUtama) headerUtama.classList.remove('hidden');
+
+        if (typeof semakJadualAwam === 'function') semakJadualAwam('aktif');
+
+        // Halang pengguna yang belum diaktifkan
+        if (data.peranan === 'tidak_aktif' || !data.peranan) {
+            alert("Akaun berjaya didaftarkan! Walau bagaimanapun, akaun anda belum diaktifkan. Sila maklumkan kepada Urusetia untuk pengaktifan peranan.");
             return;
         }
-        
-        // Tetapkan data lalai sementara untuk paparan UI
-        data = { peranan: 'tidak_aktif', nama: currentUser.user_metadata?.full_name || currentUser.email };
-    } else {
-        // Jika profil wujud, kemas kini masa log masuk sahaja
-        await supabaseClient.from('profil').update({
-            email: currentUser.email,
-            log_terakhir: new Date().toISOString()
-        }).eq('id', currentUser.id);
-    }
 
-    // 3. Paparan UI selepas disahkan berjaya
-    document.getElementById('skrin-login').classList.add('hidden');
-    document.getElementById('sistem-tab-utama').classList.remove('hidden');
-    const headerUtama = document.getElementById('header-utama');
-    if(headerUtama) headerUtama.classList.remove('hidden');
-
-    semakJadualAwam('aktif');
-
-    // Halang pengguna yang belum diaktifkan
-    if (data.peranan === 'tidak_aktif' || !data.peranan) {
-        alert("Akaun berjaya didaftarkan! Walau bagaimanapun, akaun anda belum diaktifkan. Sila maklumkan kepada Urusetia untuk pengaktifan peranan.");
-        return;
-    }
-
-    // 4. Buka tab mengikut peranan
-    if (data.peranan === 'pemohon') {
-        const btnTabMohon = document.getElementById('btnTabMohon');
-        const ruangCarian = document.getElementById('ruang-carian-jadual');
-        if(btnTabMohon) btnTabMohon.classList.remove('hidden');
-        if(ruangCarian) ruangCarian.classList.remove('hidden');
-        
-        const appNameField = document.getElementById('applicantName');
-        if(appNameField) appNameField.value = data.nama;
-
-        if(typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
-    }
-
-
-// 2. Semakan peranan lain
+        // 4. Buka tab mengikut peranan
         if (data.peranan === 'pemohon') {
             const btnTabMohon = document.getElementById('btnTabMohon');
             const ruangCarian = document.getElementById('ruang-carian-jadual');
-            if(btnTabMohon) btnTabMohon.classList.remove('hidden');
-            if(ruangCarian) ruangCarian.classList.remove('hidden');
+            if (btnTabMohon) btnTabMohon.classList.remove('hidden');
+            if (ruangCarian) ruangCarian.classList.remove('hidden');
             
             const appNameField = document.getElementById('applicantName');
-            if(appNameField) appNameField.value = data.nama;
+            if (appNameField) appNameField.value = data.nama;
 
-            // Panggil fungsi tarik data bahagian ke dalam borang
-            muatDropdownBahagian();
+            if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
         }
         else if (data.peranan === 'urusetia') {
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
-            
-            // Buka akses tab tetapan kepada Urusetia
             const btnTabTetapan = document.getElementById('btnTabTetapan');
-            if(btnTabTetapan) btnTabTetapan.classList.remove('hidden');
-            
+            if (btnTabTetapan) btnTabTetapan.classList.remove('hidden');
             const btnTabPengguna = document.getElementById('btnTabPengguna');
-            if(btnTabPengguna) btnTabPengguna.classList.remove('hidden');
+            if (btnTabPengguna) btnTabPengguna.classList.remove('hidden');
             const btnTabBahagian = document.getElementById('btnTabBahagian');
-        if(btnTabBahagian) btnTabBahagian.classList.remove('hidden');
-            muatSenaraiUrusetia();
+            if (btnTabBahagian) btnTabBahagian.classList.remove('hidden');
+            if (typeof muatSenaraiUrusetia === 'function') muatSenaraiUrusetia();
         } 
         else if (data.peranan === 'pelulus') {
             const btnTabPelulus = document.getElementById('btnTabPelulus');
-            if(btnTabPelulus) btnTabPelulus.classList.remove('hidden');
-            muatSenaraiPelulus();
+            if (btnTabPelulus) btnTabPelulus.classList.remove('hidden');
+            if (typeof muatSenaraiPelulus === 'function') muatSenaraiPelulus();
         }
-    } else {
-        alert("Profil anda tiada dalam pangkalan data. Sila hubungi Admin.");
+    } catch (err) {
+        console.error("Ralat semak peranan:", err);
     }
 }
 
-    // ==========================================
+// ==========================================
 // FUNGSI TOGGLE TAB UTAMA (KALIS RALAT)
 // ==========================================
 window.tukarTab = function(tabName) {
