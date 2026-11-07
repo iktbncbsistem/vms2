@@ -417,9 +417,9 @@ if (penumpang.length > 0) {
                 <td>${vmsEscape(p.bahagian)}</td>
             </tr>
         `).join('');
-        } else {
-            rowsPenumpang = `<tr><td colspan="5" style="text-align:center; color:#64748b; font-style:italic; padding:10px;">Tiada penumpang berdaftar (atau butiran dalam lampiran).</td></tr>`;
-        }
+    } else {
+        rowsPenumpang = `<tr><td colspan="5" style="text-align:center; color:#64748b; font-style:italic; padding:10px;">Tiada penumpang berdaftar (atau butiran dalam lampiran).</td></tr>`;
+    }
 
         // Senarai Peralatan Table
         const alatan = Array.isArray(t.senarai_peralatan) ? t.senarai_peralatan : [];
