@@ -24,7 +24,7 @@ body {
     font-size: 14px;
     line-height: 1.5;
     padding: 10px;
-   /* min-width: 1400px;  Kekal paparan Desktop View */
+    min-width: 1400px; /* Kekal paparan Desktop View */
 }
 
 .hidden { display: none !important; }
