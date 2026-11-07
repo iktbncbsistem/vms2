@@ -1158,7 +1158,13 @@ async function semakJadualAwam(mod = 'aktif') {
             const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
 
             html += `
-                <td><strong style="color:#102a43;">${tarikhMohon}</strong><br><small style="color:#64748b;">${noRujukan}</small></td>
+                <td>
+                    <strong style="color:#102a43;">${tarikhMohon}</strong><br>
+                    <!-- KOD BARU: HYPERLINK NO RUJUKAN -->
+                    <a onclick="paparButiran(${t.indexAsal})" style="color: #0284c7; font-weight: 800; cursor: pointer; text-decoration: underline; font-size: 13px;" title="Klik untuk lihat borang">
+                        ${noRujukan}
+                    </a>
+                </td>
                 <td>${infoKenderaan}</td>
                 <td>${t.destinasi || t.lokasi || '-'}</td>
                 
@@ -1177,14 +1183,12 @@ async function semakJadualAwam(mod = 'aktif') {
                     <span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:4px 10px; border-radius:12px; font-size:11px;">${labelStatus}</span>
                 </td>
 
+                <!-- LAJUR TERAKHIR: CATATAN (Butang Butiran dibuang) -->
                 <td style="color:#64748b; font-size:12px; max-width: 150px;">
                     ${t.catatan || t.tujuan || '-'}
                 </td>
-                
-                <td style="text-align:right;">
-                    <a class="air-link" onclick="paparButiran(${t.indexAsal})">Butiran ❯</a>
-                </td>
             </tr>`;
+        
         });
     }
     
