@@ -401,8 +401,7 @@ async function agihKenderaan(id) {
             return;
         }
        
-       
-       const noRujukan = `VMS-${String(t.id ?? Number(index) + 1).padStart(4, '0')}`;
+       const noRujukan = 'VMS-' + String(t.id ?? Number(index) + 1).padStart(4, '0');       
         const tarikhDihantar = t.created_at ? new Date(t.created_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
 
         // Senarai Penumpang Table
