@@ -344,6 +344,9 @@ async function sahkanUrusetia(id) {
 // ==========================================
 // FUNGSI AGIHAN KENDERAAN & PEMANDU (URUSETIA)
 // ==========================================
+// ==========================================
+// FUNGSI AGIHAN KENDERAAN & PEMANDU (URUSETIA)
+// ==========================================
 async function agihKenderaan(id) {
     const idKenderaan = document.getElementById(`kenderaan-${id}`).value;
     const namaPemandu = document.getElementById(`pemandu-${id}`).value;
@@ -353,20 +356,64 @@ async function agihKenderaan(id) {
         return;
     }
 
-    const { error } = await supabaseClient.from('tempahan').update({ 
-        id_kenderaan: idKenderaan, 
-        nama_pemandu: namaPemandu, 
-        status: 'Selesai Diagih' 
-    }).eq('id', id);
+    document.body.style.cursor = 'wait'; // Tukar cursor supaya nampak sistem sedang berfikir
 
-    if (error) {
-        alert("Ralat! Pastikan lajur 'nama_pemandu' wujud di Supabase. Ralat: " + error.message);
-    } else {
-        alert("Mantap bos! Pemandu dan Kenderaan telah berjaya diagihkan."); 
+    try {
+        // 1. Dapatkan maklumat tarikh & masa untuk tempahan semasa ini
+        const t = (typeof cacheUrusetia !== 'undefined') ? cacheUrusetia.find(x => x.id === id) : null;
+        if (!t) throw new Error("Maklumat tempahan tidak dijumpai dalam memori.");
+
+        const semasaMula = new Date(`${t.tarikh_pergi}T${t.masa_bertolak || '00:00:00'}`);
+        const semasaTamat = new Date(`${t.tarikh_balik}T${t.masa_balik || '23:59:00'}`);
+
+        // 2. Semak pangkalan data untuk Kenderaan atau Pemandu yang SAMA (Status: Selesai Diagih)
+        const { data: semakan, error: ralatSemakan } = await supabaseClient
+            .from('tempahan')
+            .select('id, nama_pemandu, id_kenderaan, tarikh_pergi, masa_bertolak, tarikh_balik, masa_balik')
+            .eq('status', 'Selesai Diagih')
+            .neq('id', id) // Jangan semak rekod diri sendiri
+            .or(`id_kenderaan.eq.${idKenderaan},nama_pemandu.eq.${namaPemandu}`); // Cari pemandu ATAU kenderaan ini
+
+        if (ralatSemakan) throw ralatSemakan;
+
+        // 3. Logik Pengesanan Pertindihan Masa (Overlap Check)
+        if (semakan && semakan.length > 0) {
+            for (let rekod of semakan) {
+                const rekodMula = new Date(`${rekod.tarikh_pergi}T${rekod.masa_bertolak || '00:00:00'}`);
+                const rekodTamat = new Date(`${rekod.tarikh_balik}T${rekod.masa_balik || '23:59:00'}`);
+
+                // Jika masa bertindih (Overlap terjadi jika: MulaA < TamatB DAN TamatA > MulaB)
+                if (semasaMula < rekodTamat && semasaTamat > rekodMula) {
+                    let mesejBentrokan = rekod.nama_pemandu === namaPemandu 
+                        ? `👨‍✈️ Pemandu (${namaPemandu}) sedang bertugas.` 
+                        : `🚘 Kenderaan tersebut sedang digunakan.`;
+                    
+                    alert(`🛑 AGIHAN DITOLAK!\n\n${mesejBentrokan}\nSistem mendapati ia telah dijadualkan untuk tugasan lain dari:\n\n🗓️ ${rekod.tarikh_pergi} (${rekod.masa_bertolak})\nhingga\n🗓️ ${rekod.tarikh_balik} (${rekod.masa_balik})\n\nSila pilih pemandu / kenderaan yang lain.`);
+                    
+                    document.body.style.cursor = 'default';
+                    return; // Blok proses agihan
+                }
+            }
+        }
+
+        // 4. Jika tiada sebarang pertindihan masa, teruskan simpan ke database
+        const { error } = await supabaseClient.from('tempahan').update({ 
+            id_kenderaan: idKenderaan, 
+            nama_pemandu: namaPemandu, 
+            status: 'Selesai Diagih' 
+        }).eq('id', id);
+
+        if (error) throw error;
+        
+        alert("✅ Mantap bos! Pemandu dan Kenderaan telah berjaya diagihkan."); 
         muatSenaraiUrusetia();
+        
+    } catch (error) {
+        alert("Ralat sistem: " + error.message);
     }
+    
+    document.body.style.cursor = 'default';
 }
-
 /* VMS - PAPARAN BUTIRAN FORMAT BORANG FIZIKAL RASMI */
 (function () {
     'use strict';
