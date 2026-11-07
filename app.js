@@ -407,16 +407,16 @@ async function agihKenderaan(id) {
         // Senarai Penumpang Table
         const penumpang = Array.isArray(t.senarai_penumpang) ? t.senarai_penumpang : [];
         let rowsPenumpang = '';
-        if (penumpang.length > 0) {
-            rowsPenumpang = penumpang.map((p, i) => `
-                <tr>
-                    <td style="text-align:center; width: 40px;">${i + 1}</td>
-                    <td><strong>${vmsEscape(p.nama)}</strong></td>
-                    <td style="text-align:center;">${vmsEscape(p.kp)}</td>
-                    <td style="text-align:center;">${vmsEscape(p.telefon)}</td>
-                    <td>${vmsEscape(p.bahagian)}</td>
-                </tr>
-            `).join('');
+if (penumpang.length > 0) {
+        rowsPenumpang = penumpang.map((p, i) => `
+            <tr>
+                <td style="text-align:center; width: 40px;">${i + 1}</td>
+                <td><strong>${vmsEscape(p.nama)}</strong></td>
+                <td style="text-align:center;">${vmsEscape(p.kp)}</td>
+                <td style="text-align:center;">${vmsEscape(p.telefon)}</td>
+                <td>${vmsEscape(p.bahagian)}</td>
+            </tr>
+        `).join('');
         } else {
             rowsPenumpang = `<tr><td colspan="5" style="text-align:center; color:#64748b; font-style:italic; padding:10px;">Tiada penumpang berdaftar (atau butiran dalam lampiran).</td></tr>`;
         }
