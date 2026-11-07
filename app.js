@@ -256,25 +256,30 @@ if(vehicleForm) {
 }
 
 
+
 // ==========================================
 // URUSETIA: PAPAR & AGIH KENDERAAN
 // ==========================================
 async function muatSenaraiUrusetia() {
     const div = document.getElementById('senarai-tempahan-urusetia');
     if(!div) return;
-    div.innerHTML = "Memuatkan data...";
+    div.innerHTML = "<p style='padding: 20px; color:#64748b; text-align:center;'>Memuatkan data... ⏳</p>";
 
     const { data: tempahan, error } = await supabaseClient.from('tempahan').select('*').in('status', ['Menunggu Semakan', 'Lulus']).order('id', {ascending: false});
     if (error) return div.innerHTML = "Ralat: " + error.message;
-    if (!tempahan || tempahan.length === 0) return div.innerHTML = "<p>Tiada permohonan baharu.</p>";
+    if (!tempahan || tempahan.length === 0) return div.innerHTML = "<p style='padding: 20px; color:#64748b; text-align:center;'>Tiada permohonan baharu.</p>";
 
     cacheUrusetia = tempahan; 
     
-    // Tarik data Pemandu & Kenderaan secara DINAMIK dari Supabase!
+    // Tarik data Pemandu & Kenderaan secara DINAMIK dari Supabase
     const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
     const { data: pemanduList } = await supabaseClient.from('pemandu').select('*');
 
-    let html = `<table style="min-width: 900px;"><tr><th>No. Rujukan</th><th>Pemohon & Lokasi</th><th>Tarikh Perjalanan</th><th>Status</th><th>Tindakan Urusetia</th></tr>`;
+    let html = `<table class="sistem-table" style="min-width: 900px; width: 100%;">
+        <thead>
+            <tr><th>No. Rujukan</th><th>Pemohon & Lokasi</th><th>Tarikh Perjalanan</th><th>Status</th><th>Tindakan Urusetia</th></tr>
+        </thead>
+        <tbody>`;
     
     tempahan.forEach((t, index) => {
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
@@ -282,21 +287,23 @@ async function muatSenaraiUrusetia() {
         html += `<tr>
             <td><strong>${noRujukan}</strong></td>
             <td><strong>${t.nama_pemohon}</strong><br><small>${t.destinasi || t.lokasi}</small></td>
-            <td>${t.tarikh_pergi}</td>
-            <td><strong style="color:var(--primary);">${t.status}</strong></td>
             <td>
+                <strong style="color:#334155;">${t.tarikh_pergi}</strong><br>
+                <small>${t.masa_bertolak || '-'}</small>
+            </td>
+            <td><span style="background:#fef3c7; color:#d97706; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">${t.status}</span></td>
+            <td style="text-align:center;">
                 <button class="btn btn-light" onclick="paparButiran(${index})" style="margin-bottom:8px; font-size:12px; width:100%;">🔍 Butiran Penuh</button><br>
         `;
 
         if (t.status === 'Menunggu Semakan') {
             html += `
                 <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <button class="btn btn-primary" onclick="sahkanUrusetia(${t.id})" style="font-size:12px; width:100%;">✅ Sahkan & Hantar Pelulus</button>
+                    <button class="btn btn-primary" onclick="sahkanUrusetia(${t.id})" style="font-size:12px; width:100%;">✅ Sahkan & Hantar</button>
                     <button class="btn btn-danger" onclick="updateStatus(${t.id}, 'Tolak')" style="font-size:12px; width:100%;">❌ Tolak (Tidak Lengkap)</button>
                 </div>
             `;
         } else if (t.status === 'Lulus') {
-            // Dropdown Pemandu (Dinamik)
             html += `
                 <select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
                     <option value="">-- Pilih Pemandu --</option>`;
@@ -306,23 +313,21 @@ async function muatSenaraiUrusetia() {
                     html += `<option value="${labelNama}">${labelNama}</option>`;
                 });
             }
-            
-            // Dropdown Kenderaan (Dinamik)
             html += `</select><br>
                 <select id="kenderaan-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
                     <option value="">-- Pilih Kenderaan --</option>`;
             if (kenderaanList) {
                kenderaanList.forEach(k => {
-    const labelKategori = k.jenis_kenderaan ? `[${k.jenis_kenderaan}] ` : '';
-    html += `<option value="${k.id}">${labelKategori}${k.model} (${k.no_plat})</option>`;
-});
+                    const labelKategori = k.jenis_kenderaan ? `[${k.jenis_kenderaan}] ` : '';
+                    html += `<option value="${k.id}">${labelKategori}${k.model} (${k.no_plat})</option>`;
+                });
             }
             html += `</select><br>
                 <button class="btn btn-success" onclick="agihKenderaan(${t.id})" style="font-size:12px; width:100%;">Sahkan Agihan</button>`;
         }
         html += `</td></tr>`;
     });
-    div.innerHTML = html + `</table>`;
+    div.innerHTML = html + `</tbody></table>`;
 }
 
 // ==========================================
@@ -330,20 +335,11 @@ async function muatSenaraiUrusetia() {
 // ==========================================
 async function sahkanUrusetia(id) {
     if(!confirm("Adakah anda pasti borang ini lengkap dan terdapat kenderaan/pemandu yang tersedia pada tarikh tersebut?")) return;
-    
     const { error } = await supabaseClient.from('tempahan').update({ status: 'Menunggu Kelulusan' }).eq('id', id);
-    
-    if(error) {
-        alert("Ralat: " + error.message);
-    } else {
-        alert("Pengesahan berjaya! Permohonan telah dihantar kepada Pelulus.");
-        muatSenaraiUrusetia(); // Refresh jadual Urusetia
-    }
+    if(error) alert("Ralat: " + error.message);
+    else { alert("Pengesahan berjaya! Permohonan telah dihantar kepada Pelulus."); muatSenaraiUrusetia(); }
 }
 
-// ==========================================
-// FUNGSI AGIHAN KENDERAAN & PEMANDU (URUSETIA)
-// ==========================================
 // ==========================================
 // FUNGSI AGIHAN KENDERAAN & PEMANDU (URUSETIA)
 // ==========================================
@@ -356,33 +352,30 @@ async function agihKenderaan(id) {
         return;
     }
 
-    document.body.style.cursor = 'wait'; // Tukar cursor supaya nampak sistem sedang berfikir
+    document.body.style.cursor = 'wait'; 
 
     try {
-        // 1. Dapatkan maklumat tarikh & masa untuk tempahan semasa ini
         const t = (typeof cacheUrusetia !== 'undefined') ? cacheUrusetia.find(x => x.id === id) : null;
         if (!t) throw new Error("Maklumat tempahan tidak dijumpai dalam memori.");
 
         const semasaMula = new Date(`${t.tarikh_pergi}T${t.masa_bertolak || '00:00:00'}`);
         const semasaTamat = new Date(`${t.tarikh_balik}T${t.masa_balik || '23:59:00'}`);
 
-        // 2. Semak pangkalan data untuk Kenderaan atau Pemandu yang SAMA (Status: Selesai Diagih)
+        // Semak pertindihan masa bagi Kenderaan/Pemandu yang sama
         const { data: semakan, error: ralatSemakan } = await supabaseClient
             .from('tempahan')
             .select('id, nama_pemandu, id_kenderaan, tarikh_pergi, masa_bertolak, tarikh_balik, masa_balik')
             .eq('status', 'Selesai Diagih')
-            .neq('id', id) // Jangan semak rekod diri sendiri
-            .or(`id_kenderaan.eq.${idKenderaan},nama_pemandu.eq.${namaPemandu}`); // Cari pemandu ATAU kenderaan ini
+            .neq('id', id) 
+            .or(`id_kenderaan.eq.${idKenderaan},nama_pemandu.eq.${namaPemandu}`); 
 
         if (ralatSemakan) throw ralatSemakan;
 
-        // 3. Logik Pengesanan Pertindihan Masa (Overlap Check)
         if (semakan && semakan.length > 0) {
             for (let rekod of semakan) {
                 const rekodMula = new Date(`${rekod.tarikh_pergi}T${rekod.masa_bertolak || '00:00:00'}`);
                 const rekodTamat = new Date(`${rekod.tarikh_balik}T${rekod.masa_balik || '23:59:00'}`);
 
-                // Jika masa bertindih (Overlap terjadi jika: MulaA < TamatB DAN TamatA > MulaB)
                 if (semasaMula < rekodTamat && semasaTamat > rekodMula) {
                     let mesejBentrokan = rekod.nama_pemandu === namaPemandu 
                         ? `👨‍✈️ Pemandu (${namaPemandu}) sedang bertugas.` 
@@ -391,12 +384,11 @@ async function agihKenderaan(id) {
                     alert(`🛑 AGIHAN DITOLAK!\n\n${mesejBentrokan}\nSistem mendapati ia telah dijadualkan untuk tugasan lain dari:\n\n🗓️ ${rekod.tarikh_pergi} (${rekod.masa_bertolak})\nhingga\n🗓️ ${rekod.tarikh_balik} (${rekod.masa_balik})\n\nSila pilih pemandu / kenderaan yang lain.`);
                     
                     document.body.style.cursor = 'default';
-                    return; // Blok proses agihan
+                    return; 
                 }
             }
         }
 
-        // 4. Jika tiada sebarang pertindihan masa, teruskan simpan ke database
         const { error } = await supabaseClient.from('tempahan').update({ 
             id_kenderaan: idKenderaan, 
             nama_pemandu: namaPemandu, 
@@ -414,6 +406,7 @@ async function agihKenderaan(id) {
     
     document.body.style.cursor = 'default';
 }
+
 /* VMS - PAPARAN BUTIRAN FORMAT BORANG FIZIKAL RASMI */
 (function () {
     'use strict';
