@@ -408,70 +408,94 @@ td input:focus { background: white; border: 1px solid var(--primary); }
     width: 100%;
 }
 
-
 /* ========================================== */
 /* GAYA SKRIN LOG MASUK ALA SISTEM ELAUN      */
 /* ========================================== */
-.login-container {
+#skrin-login {
     display: flex;
-    width: 100%;
-    max-width: 900px;
-    min-height: 500px;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    flex-wrap: wrap;
+    background: #0d2359;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
     overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin: 25px auto;
+    max-width: 1200px;
 }
 
 .login-kiri {
-    flex: 1.2;
-    background: #0f172a; /* Warna biru gelap */
-    padding: 40px;
+    flex: 1;
+    background-color: transparent;
+    color: #ffffff;
+    padding: 50px;
+    min-width: 320px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .login-kanan {
     flex: 1;
-    padding: 50px 40px;
+    background-color: transparent;
+    padding: 50px;
+    min-width: 320px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    background: white;
+    border-left: 1px solid rgba(255,255,255,0.2);
+    box-sizing: border-box;
 }
 
-.btn-google-login {
-    width: 100%;
-    padding: 12px;
-    font-size: 14px;
-    background: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 6px;
+.btn-google {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    cursor: pointer;
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
     font-weight: 600;
-    transition: background 0.2s, box-shadow 0.2s;
+    background-color: #4285F4;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-family: 'Inter', sans-serif;
 }
 
-.btn-google-login:hover {
-    background: #1d4ed8;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+.btn-google:hover {
+    background-color: #357ae8;
+    box-shadow: 0 4px 10px rgba(66, 133, 244, 0.3);
+    transform: translateY(-1px);
 }
 
-/* Responsif untuk Skrin Telefon Bimbit */
+.icon-google {
+    background: white;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    width: 20px;
+    height: 20px;
+}
+
+/* Responsif Telefon Bimbit - Sistem Elaun */
 @media (max-width: 768px) {
-    .login-container {
-        flex-direction: column;
-    }
-    .login-kiri {
-        padding: 30px 20px;
-        min-height: auto;
+    #skrin-login {
+        border-radius: 0;
+        margin: 0;
+        height: 100vh;
+        overflow-y: auto;
     }
     .login-kanan {
+        border-left: none;
+        border-top: 1px solid rgba(255,255,255,0.2);
+        padding: 30px 20px;
+    }
+    .login-kiri {
         padding: 30px 20px;
     }
 }
