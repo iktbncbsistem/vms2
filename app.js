@@ -24,53 +24,75 @@ async function logout() {
     await supabaseClient.auth.signOut();
     location.reload();
 }
+
 window.onload = async function() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         currentUser = session.user;
-        
-        // 1. Semak samada profil pengguna ini wujud atau tidak di Supabase
-        const { data: profilWujud } = await supabaseClient.from('profil').select('id').eq('id', currentUser.id).single();
-
-        if (profilWujud) {
-            // 2. Jika WUJUD (pengguna lama), kemas kini masa log masuk sahaja
-            await supabaseClient.from('profil').update({
-                email: currentUser.email,
-                log_terakhir: new Date().toISOString()
-            }).eq('id', currentUser.id);
-        } else {
-            // 3. Jika BARU (atau pernah dipadam), daftar secara automatik ke dalam database!
-            await supabaseClient.from('profil').insert([{
-                id: currentUser.id,
-                email: currentUser.email,
-                nama: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0], // Ambil nama dari Google
-                peranan: 'tidak_aktif', // Status lalai untuk pengguna baharu
-                log_terakhir: new Date().toISOString()
-            }]);
-        }
-
         document.getElementById('btnLogout').classList.remove('hidden');
-        semakPeranan();
+        semakPeranan(); 
     } else {
-        // Paparkan skrin log masuk jika tiada sesi
         document.getElementById('skrin-login').classList.remove('hidden');
     }
 };
+
 async function semakPeranan() {
-    const { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();    
-    if (data) {
-        document.getElementById('skrin-login').classList.add('hidden');
-        document.getElementById('sistem-tab-utama').classList.remove('hidden');
-        const headerUtama = document.getElementById('header-utama');
-        if(headerUtama) headerUtama.classList.remove('hidden');
+    // 1. Semak profil pengguna dalam pangkalan data
+    let { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();    
+    
+    // 2. Jika profil TIADA (pengguna baharu), daftar secara automatik!
+    if (!data) {
+        const { error: insertErr } = await supabaseClient.from('profil').insert([{
+            id: currentUser.id,
+            email: currentUser.email,
+            nama: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
+            peranan: 'tidak_aktif',
+            log_terakhir: new Date().toISOString()
+        }]);
 
-        semakJadualAwam('aktif');
-
-        // 1. Sekatan akaun tidak aktif / baharu (Tapis awal-awal)
-        if (data.peranan === 'tidak_aktif' || !data.peranan) {
-            alert("Akaun anda belum diaktifkan. Sila maklumkan kepada Urusetia untuk pengaktifan peranan.");
+        // Jika Supabase menghalang pendaftaran, paparkan ralat
+        if (insertErr) {
+            console.error("Ralat pendaftaran automatik:", insertErr);
+            alert("Gagal daftar pengguna baharu ke Supabase.\nRalat: " + insertErr.message + "\n\n(Penting: Bos perlu ke Supabase > Table Editor > 'profil' dan pastikan polisi RLS membenarkan operasi INSERT)");
             return;
         }
+        
+        // Tetapkan data lalai sementara untuk paparan UI
+        data = { peranan: 'tidak_aktif', nama: currentUser.user_metadata?.full_name || currentUser.email };
+    } else {
+        // Jika profil wujud, kemas kini masa log masuk sahaja
+        await supabaseClient.from('profil').update({
+            email: currentUser.email,
+            log_terakhir: new Date().toISOString()
+        }).eq('id', currentUser.id);
+    }
+
+    // 3. Paparan UI selepas disahkan berjaya
+    document.getElementById('skrin-login').classList.add('hidden');
+    document.getElementById('sistem-tab-utama').classList.remove('hidden');
+    const headerUtama = document.getElementById('header-utama');
+    if(headerUtama) headerUtama.classList.remove('hidden');
+
+    semakJadualAwam('aktif');
+
+    // Halang pengguna yang belum diaktifkan
+    if (data.peranan === 'tidak_aktif' || !data.peranan) {
+        alert("Akaun berjaya didaftarkan! Walau bagaimanapun, akaun anda belum diaktifkan. Sila maklumkan kepada Urusetia untuk pengaktifan peranan.");
+        return;
+    }
+
+    // 4. Buka tab mengikut peranan
+    if (data.peranan === 'pemohon') {
+        const btnTabMohon = document.getElementById('btnTabMohon');
+        const ruangCarian = document.getElementById('ruang-carian-jadual');
+        if(btnTabMohon) btnTabMohon.classList.remove('hidden');
+        if(ruangCarian) ruangCarian.classList.remove('hidden');
+        
+        const appNameField = document.getElementById('applicantName');
+        if(appNameField) appNameField.value = data.nama;
+
+        if(typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
+    }
 
 
 // 2. Semakan peranan lain
