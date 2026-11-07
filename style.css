@@ -437,52 +437,17 @@ td input:focus { background: white; border: 1px solid var(--primary); }
 
 .login-kanan {
     flex: 1;
-    background-color: transparent;
+    background-color: #ffffff; /* Latar belakang ditukar ke putih */
     padding: 50px;
     min-width: 320px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border-left: 1px solid rgba(255,255,255,0.2);
+    border-left: 1px solid #e2e8f0; /* Tukar garisan pemisah ke warna kelabu lembut */
     box-sizing: border-box;
 }
 
-.btn-google {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 12px;
-    font-size: 15px;
-    font-weight: 600;
-    background-color: #4285F4;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.3s;
-    font-family: 'Inter', sans-serif;
-}
-
-.btn-google:hover {
-    background-color: #357ae8;
-    box-shadow: 0 4px 10px rgba(66, 133, 244, 0.3);
-    transform: translateY(-1px);
-}
-
-.icon-google {
-    background: white;
-    padding: 6px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 15px;
-    width: 20px;
-    height: 20px;
-}
-
-/* Responsif Telefon Bimbit - Sistem Elaun */
+/* Responsif Telefon Bimbit */
 @media (max-width: 768px) {
     #skrin-login {
         border-radius: 0;
@@ -492,7 +457,7 @@ td input:focus { background: white; border: 1px solid var(--primary); }
     }
     .login-kanan {
         border-left: none;
-        border-top: 1px solid rgba(255,255,255,0.2);
+        border-top: 1px solid #e2e8f0; /* Garisan pemisah atas kelabu lembut */
         padding: 30px 20px;
     }
     .login-kiri {
