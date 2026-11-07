@@ -39,13 +39,13 @@ window.onload = async function() {
         semakPeranan();
     } else {
         // LETAK KOD DI SINI JIKA TIADA SESI (BELUM LOG MASUK)
-        document.getElementById('login-section').classList.remove('hidden');
+        document.getElementById('skrin-login').classList.remove('hidden');
     }
 };
 async function semakPeranan() {
     const { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();    
     if (data) {
-        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('skrin-login').classList.add('hidden');
         document.getElementById('sistem-tab-utama').classList.remove('hidden');
         const headerUtama = document.getElementById('header-utama');
         if(headerUtama) headerUtama.classList.remove('hidden');
