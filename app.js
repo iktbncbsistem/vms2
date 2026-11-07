@@ -29,16 +29,30 @@ window.onload = async function() {
     if (session) {
         currentUser = session.user;
         
-        // KOD AUTOMASI: Simpan e-mel & masa log masuk terkini ke jadual profil
-        await supabaseClient.from('profil').update({
-            email: currentUser.email,
-            log_terakhir: new Date().toISOString()
-        }).eq('id', currentUser.id);
+        // 1. Semak samada profil pengguna ini wujud atau tidak di Supabase
+        const { data: profilWujud } = await supabaseClient.from('profil').select('id').eq('id', currentUser.id).single();
+
+        if (profilWujud) {
+            // 2. Jika WUJUD (pengguna lama), kemas kini masa log masuk sahaja
+            await supabaseClient.from('profil').update({
+                email: currentUser.email,
+                log_terakhir: new Date().toISOString()
+            }).eq('id', currentUser.id);
+        } else {
+            // 3. Jika BARU (atau pernah dipadam), daftar secara automatik ke dalam database!
+            await supabaseClient.from('profil').insert([{
+                id: currentUser.id,
+                email: currentUser.email,
+                nama: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0], // Ambil nama dari Google
+                peranan: 'tidak_aktif', // Status lalai untuk pengguna baharu
+                log_terakhir: new Date().toISOString()
+            }]);
+        }
 
         document.getElementById('btnLogout').classList.remove('hidden');
         semakPeranan();
     } else {
-        // LETAK KOD DI SINI JIKA TIADA SESI (BELUM LOG MASUK)
+        // Paparkan skrin log masuk jika tiada sesi
         document.getElementById('skrin-login').classList.remove('hidden');
     }
 };
