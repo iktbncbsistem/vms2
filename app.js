@@ -46,7 +46,7 @@ async function semakPeranan() {
                 id: currentUser.id,
                 email: currentUser.email,
                 nama: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
-                peranan: 'tidak_aktif',
+                peranan: 'pemohon',
                 log_terakhir: new Date().toISOString()
             }]);
 
@@ -58,7 +58,7 @@ async function semakPeranan() {
             }
             
             // Tetapkan data lalai sementara
-            data = { peranan: 'tidak_aktif', nama: currentUser.user_metadata?.full_name || currentUser.email };
+            data = { peranan: 'pemohon', nama: currentUser.user_metadata?.full_name || currentUser.email };
         } else {
             // Jika profil wujud, kemas kini masa log masuk
             await supabaseClient.from('profil').update({
@@ -76,7 +76,7 @@ async function semakPeranan() {
         if (typeof semakJadualAwam === 'function') semakJadualAwam('aktif');
 
         // Halang pengguna yang belum diaktifkan
-        if (data.peranan === 'tidak_aktif' || !data.peranan) {
+        if (data.peranan === 'pemohon' || !data.peranan) {
             alert("Akaun berjaya didaftarkan! Walau bagaimanapun, akaun anda belum diaktifkan. Sila maklumkan kepada Urusetia untuk pengaktifan peranan.");
             return;
         }
@@ -1230,7 +1230,7 @@ async function muatSenaraiPengguna() {
 
     let html = '';
     users.forEach((u, i) => {
-        const perananSemasa = u.peranan || 'tidak_aktif';
+        const perananSemasa = u.peranan || 'pemohon';
 
         // Lencana status peranan
         let badge = '<span style="background:#fee2e2; color:#b91c1c; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Akaun Tidak Aktif</span>';
@@ -1252,7 +1252,7 @@ async function muatSenaraiPengguna() {
                 <td style="text-align: center;">
                     <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
                         <select id="select-role-${u.id}" style="width: 130px; padding: 6px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                            <option value="tidak_aktif" ${perananSemasa === 'tidak_aktif' ? 'selected' : ''}>Akaun Tidak Aktif</option>
+                            <option value="pemohon" ${perananSemasa === 'pemohon' ? 'selected' : ''}>Akaun Tidak Aktif</option>
                             <option value="pemohon" ${perananSemasa === 'pemohon' ? 'selected' : ''}>Pemohon</option>
                             <option value="urusetia" ${perananSemasa === 'urusetia' ? 'selected' : ''}>Urusetia</option>
                             <option value="pelulus" ${perananSemasa === 'pelulus' ? 'selected' : ''}>Pelulus</option>
