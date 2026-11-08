@@ -198,8 +198,8 @@ if(vehicleForm) {
         btnSubmit.innerHTML = '⏳ Menghantar...';
         btnSubmit.disabled = true;
 
-        try {
-            // Upload Fail Surat (Dengan Compression)
+       try {
+            // Upload Fail Surat Arahan Rasmi
             let fileUpload = document.getElementById('fileUpload').files[0];
             let fileUrl = null;
             if (fileUpload) {
@@ -209,7 +209,30 @@ if(vehicleForm) {
                 if (uploadError) throw uploadError;
                 fileUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fileName).data.publicUrl;
             }
-            // Kumpul Data Penumpang (4 lajur)
+
+            // Upload Fail Senarai Penumpang (Jika Ada)
+            let failPenumpang = document.getElementById('failSenaraiPenumpang') ? document.getElementById('failSenaraiPenumpang').files[0] : null;
+            let filePenumpangUrl = null;
+            if (failPenumpang) {
+                failPenumpang = await mampatkanGambar(failPenumpang);
+                const fName = `penumpang_${Date.now()}_${Math.floor(Math.random()*1000)}.${failPenumpang.name.split('.').pop()}`;
+                const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failPenumpang);
+                if (upErr) throw upErr;
+                filePenumpangUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+            }
+
+            // Upload Fail Senarai Peralatan (Jika Ada)
+            let failPeralatan = document.getElementById('failSenaraiPeralatan') ? document.getElementById('failSenaraiPeralatan').files[0] : null;
+            let filePeralatanUrl = null;
+            if (failPeralatan) {
+                failPeralatan = await mampatkanGambar(failPeralatan);
+                const fName = `peralatan_${Date.now()}_${Math.floor(Math.random()*1000)}.${failPeralatan.name.split('.').pop()}`;
+                const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failPeralatan);
+                if (upErr) throw upErr;
+                filePeralatanUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+            }
+
+            // Kumpul Data Penumpang (Jadual)
             const passengers = [];
             document.querySelectorAll('#tblPassengers tbody tr').forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
@@ -218,7 +241,7 @@ if(vehicleForm) {
                 }
             });
             
-            // Kumpul Data Peralatan (4 lajur)
+            // Kumpul Data Peralatan (Jadual)
             const equipments = [];
             document.querySelectorAll('#tblEquipment tbody tr').forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
@@ -227,13 +250,13 @@ if(vehicleForm) {
                 }
             });
 
-            // Hantar ke Database
+            // Hantar semua data ke Database Supabase
             const { error: insertError } = await supabaseClient.from('tempahan').insert([{
                 id_pemohon: currentUser.id,
                 nama_pemohon: document.getElementById('applicantName').value,
                 no_telefon: document.getElementById('phone').value,
                 bahagian: document.getElementById('pilihanBahagian').value,
-            tujuan: document.getElementById('tujuanPermohonan').value,
+                tujuan: document.getElementById('tujuanPermohonan').value,
                 destinasi: document.getElementById('location').value,
                 lokasi: document.getElementById('location').value, // backup column
                 tarikh_pergi: document.getElementById('tripDate').value,
@@ -241,6 +264,8 @@ if(vehicleForm) {
                 masa_bertolak: document.getElementById('departTime').value,
                 masa_balik: document.getElementById('returnTime').value,
                 fail_surat: fileUrl,
+                fail_penumpang: filePenumpangUrl, // Link upload penumpang
+                fail_peralatan: filePeralatanUrl, // Link upload peralatan
                 senarai_penumpang: passengers,
                 senarai_peralatan: equipments,
                 status: 'Menunggu Semakan'
@@ -250,15 +275,10 @@ if(vehicleForm) {
             alert("Permohonan berjaya dihantar!");
             vehicleForm.reset();
             
-            // BUANG DRAF BILA DAH BERJAYA HANTAR
-            if(currentUser) {
-                localStorage.removeItem('vms_draft_' + currentUser.id);
-            }
+            if(currentUser) localStorage.removeItem('vms_draft_' + currentUser.id);
             
-            // Kembali ke jadual
             tukarTab('jadual');
             muatSejarahPemohon();
-
         } catch (error) {
             alert("Ralat menghantar permohonan: " + error.message);
         } finally {
