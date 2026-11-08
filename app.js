@@ -298,15 +298,21 @@ async function muatSenaraiUrusetia() {
     if(!div) return;
     div.innerHTML = "<p style='padding: 20px; color:#64748b; text-align:center;'>Memuatkan data... ⏳</p>";
 
+    // 1. Tarik permohonan yang perlu tindakan (Menunggu Semakan & Lulus)
     const { data: tempahan, error } = await supabaseClient.from('tempahan').select('*').in('status', ['Menunggu Semakan', 'Lulus']).order('id', {ascending: false});
     if (error) return div.innerHTML = "Ralat: " + error.message;
     if (!tempahan || tempahan.length === 0) return div.innerHTML = "<p style='padding: 20px; color:#64748b; text-align:center;'>Tiada permohonan baharu.</p>";
 
     cacheUrusetia = tempahan; 
     
-    // Tarik data Pemandu & Kenderaan secara DINAMIK dari Supabase
+    // 2. Tarik data Pemandu & Kenderaan
     const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
     const { data: pemanduList } = await supabaseClient.from('pemandu').select('*');
+
+    // 3. Tarik senarai TUGASAN AKTIF (Selesai Diagih) untuk sistem semak pertindihan (clash)
+    const { data: tugasanAktif } = await supabaseClient.from('tempahan')
+        .select('nama_pemandu, id_kenderaan, tarikh_pergi, masa_bertolak, tarikh_balik, masa_balik')
+        .eq('status', 'Selesai Diagih');
 
     let html = `<table class="sistem-table" style="min-width: 900px; width: 100%;">
         <thead>
@@ -316,6 +322,10 @@ async function muatSenaraiUrusetia() {
     
     tempahan.forEach((t, index) => {
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+
+        // Sistem kira masa permohonan INI untuk dibandingkan
+        const semasaMula = new Date(`${t.tarikh_pergi}T${t.masa_bertolak || '00:00:00'}`);
+        const semasaTamat = new Date(`${t.tarikh_balik}T${t.masa_balik || '23:59:00'}`);
 
         html += `<tr>
             <td><strong>${noRujukan}</strong></td>
@@ -337,22 +347,57 @@ async function muatSenaraiUrusetia() {
                 </div>
             `;
         } else if (t.status === 'Lulus') {
-            html += `
-                <select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
+            
+            // ==========================================
+            // DROPDOWN PEMANDU (AUTO-FILTER)
+            // ==========================================
+            html += `<select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
                     <option value="">-- Pilih Pemandu --</option>`;
             if (pemanduList) {
                 pemanduList.forEach(p => {
+                    let clash = false;
+                    if (tugasanAktif) {
+                        for (let rekod of tugasanAktif) {
+                            if (rekod.nama_pemandu === p.nama) {
+                                const rekodMula = new Date(`${rekod.tarikh_pergi}T${rekod.masa_bertolak || '00:00:00'}`);
+                                const rekodTamat = new Date(`${rekod.tarikh_balik}T${rekod.masa_balik || '23:59:00'}`);
+                                if (semasaMula < rekodTamat && semasaTamat > rekodMula) { clash = true; break; }
+                            }
+                        }
+                    }
                     const labelNama = p.kategori === 'Gantian' ? `${p.nama} (Gantian)` : p.nama;
-                    html += `<option value="${labelNama}">${labelNama}</option>`;
+                    if (clash) {
+                        html += `<option value="${labelNama}" disabled style="color:#ef4444; background:#fee2e2;">⛔ ${labelNama} (Sedang Bertugas)</option>`;
+                    } else {
+                        html += `<option value="${labelNama}">${labelNama}</option>`;
+                    }
                 });
             }
+            
+            // ==========================================
+            // DROPDOWN KENDERAAN (AUTO-FILTER)
+            // ==========================================
             html += `</select><br>
                 <select id="kenderaan-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
                     <option value="">-- Pilih Kenderaan --</option>`;
             if (kenderaanList) {
                kenderaanList.forEach(k => {
+                    let clash = false;
+                    if (tugasanAktif) {
+                        for (let rekod of tugasanAktif) {
+                            if (rekod.id_kenderaan == k.id) {
+                                const rekodMula = new Date(`${rekod.tarikh_pergi}T${rekod.masa_bertolak || '00:00:00'}`);
+                                const rekodTamat = new Date(`${rekod.tarikh_balik}T${rekod.masa_balik || '23:59:00'}`);
+                                if (semasaMula < rekodTamat && semasaTamat > rekodMula) { clash = true; break; }
+                            }
+                        }
+                    }
                     const labelKategori = k.jenis_kenderaan ? `[${k.jenis_kenderaan}] ` : '';
-                    html += `<option value="${k.id}">${labelKategori}${k.model} (${k.no_plat})</option>`;
+                    if (clash) {
+                        html += `<option value="${k.id}" disabled style="color:#ef4444; background:#fee2e2;">⛔ ${labelKategori}${k.model} (${k.no_plat}) (Telah Ditempah)</option>`;
+                    } else {
+                        html += `<option value="${k.id}">${labelKategori}${k.model} (${k.no_plat})</option>`;
+                    }
                 });
             }
             html += `</select><br>
@@ -362,7 +407,6 @@ async function muatSenaraiUrusetia() {
     });
     div.innerHTML = html + `</tbody></table>`;
 }
-
 // ==========================================
 // FUNGSI PENGESAHAN URUSETIA (BAHAGIAN B)
 // ==========================================
