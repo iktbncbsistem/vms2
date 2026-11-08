@@ -591,7 +591,7 @@ async function agihKenderaan(id) {
                             </tr>
                         </table>
 
-                        <!-- BAHAGIAN 3: SENARAI PENUMPANG -->
+                       <!-- BAHAGIAN 3: SENARAI PENUMPANG -->
                         <div class="sheet-section-title">Bahagian 3: Senarai Penumpang (${penumpang.length} Orang)</div>
                         <table class="sheet-data-table">
                             <thead>
@@ -607,6 +607,7 @@ async function agihKenderaan(id) {
                                 ${rowsPenumpang}
                             </tbody>
                         </table>
+                        ${t.fail_penumpang ? `<div style="padding: 8px 10px; background: #f8fafc; border: 1px solid #94a3b8; border-top: none; font-size: 12px;"><a href="${vmsEscape(t.fail_penumpang)}" target="_blank" style="color:#0284c7; font-weight:700; text-decoration:underline;">📎 Klik di sini untuk membuka Dokumen Lampiran Senarai Penumpang</a></div>` : ''}
 
                         <!-- BAHAGIAN 4: SENARAI PERALATAN -->
                         <div class="sheet-section-title">Bahagian 4: Peralatan / Kelengkapan Dibawa</div>
@@ -624,7 +625,7 @@ async function agihKenderaan(id) {
                                 ${rowsAlatan}
                             </tbody>
                         </table>
-
+                        ${t.fail_peralatan ? `<div style="padding: 8px 10px; background: #f8fafc; border: 1px solid #94a3b8; border-top: none; font-size: 12px;"><a href="${vmsEscape(t.fail_peralatan)}" target="_blank" style="color:#0284c7; font-weight:700; text-decoration:underline;">📎 Klik di sini untuk membuka Dokumen Lampiran Senarai Peralatan</a></div>` : ''}
                         <!-- BAHAGIAN 5: PENGESAHAN URUSETIA & KELULUSAN -->
                         <div class="sheet-section-title">Bahagian 5: Pengesahan & Kelulusan Rasmi</div>
                         <table class="sheet-table-info">
