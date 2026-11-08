@@ -75,12 +75,7 @@ async function semakPeranan() {
 
         if (typeof semakJadualAwam === 'function') semakJadualAwam('aktif');
 
-        // Halang pengguna yang belum diaktifkan
-        if (data.peranan === 'pemohon' || !data.peranan) {
-            alert("Akaun berjaya didaftarkan! Walau bagaimanapun, akaun anda belum diaktifkan. Sila maklumkan kepada Urusetia untuk pengaktifan peranan.");
-            return;
-        }
-
+      
         // 4. Buka tab mengikut peranan
         if (data.peranan === 'pemohon') {
             const btnTabMohon = document.getElementById('btnTabMohon');
