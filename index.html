@@ -1,3 +1,6 @@
+
+
+
 <!doctype html>
 <html lang="ms">
 <head>
@@ -26,69 +29,65 @@
     </div>
 </header>
 
+<!-- ========================================== -->
+<!-- BAHAGIAN LOG MASUK (REKAAN BAHARU) -->
+<!-- ========================================== -->
+<div id="skrin-login" class="hidden">        
+    <div class="login-kiri">
+        <!-- 1. Sub-tajuk & Logo di Bahagian Atas -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="color: #64b5f6; margin: 0; font-size: 14px; border:none; padding:0; letter-spacing: 1px;">SISTEM VMS JABATAN</h3>
 
-    <!-- ========================================== -->
-    <!-- SKRIN LOG MASUK (REKAAN PREMIUM) -->
-    <!-- ========================================== -->
-    <div id="skrin-login" class="login-wrapper hidden">
-        
-        <!-- Bahagian Kiri: Penjenamaan (Dark Blue) -->
-        <div class="login-left">
-            <div class="login-logo-container">
-                <!-- LETAK KOD LOGO ASAL BOS DI SINI -->
-                <img src="https://eazdfwzifcsfayapyshv.supabase.co/storage/v1/object/public/image/logo.png" alt="Logo" style="height: 50px;">
-            </div>
-            
-            <div class="login-title-area">
-                <p class="login-kbs-text">SISTEM VMS • IKTBN CHEMBONG</p>
-                <h1>Sistem Pengurusan Kenderaan Jabatan (<span style="color:#fbbf24;">VMS</span>)</h1>
-                <p class="login-subtitle">Pengurusan kenderaan jabatan yang lebih efisien, teratur dan terancang.</p>
-            </div>
+            <!-- Ruang Logo-Logo Rasmi -->
+            <div style="display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.1); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
+                <!-- Logo 1: KBS -->
+                <img src="https://roupbsxqjhurtpacrnxy.supabase.co/storage/v1/object/public/image/header-logo-front.png" alt="Logo KBS" style="height: 48px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
 
-            <div class="login-info-box">
-                <div style="font-weight:700; margin-bottom:5px; display:flex; align-items:center; gap:8px;">
-                    <span style="background:white; color:#0f172a; border-radius:50%; width:20px; height:20px; display:inline-flex; justify-content:center; align-items:center; font-size:12px;">i</span> 
-                    Maklumat Sistem
-                </div>
-                <p style="margin:0; font-size:13px; color:#cbd5e1; line-height:1.5;">Sila log masuk untuk mengakses sistem pengurusan kenderaan jabatan IKTBN Chembong.</p>
+                <!-- Logo 2: ILKBS / IKTBN -->
+                <img src="https://eazdfwzifcsfayapyshv.supabase.co/storage/v1/object/public/image/logo.png" alt="Logo ILKBS" style="height: 48px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
             </div>
         </div>
 
-        <!-- Bahagian Kanan: Kad Log Masuk (White Card) -->
-        <div class="login-right">
-            <div class="login-card">
-                <div class="login-badge">
-                    <span style="color:#fbbf24;">🟡</span> SELAMAT DATANG
-                </div>
-                
-                <h2 style="color:#0f172a; font-size:28px; margin:0 0 10px 0; font-weight:800;">Daftar Masuk</h2>
-                <p style="color:#64748b; font-size:14px; margin-bottom:30px;">Sahkan identiti anda menggunakan akaun rasmi anda.</p>
+        <!-- 2. Tajuk Utama (Melintang Panjang) -->
+        <h1 style="margin-top: 0; font-size: 32px; line-height: 1.2; font-weight: 700; color: #fff; margin-bottom: 15px;">
+            Sistem Pengurusan Kenderaan Jabatan (VMS)
+        </h1>
 
-                <button onclick="loginGoogle()" class="btn-google-premium">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width:20px; height:20px; background:white; padding:2px; border-radius:50%;">
-                    Daftar Masuk dengan Google
-                </button>
+        <p style="color: #e0eaff; font-size: 14px; margin-bottom: 20px;">Gunakan E-mel Google rasmi (IKTBN) anda untuk mengakses perkhidmatan permohonan kenderaan, semakan jadual pergerakan, dan kelulusan secara digital.</p>
 
-                <div class="login-warning-box">
-                    <strong>⚠️ Perhatian:</strong> Akaun baharu akan didaftarkan dalam status <em>Akaun Tidak Aktif</em> untuk tujuan keselamatan. Sila maklumkan kepada Urusetia untuk pengaktifan peranan.
-                </div>
-            </div>
+        <div style="background-color: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: 20px; border-radius: 8px;">
+            <strong style="font-size: 13px; color: #fff;">ℹ️ Khidmat Bantuan</strong>
+            <p style="font-size: 12px; color: #d6eaf8; margin: 8px 0 0 0; line-height: 1.5;">Jika anda mengalami masalah akses atau baru pertama kali menggunakan sistem, sila hubungi <b>Urusetia (Pentadbiran)</b> untuk penetapan peranan.</p>
         </div>
-        
+    </div>   
+
+    <div class="login-kanan">
+    <div style="background: #f0f7ff; color: #1767c2; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; width: fit-content; margin-bottom: 20px; border: 1px solid #bae6fd;">
+        👋 SELAMAT DATANG 
     </div>
 
+    <h2 style="border: none; padding: 0; font-size: 26px; color: #0f172a; margin-bottom: 5px;">Daftar Masuk</h2>
+    <p style="color: #64748b; font-size: 14px; margin-top: 0; margin-bottom: 35px;">Sahkan identiti anda menggunakan akaun kbs.gov.my anda.</p>
+
+    <button class="btn-google" onclick="loginGoogle()">
+        <div class="icon-google">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 18px; height: 18px;">
+        </div>
+        Daftar Masuk dengan Google
+    </button>
 
 
-
-
-
-
+    <div style="margin-top: 35px; background: #fffbeb; color: #92400e; padding: 15px; border-radius: 6px; font-size: 12px; border-left: 4px solid #f59e0b; line-height:1.5;">
+        ⚠️ <b>Perhatian:</b> Akaun baharu akan diletakkan dalam status Menunggu Pengesahan untuk tujuan keselamatan data.
+    </div>
+</div>
+</div>  
 <!-- ========================================== -->
 <!-- ========================================== -->
 <!-- SISTEM TAB UTAMA (JADUAL, BORANG & TINDAKAN) -->
 <!-- ========================================== -->
 <div id="sistem-tab-utama" class="hidden" style="width: 100%; max-width: 1400px; margin: 15px auto; padding: 10px; box-sizing: border-box;">
-    
+
     <!-- Butang Tab -->
     <div style="display: flex; gap: 8px; margin-bottom: -1px; position: relative; z-index: 2;">
         <button id="btnTabJadual" onclick="tukarTab('jadual')" style="background: white; border: 1px solid #cbd5e1; border-bottom: none; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 700; color: #1767c2; cursor: pointer; transition: 0.2s;">
@@ -113,7 +112,7 @@
         <button id="btnTabBahagian" onclick="tukarTab('bahagian')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s; margin-left: 5px;">
     🏢 Tetapan Bahagian
 </button>
-        
+
         <button id="btnTabPelulus" onclick="tukarTab('pelulus')" class="hidden" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 25px; border-radius: 12px 12px 0 0; font-weight: 600; color: #64748b; cursor: pointer; transition: 0.2s;">
             ✅ Peti Tindakan Pelulus
         </button>
@@ -121,11 +120,11 @@
 
     <!-- Bekas Kandungan Tab -->
     <div style="background: white; border: 1px solid #cbd5e1; border-radius: 0 12px 12px 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-        
+
         <!-- TAB 1: JADUAL AWAM -->
         <div id="tab-jadual-awam">
             <h3 style="color: #102a43; margin: 0 0 15px 0;">Jadual Pergerakan Kenderaan</h3>
-            
+
             <div id="ruang-carian-jadual" class="air-search-bar hidden">
                 <div style="flex: 1; min-width: 150px;">
                     <label style="font-size:12px; color:#64748b; display:block; margin-bottom:5px; font-weight:600;">Dari Tarikh</label>
@@ -141,7 +140,7 @@
                     <button onclick="semakJadualAwam('cari')" class="btn btn-danger" style="padding:12px 16px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">🔍 Cari</button>
                 </div>
             </div>
-            
+
             <div style="background:white; border-radius:12px; border:1px solid #e2e8f0; overflow-x:auto;">
                 <table class="air-table">
                    <thead>
@@ -154,7 +153,7 @@
                             <th>Masa & Tarikh Balik</th>
                             <th>Pemohon</th>
                             <th>Catatan</th>
-                            
+
                         </tr>
                     </thead>
                     <tbody id="isiJadualAwam">
@@ -166,11 +165,11 @@
 
         <!-- TAB 2: BORANG MOHON KENDERAAN (PEMOHON SAHAJA) -->
         <div id="tab-mohon-kenderaan" class="hidden">
-            
+
             <form id="vehicleForm" style="margin-top: 10px;">
                 <!-- Override grid asal supaya form guna 100% lebar tanpa sidebar -->
                 <div class="container" style="grid-template-columns: 1fr; padding: 0;">
-                    
+
                     <div class="form-sections">
                         <!-- A. Maklumat Pemohon -->
                         <div class="card">
@@ -345,13 +344,13 @@
                                     Sila pastikan semua maklumat diisi dengan lengkap berserta lampiran <strong>Surat Arahan Tugas Rasmi</strong> sebelum menghantar permohonan.
                                 </div>
                             </div>
-                            
+
                             <div class="actions-right">
                                 <button type="button" class="btn btn-outline" id="btnDraft">💾 Simpan Draf</button>
                                 <button type="submit" class="btn btn-success" id="btnSubmit">➤ Hantar Permohonan</button>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
             </form>
@@ -371,10 +370,10 @@
         </div>
 <!-- TAB TETAPAN (URUSETIA SAHAJA) -->
         <div id="tab-tetapan-urusetia" class="hidden">
-            
+
             <div style="border:1px solid #e2e8f0; border-radius:8px; padding:20px; background:white;">
                 <p style="color:#64748b; font-size:13px; margin-top:0;">Urus senarai pemandu dan kenderaan yang akan dipaparkan dalam sistem (Fungsi UI sedang dibangunkan).</p>
-                
+
                 <div class="form-grid">
                     <!-- Senarai Pemandu -->
                     <div class="card" style="box-shadow:none; border-color:#e2e8f0;">
@@ -398,12 +397,12 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Senarai Kenderaan -->
                     <div class="card" style="box-shadow:none; border-color:#e2e8f0;">
                         <div class="card-header" style="background:#f8fafc; color:#1e293b; border-bottom:1px solid #e2e8f0;">🚘 Senarai Kenderaan</div>
                         <div class="card-body" style="padding:15px;">
-                            
+
                             <!-- Ruangan Input Disusun Semula -->
                             <div style="display:flex; gap:10px; margin-bottom:15px;">
                                 <!-- 1. Kategori (Boleh taip atau pilih) -->
@@ -414,16 +413,16 @@
                                     <option value="Kereta"></option>
                                     <option value="SUV"></option>
                                 </datalist>
-                                
+
                                 <!-- 2. Keluaran -->
                                 <input type="text" id="modelKenderaanBaru" placeholder="Keluaran (Cth: Scania, Hiace)" style="flex:1.5; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
-                                
+
                                 <!-- 3. No Plat -->
                                 <input type="text" id="platKenderaanBaru" placeholder="No. Plat" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
-                                
+
                                 <button type="button" class="btn btn-primary" onclick="tambahKenderaan()">Tambah</button>
                             </div>
-                            
+
                             <!-- Jadual Disusun Semula -->
                             <div class="table-responsive">
                                 <table class="vms-table" style="min-width:100%;">
@@ -433,7 +432,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
+
                         </div>
                     </div>
                 </div>
@@ -477,7 +476,7 @@
         </div>
         <button type="button" class="btn btn-primary" onclick="tambahBahagian()">+ Tambah Bahagian</button>
     </div>
-    
+
     <div class="table-responsive">
         <table class="vms-table" style="min-width: 100%;">
             <thead>
@@ -493,7 +492,7 @@
         </table>
     </div>
 </div>
-        
+
         <!-- TAB 4: PELULUS -->
         <div id="tab-dashboard-pelulus" class="hidden">
             <div style="background:#15945b; color:white; padding:14px 20px; border-radius:8px 8px 0 0; font-weight:600;">
@@ -509,8 +508,8 @@
     </div>
 </div>
 
-    
-    
+
+
 <!-- ========================================== -->
 <!-- PAPARAN BUTIRAN PENUH (HALAMAN PENUH) -->
 <!-- ========================================== -->
