@@ -499,3 +499,172 @@ td input:focus { background: white; border: 1px solid var(--primary); }
     width: 20px;
     height: 20px;
 }
+
+/* ========================================== */
+/* REKAAN SKRIN LOG MASUK PREMIUM */
+/* ========================================== */
+.login-wrapper {
+    display: flex;
+    min-height: 100vh; /* Pastikan ia sentiasa penuhi skrin */
+    width: 100%;
+    background: #f0f9ff;
+    font-family: 'Inter', sans-serif;
+}
+
+.login-left {
+    flex: 1;
+    background: linear-gradient(135deg, #020617 0%, #1e3a8a 100%);
+    color: white;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Kesan Pantulan Emas di bucu */
+.login-left::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.login-logo-container {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    z-index: 1;
+}
+
+.login-title-area {
+    z-index: 1;
+    margin-top: 40px;
+}
+
+.login-kbs-text {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    color: #cbd5e1;
+}
+
+.login-title-area h1 {
+    font-size: 42px;
+    line-height: 1.2;
+    margin: 0 0 20px 0;
+    font-weight: 800;
+}
+
+.login-subtitle {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #e2e8f0;
+    border-left: 3px solid #fbbf24;
+    padding-left: 15px;
+    font-style: italic;
+}
+
+.login-info-box {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 20px;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    z-index: 1;
+    max-width: 80%;
+}
+
+.login-right {
+    flex: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at bottom right, #bfdbfe 0%, #eff6ff 100%);
+    padding: 20px;
+}
+
+.login-card {
+    background: white;
+    padding: 50px 40px;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0,0,0,0.05);
+    width: 100%;
+    max-width: 450px;
+}
+
+.login-badge {
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-google-premium {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: #2563eb;
+    color: white;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+.btn-google-premium:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.4);
+}
+
+.login-warning-box {
+    margin-top: 30px;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* Susunan untuk Telefon Bimbit */
+@media (max-width: 900px) {
+    .login-wrapper {
+        flex-direction: column;
+    }
+    .login-left {
+        padding: 40px 25px;
+        gap: 30px;
+    }
+    .login-info-box {
+        max-width: 100%;
+    }
+    .login-title-area h1 {
+        font-size: 32px;
+    }
+    .login-right {
+        padding: 40px 20px;
+    }
+    .login-card {
+        padding: 35px 25px;
+    }
+}
