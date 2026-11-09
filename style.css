@@ -596,13 +596,17 @@ td input:focus { background: white; border: 1px solid var(--primary); }
     flex-shrink: 0;
 }
 
+
+
+
 .login-premium .login-logos img {
-    height: 43px;
+    height: 65px; /* Asalnya 43px (dibesarkan ~50%) */
     width: auto;
-    max-width: 75px;
+    max-width: 110px; /* Asalnya 75px */
     object-fit: contain;
     filter: drop-shadow(0 2px 3px rgba(0,0,0,.25));
 }
+
 
 .login-premium .logo-divider {
     height: 38px;
@@ -948,26 +952,38 @@ td input:focus { background: white; border: 1px solid var(--primary); }
     overflow: hidden;
 }
 
-/* Imej kenderaan */
-.login-premium .login-vehicle-bg {
-    position: absolute;
-    bottom: 35px;
-    right: -15px;
+/* KOTAK INFO DENGAN LATAR BELAKANG KERETA */
+.login-premium .login-info-container {
+    position: relative;
     width: 100%;
-    height: 260px;
-    z-index: 0;
-    pointer-events: none;
+    margin-top: 20px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(65,163,255,.4);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
 }
 
-.login-premium .login-vehicle-bg img {
+.login-premium .login-vehicle-img {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain;
-    object-position: bottom right;
-    opacity: 0.28;
-    filter: grayscale(25%);
+    object-fit: cover;
+    z-index: 0;
+    opacity: 0.6;
+    filter: grayscale(10%);
 }
 
+.login-premium .login-info {
+    position: relative;
+    z-index: 1;
+    padding: 25px 20px;
+    background: linear-gradient(to right, rgba(0,30,75,0.85), rgba(0,30,75,0.6));
+    backdrop-filter: blur(2px);
+    border: none;
+    border-radius: 0;
+}
 /* Pastikan kandungan berada di hadapan imej */
 .login-premium .login-header,
 .login-premium .login-hero,
