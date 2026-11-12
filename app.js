@@ -39,6 +39,7 @@ async function semakPeranan() {
     try {
         // 1. Semak profil pengguna dalam pangkalan data
         let { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();    
+        window.userRole = data ? data.peranan : 'pemohon';
         
         // 2. Jika profil TIADA (pengguna baharu), daftar secara automatik!
         if (!data) {
@@ -88,7 +89,10 @@ async function semakPeranan() {
 
             if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
         }
-        else if (data.peranan === 'urusetia') {
+        else if (data.peranan === 'urusetia') {                           
+           
+            const thTindakan = document.getElementById('headerTindakanJadual');
+            if(thTindakan) thTindakan.classList.remove('hidden');            
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
             const btnTabTetapan = document.getElementById('btnTabTetapan');
             if (btnTabTetapan) btnTabTetapan.classList.remove('hidden');
@@ -1099,11 +1103,21 @@ async function semakJadualAwam(mod = 'aktif') {
                     <span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:4px 10px; border-radius:12px; font-size:11px;">${labelStatus}</span>
                 </td>
 
-                <!-- LAJUR TERAKHIR: CATATAN (Butang Butiran dibuang) -->
+               <!-- LAJUR TERAKHIR: CATATAN -->
                 <td style="color:#64748b; font-size:12px; max-width: 150px;">
                     ${t.catatan || t.tujuan || '-'}
-                </td>
-            </tr>`;
+                </td>`;
+
+            // KOD BARU: TAMBAH BUTANG JIKA URUSETIA
+            if (window.userRole === 'urusetia') {
+                html += `
+                <td style="text-align:center; white-space:nowrap; background:#f8fafc;">
+                    <button class="btn-action-icon edit" onclick="editTempahanAwam(${t.id})" title="Ubah Tarikh / Masa">✏️</button>
+                    <button class="btn-action-icon delete" onclick="padamTempahanAwam(${t.id})" title="Padam Rekod">❌</button>
+                </td>`;
+            }
+
+            html += `</tr>`;
         
         });
     }
@@ -1535,3 +1549,47 @@ async function mampatkanGambar(file) {
         };
     });
 }
+
+
+// ==========================================
+// FUNGSI EDIT & PADAM DI JADUAL AWAM (URUSETIA SAHAJA)
+// ==========================================
+window.editTempahanAwam = async function(id) {
+    const t = cacheUrusetia.find(x => x.id === id);
+    if (!t) return alert("Rekod tidak dijumpai.");
+
+    // Minta Urusetia masukkan data baharu (Boleh tekan Cancel jika tak mahu ubah)
+    const tarikhBaru = prompt("Ubah Tarikh Pergi (YYYY-MM-DD):", t.tarikh_pergi);
+    if (tarikhBaru === null) return; 
+
+    const masaBaru = prompt("Ubah Masa Bertolak (HH:MM):", t.masa_bertolak);
+    if (masaBaru === null) return;
+
+    // Hantar ke database
+    const { error } = await supabaseClient
+        .from('tempahan')
+        .update({ tarikh_pergi: tarikhBaru, masa_bertolak: masaBaru })
+        .eq('id', id);
+
+    if (error) alert("Ralat: " + error.message);
+    else {
+        alert("✅ Maklumat jadual berjaya dikemaskini!");
+        semakJadualAwam('aktif'); // Refresh jadual
+    }
+};
+
+window.padamTempahanAwam = async function(id) {
+    if (!confirm("⚠️ AMARAN: Adakah anda pasti mahu memadam rekod permohonan ini secara kekal? Tindakan ini tidak boleh diundur.")) return;
+
+    // Padam dari database
+    const { error } = await supabaseClient
+        .from('tempahan')
+        .delete()
+        .eq('id', id);
+
+    if (error) alert("Ralat padam: " + error.message);
+    else {
+        alert("✅ Rekod permohonan telah berjaya dipadam.");
+        semakJadualAwam('aktif'); // Refresh jadual
+    }
+};
