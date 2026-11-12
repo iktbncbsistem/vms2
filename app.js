@@ -559,7 +559,17 @@ async function agihKenderaan(id) {
         let statusBadgeColor = '#f59e0b';
         if (t.status === 'Lulus' || t.status === 'Selesai Diagih') statusBadgeColor = '#10b981';
         else if (t.status === 'Tolak') statusBadgeColor = '#ef4444';
-
+// Pengehadan Paparan Alasan Perubahan (Hanya Urusetia & Pelulus)
+        let alasanPerubahanHtml = '';
+        if ((window.userRole === 'urusetia' || window.userRole === 'pelulus') && t.alasan_perubahan) {
+            alasanPerubahanHtml = `
+            <tr>
+                <td class="label-cell" style="color:#b91c1c; background:#fee2e2;">Rekod Perubahan (Audit)</td>
+                <td class="val-cell" colspan="3" style="color:#b91c1c; background:#fef2f2; font-style:italic;">
+                    ${vmsEscape(t.alasan_perubahan)}
+                </td>
+            </tr>`;
+        }
         const modalHtml = `
             <div class="vms-sheet-container">
                 <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
@@ -674,7 +684,7 @@ async function agihKenderaan(id) {
                             </tbody>
                         </table>
                         ${t.fail_peralatan ? `<div style="padding: 8px 10px; background: #f8fafc; border: 1px solid #94a3b8; border-top: none; font-size: 12px;"><a href="${vmsEscape(t.fail_peralatan)}" target="_blank" style="color:#0284c7; font-weight:700; text-decoration:underline;">📎 Klik di sini untuk membuka Dokumen Lampiran Senarai Peralatan</a></div>` : ''}
-                        <!-- BAHAGIAN 5: PENGESAHAN URUSETIA & KELULUSAN -->
+                       <!-- BAHAGIAN 5: PENGESAHAN URUSETIA & KELULUSAN -->
                         <div class="sheet-section-title">Bahagian 5: Pengesahan & Kelulusan Rasmi</div>
                         <table class="sheet-table-info">
                             <tr>
@@ -687,6 +697,7 @@ async function agihKenderaan(id) {
                                 <td class="label-cell">Pemandu Ditugaskan</td>
                                 <td class="val-cell"><strong>${vmsEscape(t.nama_pemandu || 'Belum Diagih')}</strong></td>
                             </tr>
+                            ${alasanPerubahanHtml}
                         </table>
 
                         <!-- PETAK TANDATANGAN RASMI -->
@@ -1558,38 +1569,115 @@ window.editTempahanAwam = async function(id) {
     const t = cacheUrusetia.find(x => x.id === id);
     if (!t) return alert("Rekod tidak dijumpai.");
 
-    // Minta Urusetia masukkan data baharu (Boleh tekan Cancel jika tak mahu ubah)
-    const tarikhBaru = prompt("Ubah Tarikh Pergi (YYYY-MM-DD):", t.tarikh_pergi);
-    if (tarikhBaru === null) return; 
+    const { data: pemanduList } = await supabaseClient.from('pemandu').select('*');
+    const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
 
-    const masaBaru = prompt("Ubah Masa Bertolak (HH:MM):", t.masa_bertolak);
-    if (masaBaru === null) return;
+    let pemanduOpts = '<option value="">-- Pilih / Kosongkan Pemandu --</option>';
+    if (pemanduList) {
+        pemanduList.forEach(p => {
+            const isSelected = (t.nama_pemandu === p.nama) ? 'selected' : '';
+            pemanduOpts += `<option value="${p.nama}" ${isSelected}>${p.nama}</option>`;
+        });
+    }
 
-    // Hantar ke database
-    const { error } = await supabaseClient
-        .from('tempahan')
-        .update({ tarikh_pergi: tarikhBaru, masa_bertolak: masaBaru })
-        .eq('id', id);
+    let kenderaanOpts = '<option value="">-- Pilih / Kosongkan Kenderaan --</option>';
+    if (kenderaanList) {
+        kenderaanList.forEach(k => {
+            const isSelected = (t.id_kenderaan == k.id) ? 'selected' : '';
+            kenderaanOpts += `<option value="${k.id}" ${isSelected}>[${k.jenis_kenderaan || '-'}] ${k.no_plat} - ${k.model}</option>`;
+        });
+    }
 
-    if (error) alert("Ralat: " + error.message);
-    else {
-        alert("✅ Maklumat jadual berjaya dikemaskini!");
-        semakJadualAwam('aktif'); // Refresh jadual
+    const modalId = 'modalEditJadual';
+    const sediaAda = document.getElementById(modalId);
+    if (sediaAda) sediaAda.remove();
+
+    const htmlModal = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; display:flex; justify-content:center; align-items:center;">
+        <div style="background:white; padding:25px; border-radius:12px; width:450px; max-width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#102a43; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">✏️ Kemaskini Jadual & Tugasan</h3>
+            
+            <div style="margin-bottom:12px; display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#475569;">Tarikh Pergi</label>
+                    <input type="date" id="editJadualTarikh" value="${t.tarikh_pergi || ''}" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#475569;">Masa Bertolak</label>
+                    <input type="time" id="editJadualMasa" value="${t.masa_bertolak || ''}" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                </div>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#475569;">Ubah Pemandu</label>
+                <select id="editJadualPemandu" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    ${pemanduOpts}
+                </select>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#475569;">Ubah Kenderaan</label>
+                <select id="editJadualKenderaan" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    ${kenderaanOpts}
+                </select>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#ef4444;">Alasan Perubahan (Wajib)</label>
+                <textarea id="editJadualAlasan" placeholder="Cth: Pemandu asal cuti sakit / Kenderaan rosak..." style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box; height:60px;" required></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-light" style="padding:8px 15px;">Batal</button>
+                <button onclick="simpanEditJadualAwam(${t.id})" class="btn btn-primary" style="padding:8px 15px;">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', htmlModal);
+};
+
+window.simpanEditJadualAwam = async function(id) {
+    const tarikh = document.getElementById('editJadualTarikh').value;
+    const masa = document.getElementById('editJadualMasa').value;
+    const pemandu = document.getElementById('editJadualPemandu').value;
+    const kenderaan = document.getElementById('editJadualKenderaan').value;
+    const alasan = document.getElementById('editJadualAlasan').value.trim();
+
+    if (!alasan) return alert("Sila nyatakan alasan perubahan untuk tujuan rekod!");
+
+    const alasanBerekod = `[Kemas kini pada ${new Date().toLocaleDateString('ms-MY')}] ${alasan}`;
+
+    document.body.style.cursor = 'wait';
+
+    const { error } = await supabaseClient.from('tempahan').update({
+        tarikh_pergi: tarikh || null,
+        masa_bertolak: masa || null,
+        nama_pemandu: pemandu || null,
+        id_kenderaan: kenderaan ? parseInt(kenderaan) : null,
+        alasan_perubahan: alasanBerekod
+    }).eq('id', id);
+
+    document.body.style.cursor = 'default';
+
+    if (error) {
+        alert("Ralat kemaskini: " + error.message);
+    } else {
+        alert("✅ Maklumat jadual berjaya dikemaskini berserta alasan!");
+        document.getElementById('modalEditJadual').remove();
+        semakJadualAwam('aktif');
     }
 };
 
 window.padamTempahanAwam = async function(id) {
     if (!confirm("⚠️ AMARAN: Adakah anda pasti mahu memadam rekod permohonan ini secara kekal? Tindakan ini tidak boleh diundur.")) return;
 
-    // Padam dari database
-    const { error } = await supabaseClient
-        .from('tempahan')
-        .delete()
-        .eq('id', id);
+    const { error } = await supabaseClient.from('tempahan').delete().eq('id', id);
 
     if (error) alert("Ralat padam: " + error.message);
     else {
         alert("✅ Rekod permohonan telah berjaya dipadam.");
-        semakJadualAwam('aktif'); // Refresh jadual
+        semakJadualAwam('aktif');
     }
 };
+
