@@ -1706,119 +1706,62 @@ window.padamTempahanAwam = async function(id) {
     }
 };
 // ==========================================
-// FUNGSI KHAS PEMANDU: MUAT TUGASAN & SIMPAN REKOD
+// FUNGSI PROFIL: BUKA & SIMPAN AVATAR
 // ==========================================
-window.muatTugasanPemandu = async function() {
-    const div = document.getElementById('senarai-tugasan-pemandu');
-    if (!div) return;
-    div.innerHTML = "<div style='padding:20px; text-align:center;'>Memuatkan tugasan... ⏳</div>";
-
-    // Tarik nama profil pemandu semasa
-    const { data: profil } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
-    if (!profil || !profil.nama) return div.innerHTML = "Ralat: Sila pastikan nama anda berdaftar dengan betul.";
-
-    // Cari tugasan milik pemandu ini (hanya yang sedang/baru diagihkan)
-    const { data, error } = await supabaseClient
-        .from('tempahan')
-        .select('*')
-        .eq('nama_pemandu', profil.nama)
-        .in('status', ['Selesai Diagih', 'Lulus'])
-        .order('tarikh_pergi', { ascending: false });
-
-    if (error) return div.innerHTML = "Ralat: " + error.message;
-    if (!data || data.length === 0) return div.innerHTML = "<div style='padding:20px; text-align:center; color:#64748b; background:#f8fafc; border-radius:8px;'>Tiada tugasan rasmi untuk anda pada masa ini.</div>";
-
-    let html = '';
-    data.forEach(t => {
-        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
-        const odoMula = t.odometer_mula || '';
-        const odoAkhir = t.odometer_akhir || '';
-        const linkResit = t.resit_minyak 
-            ? `<a href="${t.resit_minyak}" target="_blank" style="color:#0284c7; font-weight:600; text-decoration:underline;">📎 Lihat Resit Disimpan</a>` 
-            : '<span style="color:#ef4444; font-size:12px;">Belum dimuat naik</span>';
-
-        html += `
-        <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 20px; background: white; box-shadow:0 4px 6px rgba(0,0,0,0.02);">
-            <div style="border-bottom:1px solid #e2e8f0; padding-bottom:10px; margin-bottom:15px;">
-                <h4 style="margin:0; color:#102a43; font-size:15px;">Tugasan: ${noRujukan} - ${t.destinasi || t.lokasi}</h4>
-                <p style="margin:4px 0 0 0; font-size: 12px; color:#475569;">
-                    🗓️ ${t.tarikh_pergi} (${t.masa_bertolak}) &nbsp;|&nbsp; 👤 Pemohon: <strong>${t.nama_pemohon}</strong>
-                </p>
-            </div>
-
-            <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
-                <div style="flex:1; min-width: 140px;">
-                    <label style="font-size:12px; font-weight:600; color:#1e293b; display:block; margin-bottom:5px;">Odometer Mula (KM)</label>
-                    <input type="number" id="odoMula_${t.id}" value="${odoMula}" placeholder="Cth: 125000" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box;">
-                </div>
-                <div style="flex:1; min-width: 140px;">
-                    <label style="font-size:12px; font-weight:600; color:#1e293b; display:block; margin-bottom:5px;">Odometer Akhir (KM)</label>
-                    <input type="number" id="odoAkhir_${t.id}" value="${odoAkhir}" placeholder="Cth: 125450" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box;">
-                </div>
-            </div>
-
-            <div style="margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:6px; border:1px dashed #cbd5e1;">
-                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:#1e293b;">📸 Gambar Resit Minyak / Tol (Pilihan)</label>
-                <!-- ATTRIBUTE CAPTURE="ENVIRONMENT" AKAN BUKA KAMERA BELAKANG TELEFON -->
-                <input type="file" id="resit_${t.id}" accept="image/*" capture="environment" style="font-size: 13px; width:100%; cursor:pointer;">
-                <div style="margin-top:8px;">Status: ${linkResit}</div>
-            </div>
-
-            <button onclick="simpanRekodPemandu(event, ${t.id})" class="btn btn-primary" style="width:100%; font-size:14px; padding:12px;">💾 Simpan Rekod Perjalanan</button>
-        </div>
-        `;
-    });
-    div.innerHTML = html;
+window.bukaModalProfil = function() {
+    document.getElementById('modalProfil').classList.remove('hidden');
+    document.getElementById('previewAvatar').src = document.getElementById('headerAvatar').src;
 };
 
-window.simpanRekodPemandu = async function(event, id) {
-    const btn = event.target;
+window.previewGambarProfil = function(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) { document.getElementById('previewAvatar').src = e.target.result; }
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+window.simpanProfil = async function() {
+    const file = document.getElementById('inputAvatar').files[0];
+    if(!file) return alert("Sila pilih gambar baharu dahulu.");
+    
+    const btn = document.getElementById('btnSimpanProfil');
     const teksAsal = btn.innerText;
-    btn.innerText = "⏳ Memuat naik & Menyimpan...";
+    btn.innerText = "⏳ Menyimpan...";
     btn.disabled = true;
-
+    
     try {
-        const odoMula = document.getElementById(`odoMula_${id}`).value;
-        const odoAkhir = document.getElementById(`odoAkhir_${id}`).value;
-        const resitInput = document.getElementById(`resit_${id}`).files[0];
-        let resitUrl = null;
-
-        // Proses kompres dan upload jika ada gambar baharu diambil
-        if (resitInput) {
-            const failMampat = await mampatkanGambar(resitInput);
-            const fName = `resit_${id}_${Date.now()}.${failMampat.name.split('.').pop()}`;
-            const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failMampat);
-            if (upErr) throw upErr;
-            resitUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+        const failMampat = await mampatkanGambar(file);
+        const fName = `avatar_${currentUser.id}_${Date.now()}.${failMampat.name.split('.').pop()}`;
+        
+        const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failMampat);
+        if(upErr) throw upErr;
+        
+        const avatarUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+        
+        const { error: updateErr } = await supabaseClient.from('profil').update({ gambar_profil: avatarUrl }).eq('id', currentUser.id);
+        if(updateErr) throw updateErr;
+        
+        document.getElementById('headerAvatar').src = avatarUrl;
+        alert("✅ Gambar profil berjaya dikemaskini!");
+        document.getElementById('modalProfil').classList.add('hidden');
+        
+        // Refresh jadual untuk tunjuk muka baharu
+        if(typeof muatTugasanPemandu === 'function' && document.getElementById('tab-tugasan-pemandu').classList.contains('hidden') === false) {
+            muatTugasanPemandu();
         }
-
-        // Susun data untuk dikemas kini
-        let updateData = {};
-        if (odoMula) updateData.odometer_mula = odoMula;
-        if (odoAkhir) updateData.odometer_akhir = odoAkhir;
-        if (resitUrl) updateData.resit_minyak = resitUrl;
-
-        // Hanya hantar ke database jika ada sesuatu yang diisi
-        if (Object.keys(updateData).length > 0) {
-            const { error } = await supabaseClient.from('tempahan').update(updateData).eq('id', id);
-            if (error) throw error;
-            alert("✅ Rekod odometer dan resit berjaya disimpan!");
-            muatTugasanPemandu(); // Refresh UI
-        } else {
-            alert("Sila isi sekurang-kurangnya Odometer atau muat naik resit.");
-        }
-
-    } catch (error) {
-        alert("Ralat sistem: " + error.message);
+    } catch(e) {
+        alert("Ralat memuat naik gambar: " + e.message);
     } finally {
         btn.innerText = teksAsal;
         btn.disabled = false;
     }
 };
+
 // ==========================================
 // FUNGSI KHAS PEMANDU: JADUAL TUGASAN & REKOD
 // ==========================================
-window.muatTugasanPemandu = async function(tMula = '', tAkhir = '') {
+window.muatTugasanPemandu = async function(tMula = '', tAkhir = '', teksCari = '') {
     const div = document.getElementById('senarai-tugasan-pemandu');
     if (!div) return;
     div.innerHTML = "<div style='padding:30px; text-align:center; color:#64748b;'>Memuatkan jadual tugasan... ⏳</div>";
@@ -1827,48 +1770,71 @@ window.muatTugasanPemandu = async function(tMula = '', tAkhir = '') {
     const { data: profil } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
     const namaPemanduSemasa = profil ? profil.nama : '';
 
-    // Bina query: Tarik SEMUA tugasan yang telah diagih (sebagai rujukan tuntutan semua pemandu)
     let query = supabaseClient.from('tempahan')
         .select('*')
         .in('status', ['Selesai Diagih', 'Lulus'])
         .order('tarikh_pergi', { ascending: false });
 
-    // Filter Carian Tarikh
+    // Penapis Tarikh dari Pangkalan Data
     if (tMula) query = query.gte('tarikh_pergi', tMula);
     if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
 
     const { data, error } = await query;
     const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model, jenis_kenderaan');
+    
+    // Tarik SEMUA profil untuk dapatkan gambar avatar pemandu
+    const { data: senaraiProfil } = await supabaseClient.from('profil').select('nama, gambar_profil');
+    const petaAvatar = {};
+    if (senaraiProfil) senaraiProfil.forEach(p => petaAvatar[p.nama] = p.gambar_profil);
 
-    // 1. BINA BAR CARIAN KHAS PEMANDU
+    // 1. REKAAN BAR CARIAN PREMIUM
     let html = `
-    <div style="background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #e2e8f0; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-        <div style="flex:1; min-width:150px;">
-            <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:5px;">Dari Tarikh</label>
-            <input type="date" id="cariTugasanMula" value="${tMula}" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
+    <div style="background: linear-gradient(to right, #f8fafc, #f1f5f9); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.03); display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex: 2; min-width: 200px;">
+            <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">🔍 Carian Cepat</label>
+            <input type="text" id="cariTugasanTeks" value="${teksCari}" placeholder="Cari pemandu, lokasi, kenderaan atau pemohon..." style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; outline:none; transition:0.2s;" onfocus="this.style.borderColor='#0284c7'">
         </div>
-        <div style="flex:1; min-width:150px;">
-            <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:5px;">Hingga Tarikh</label>
-            <input type="date" id="cariTugasanAkhir" value="${tAkhir}" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
+        <div style="flex: 1; min-width: 140px;">
+            <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">📅 Dari Tarikh</label>
+            <input type="date" id="cariTugasanMula" value="${tMula}" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit;">
         </div>
-        <div style="flex:0 0 auto;">
-            <button onclick="muatTugasanPemandu(document.getElementById('cariTugasanMula').value, document.getElementById('cariTugasanAkhir').value)" class="btn btn-primary" style="padding:9px 15px;">🔍 Cari</button>
-            <button onclick="muatTugasanPemandu()" class="btn btn-outline" style="padding:9px 15px; background:white;">🔄 Reset</button>
+        <div style="flex: 1; min-width: 140px;">
+            <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">📅 Hingga Tarikh</label>
+            <input type="date" id="cariTugasanAkhir" value="${tAkhir}" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit;">
+        </div>
+        <div style="flex: 0 0 auto; display:flex; gap:10px;">
+            <button onclick="muatTugasanPemandu(document.getElementById('cariTugasanMula').value, document.getElementById('cariTugasanAkhir').value, document.getElementById('cariTugasanTeks').value)" class="btn btn-primary" style="padding:10px 20px; border-radius:8px; font-weight:600; box-shadow:0 4px 10px rgba(2, 132, 199, 0.2);">Cari</button>
+            <button onclick="muatTugasanPemandu('', '', '')" class="btn btn-outline" style="padding:10px 20px; border-radius:8px; background:white; font-weight:600;">Reset</button>
         </div>
     </div>
     `;
 
     if (error) return div.innerHTML = html + "Ralat: " + error.message;
-    if (!data || data.length === 0) return div.innerHTML = html + "<div style='padding:20px; text-align:center; color:#64748b; background:#f8fafc; border-radius:8px;'>Tiada rekod tugasan ditemui pada tarikh ini.</div>";
 
-    // Simpan dalam cache khas pemandu untuk pop-up form nanti
-    window.cacheTugasanPemandu = data;
+    // Logik Penapis Teks (Text Filter)
+    let filteredData = data || [];
+    if (teksCari.trim() !== '') {
+        const k = teksCari.toLowerCase();
+        filteredData = filteredData.filter(t => {
+            const kenderaan = senaraiKenderaan && t.id_kenderaan ? senaraiKenderaan.find(x => x.id == t.id_kenderaan) : null;
+            const namaK = kenderaan ? `${kenderaan.no_plat} ${kenderaan.model}`.toLowerCase() : '';
+            return (t.destinasi && t.destinasi.toLowerCase().includes(k)) || 
+                   (t.lokasi && t.lokasi.toLowerCase().includes(k)) || 
+                   (t.nama_pemohon && t.nama_pemohon.toLowerCase().includes(k)) ||
+                   (t.nama_pemandu && t.nama_pemandu.toLowerCase().includes(k)) ||
+                   namaK.includes(k);
+        });
+    }
 
-    // 2. BINA JADUAL SENARAI TUGASAN
+    if (!filteredData || filteredData.length === 0) return div.innerHTML = html + "<div style='padding:20px; text-align:center; color:#64748b; background:#f8fafc; border-radius:8px;'>Tiada rekod tugasan ditemui bertepatan dengan carian anda.</div>";
+
+    window.cacheTugasanPemandu = filteredData;
+
+    // 2. BINA JADUAL SENARAI TUGASAN (DENGAN GAMBAR AVATAR)
     html += `<div class="table-responsive"><table class="vms-table" style="min-width: 1000px; width:100%;">
         <thead>
             <tr>
-                <th>Pemandu</th>
+                <th style="width:25%;">Pemandu</th>
                 <th>Kenderaan</th>
                 <th>Lokasi & Pemohon</th>
                 <th>Masa & Tarikh Pergi</th>
@@ -1878,7 +1844,7 @@ window.muatTugasanPemandu = async function(tMula = '', tAkhir = '') {
         </thead>
         <tbody>`;
 
-   data.forEach((t, index) => {
+    filteredData.forEach((t, index) => {
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
         let infoKenderaan = '-';
         if (t.id_kenderaan && senaraiKenderaan) {
@@ -1886,7 +1852,10 @@ window.muatTugasanPemandu = async function(tMula = '', tAkhir = '') {
             if (k) infoKenderaan = `<strong>${k.model || '-'}</strong><br><small style="color:#475569; font-weight:600;">${k.no_plat || '-'}</small>`;
         }
 
-        // Kalau tugasan milik pemandu login, warna row berbeza dan butang berbeza
+        // Semak URL Avatar Pemandu
+        const namaP = t.nama_pemandu || 'Belum Diagih';
+        const urlAvatar = petaAvatar[namaP] || `https://ui-avatars.com/api/?name=${encodeURIComponent(namaP)}&background=0f172a&color=fff`;
+
         const adakahMilikSaya = (t.nama_pemandu === namaPemanduSemasa);
         const rowStyle = adakahMilikSaya ? 'background:#f0f9ff;' : '';
         
@@ -1900,8 +1869,13 @@ window.muatTugasanPemandu = async function(tMula = '', tAkhir = '') {
         html += `
         <tr style="${rowStyle}">
             <td>
-                <span style="font-size:18px;">👨‍✈️</span> <strong style="color:#1e293b;">${t.nama_pemandu || 'Belum Diagih'}</strong><br>
-                <small style="color:#0284c7; font-weight:700;">${noRujukan}</small>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <img src="${urlAvatar}" alt="Avatar" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid ${adakahMilikSaya ? '#0284c7' : '#e2e8f0'}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div>
+                        <strong style="color:#1e293b; display:block; line-height:1.2;">${namaP}</strong>
+                        <small style="color:#0284c7; font-weight:700;">${noRujukan}</small>
+                    </div>
+                </div>
             </td>
             <td>${infoKenderaan}</td>
             <td>
@@ -1921,6 +1895,7 @@ window.muatTugasanPemandu = async function(tMula = '', tAkhir = '') {
             </td>
         </tr>`;
     });
+
     html += `</tbody></table></div>`;
     div.innerHTML = html;
 };
