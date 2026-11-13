@@ -1338,9 +1338,8 @@ async function muatSenaraiPengguna() {
             badge = '<span style="background:#dbeafe; color:#1d4ed8; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Pemohon</span>';
         } else if (perananSemasa === 'urusetia') {
             badge = '<span style="background:#ffedd5; color:#c2410c; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Urusetia</span>';
-        } else if (perananSemasa === 'pelulus') {
+} else if (perananSemasa === 'pelulus') {
             badge = '<span style="background:#dcfce7; color:#15803d; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Pelulus</span>';
-        }
         } else if (perananSemasa === 'pemandu') {
             badge = '<span style="background:#fef08a; color:#854d0e; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Pemandu</span>';
         }
