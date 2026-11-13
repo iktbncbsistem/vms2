@@ -125,6 +125,7 @@ window.tukarTab = function(tabName) {
         'tab-tetapan-pengguna', 
         'tab-dashboard-pelulus',
         'tab-tetapan-bahagian'
+        'tab-tugasan-pemandu'
     ];
     semuaTab.forEach(id => {
         const el = document.getElementById(id);
@@ -173,6 +174,20 @@ else if (tabName === 'bahagian') {
         idBtnBuka = 'btnTabBahagian';
         muatSenaraiBahagian();
     }
+    else if (tabName === 'bahagian') {
+        idTabBuka = 'tab-tetapan-bahagian';
+        idBtnBuka = 'btnTabBahagian';
+        muatSenaraiBahagian();
+    }
+    
+    else if (tabName === 'pemandu') { 
+        idTabBuka = 'tab-tugasan-pemandu'; 
+        idBtnBuka = 'btnTabPemandu'; 
+        if(typeof muatTugasanPemandu === 'function') muatTugasanPemandu();
+    }
+
+    const tabDibuka = document.getElementById(idTabBuka);
+    if (tabDibuka) {
     const tabDibuka = document.getElementById(idTabBuka);
     if (tabDibuka) {
         tabDibuka.classList.remove('hidden');
