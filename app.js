@@ -1696,3 +1696,113 @@ window.padamTempahanAwam = async function(id) {
         semakJadualAwam('aktif');
     }
 };
+// ==========================================
+// FUNGSI KHAS PEMANDU: MUAT TUGASAN & SIMPAN REKOD
+// ==========================================
+window.muatTugasanPemandu = async function() {
+    const div = document.getElementById('senarai-tugasan-pemandu');
+    if (!div) return;
+    div.innerHTML = "<div style='padding:20px; text-align:center;'>Memuatkan tugasan... ⏳</div>";
+
+    // Tarik nama profil pemandu semasa
+    const { data: profil } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
+    if (!profil || !profil.nama) return div.innerHTML = "Ralat: Sila pastikan nama anda berdaftar dengan betul.";
+
+    // Cari tugasan milik pemandu ini (hanya yang sedang/baru diagihkan)
+    const { data, error } = await supabaseClient
+        .from('tempahan')
+        .select('*')
+        .eq('nama_pemandu', profil.nama)
+        .in('status', ['Selesai Diagih', 'Lulus'])
+        .order('tarikh_pergi', { ascending: false });
+
+    if (error) return div.innerHTML = "Ralat: " + error.message;
+    if (!data || data.length === 0) return div.innerHTML = "<div style='padding:20px; text-align:center; color:#64748b; background:#f8fafc; border-radius:8px;'>Tiada tugasan rasmi untuk anda pada masa ini.</div>";
+
+    let html = '';
+    data.forEach(t => {
+        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+        const odoMula = t.odometer_mula || '';
+        const odoAkhir = t.odometer_akhir || '';
+        const linkResit = t.resit_minyak 
+            ? `<a href="${t.resit_minyak}" target="_blank" style="color:#0284c7; font-weight:600; text-decoration:underline;">📎 Lihat Resit Disimpan</a>` 
+            : '<span style="color:#ef4444; font-size:12px;">Belum dimuat naik</span>';
+
+        html += `
+        <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 20px; background: white; box-shadow:0 4px 6px rgba(0,0,0,0.02);">
+            <div style="border-bottom:1px solid #e2e8f0; padding-bottom:10px; margin-bottom:15px;">
+                <h4 style="margin:0; color:#102a43; font-size:15px;">Tugasan: ${noRujukan} - ${t.destinasi || t.lokasi}</h4>
+                <p style="margin:4px 0 0 0; font-size: 12px; color:#475569;">
+                    🗓️ ${t.tarikh_pergi} (${t.masa_bertolak}) &nbsp;|&nbsp; 👤 Pemohon: <strong>${t.nama_pemohon}</strong>
+                </p>
+            </div>
+
+            <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+                <div style="flex:1; min-width: 140px;">
+                    <label style="font-size:12px; font-weight:600; color:#1e293b; display:block; margin-bottom:5px;">Odometer Mula (KM)</label>
+                    <input type="number" id="odoMula_${t.id}" value="${odoMula}" placeholder="Cth: 125000" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box;">
+                </div>
+                <div style="flex:1; min-width: 140px;">
+                    <label style="font-size:12px; font-weight:600; color:#1e293b; display:block; margin-bottom:5px;">Odometer Akhir (KM)</label>
+                    <input type="number" id="odoAkhir_${t.id}" value="${odoAkhir}" placeholder="Cth: 125450" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box;">
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:6px; border:1px dashed #cbd5e1;">
+                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:#1e293b;">📸 Gambar Resit Minyak / Tol (Pilihan)</label>
+                <!-- ATTRIBUTE CAPTURE="ENVIRONMENT" AKAN BUKA KAMERA BELAKANG TELEFON -->
+                <input type="file" id="resit_${t.id}" accept="image/*" capture="environment" style="font-size: 13px; width:100%; cursor:pointer;">
+                <div style="margin-top:8px;">Status: ${linkResit}</div>
+            </div>
+
+            <button onclick="simpanRekodPemandu(event, ${t.id})" class="btn btn-primary" style="width:100%; font-size:14px; padding:12px;">💾 Simpan Rekod Perjalanan</button>
+        </div>
+        `;
+    });
+    div.innerHTML = html;
+};
+
+window.simpanRekodPemandu = async function(event, id) {
+    const btn = event.target;
+    const teksAsal = btn.innerText;
+    btn.innerText = "⏳ Memuat naik & Menyimpan...";
+    btn.disabled = true;
+
+    try {
+        const odoMula = document.getElementById(`odoMula_${id}`).value;
+        const odoAkhir = document.getElementById(`odoAkhir_${id}`).value;
+        const resitInput = document.getElementById(`resit_${id}`).files[0];
+        let resitUrl = null;
+
+        // Proses kompres dan upload jika ada gambar baharu diambil
+        if (resitInput) {
+            const failMampat = await mampatkanGambar(resitInput);
+            const fName = `resit_${id}_${Date.now()}.${failMampat.name.split('.').pop()}`;
+            const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failMampat);
+            if (upErr) throw upErr;
+            resitUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+        }
+
+        // Susun data untuk dikemas kini
+        let updateData = {};
+        if (odoMula) updateData.odometer_mula = odoMula;
+        if (odoAkhir) updateData.odometer_akhir = odoAkhir;
+        if (resitUrl) updateData.resit_minyak = resitUrl;
+
+        // Hanya hantar ke database jika ada sesuatu yang diisi
+        if (Object.keys(updateData).length > 0) {
+            const { error } = await supabaseClient.from('tempahan').update(updateData).eq('id', id);
+            if (error) throw error;
+            alert("✅ Rekod odometer dan resit berjaya disimpan!");
+            muatTugasanPemandu(); // Refresh UI
+        } else {
+            alert("Sila isi sekurang-kurangnya Odometer atau muat naik resit.");
+        }
+
+    } catch (error) {
+        alert("Ralat sistem: " + error.message);
+    } finally {
+        btn.innerText = teksAsal;
+        btn.disabled = false;
+    }
+};
