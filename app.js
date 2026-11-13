@@ -124,7 +124,7 @@ window.tukarTab = function(tabName) {
         'tab-tetapan-urusetia', 
         'tab-tetapan-pengguna', 
         'tab-dashboard-pelulus',
-        'tab-tetapan-bahagian'
+        'tab-tetapan-bahagian',
         'tab-tugasan-pemandu'
     ];
     semuaTab.forEach(id => {
