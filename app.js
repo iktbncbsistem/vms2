@@ -1801,3 +1801,218 @@ window.simpanRekodPemandu = async function(event, id) {
         btn.disabled = false;
     }
 };
+// ==========================================
+// FUNGSI KHAS PEMANDU: JADUAL TUGASAN & REKOD
+// ==========================================
+window.muatTugasanPemandu = async function(tMula = '', tAkhir = '') {
+    const div = document.getElementById('senarai-tugasan-pemandu');
+    if (!div) return;
+    div.innerHTML = "<div style='padding:30px; text-align:center; color:#64748b;'>Memuatkan jadual tugasan... ⏳</div>";
+
+    // Tarik nama profil pemandu semasa untuk highlight jadual
+    const { data: profil } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
+    const namaPemanduSemasa = profil ? profil.nama : '';
+
+    // Bina query: Tarik SEMUA tugasan yang telah diagih (sebagai rujukan tuntutan semua pemandu)
+    let query = supabaseClient.from('tempahan')
+        .select('*')
+        .in('status', ['Selesai Diagih', 'Lulus'])
+        .order('tarikh_pergi', { ascending: false });
+
+    // Filter Carian Tarikh
+    if (tMula) query = query.gte('tarikh_pergi', tMula);
+    if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
+
+    const { data, error } = await query;
+    const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model, jenis_kenderaan');
+
+    // 1. BINA BAR CARIAN KHAS PEMANDU
+    let html = `
+    <div style="background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #e2e8f0; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+        <div style="flex:1; min-width:150px;">
+            <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:5px;">Dari Tarikh</label>
+            <input type="date" id="cariTugasanMula" value="${tMula}" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
+        </div>
+        <div style="flex:1; min-width:150px;">
+            <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:5px;">Hingga Tarikh</label>
+            <input type="date" id="cariTugasanAkhir" value="${tAkhir}" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit;">
+        </div>
+        <div style="flex:0 0 auto;">
+            <button onclick="muatTugasanPemandu(document.getElementById('cariTugasanMula').value, document.getElementById('cariTugasanAkhir').value)" class="btn btn-primary" style="padding:9px 15px;">🔍 Cari</button>
+            <button onclick="muatTugasanPemandu()" class="btn btn-outline" style="padding:9px 15px; background:white;">🔄 Reset</button>
+        </div>
+    </div>
+    `;
+
+    if (error) return div.innerHTML = html + "Ralat: " + error.message;
+    if (!data || data.length === 0) return div.innerHTML = html + "<div style='padding:20px; text-align:center; color:#64748b; background:#f8fafc; border-radius:8px;'>Tiada rekod tugasan ditemui pada tarikh ini.</div>";
+
+    // Simpan dalam cache khas pemandu untuk pop-up form nanti
+    window.cacheTugasanPemandu = data;
+
+    // 2. BINA JADUAL SENARAI TUGASAN
+    html += `<div class="table-responsive"><table class="vms-table" style="min-width: 1000px; width:100%;">
+        <thead>
+            <tr>
+                <th>Pemandu</th>
+                <th>Kenderaan</th>
+                <th>Lokasi & Pemohon</th>
+                <th>Masa & Tarikh Pergi</th>
+                <th>Masa & Tarikh Balik</th>
+                <th style="text-align:center; width:120px;">Tindakan</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    data.forEach((t, index) => {
+        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+        let infoKenderaan = '-';
+        if (t.id_kenderaan && senaraiKenderaan) {
+            const k = senaraiKenderaan.find(x => x.id == t.id_kenderaan);
+            if (k) infoKenderaan = `<strong>${k.model || '-'}</strong><br><small style="color:#475569; font-weight:600;">${k.no_plat || '-'}</small>`;
+        }
+
+        // Kalau tugasan milik pemandu login, warna row berbeza (highlight biru)
+        const adakahMilikSaya = (t.nama_pemandu === namaPemanduSemasa);
+        const rowStyle = adakahMilikSaya ? 'background:#f0f9ff;' : '';
+        const btnStyle = adakahMilikSaya ? 'background:#0284c7; color:white; border-color:#0284c7;' : 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;';
+        const btnTeks = adakahMilikSaya ? '📝 Isi Rekod Saya' : 'Lihat / Edit';
+
+        html += `
+        <tr style="${rowStyle}">
+            <td>
+                <span style="font-size:18px;">👨‍✈️</span> <strong style="color:#1e293b;">${t.nama_pemandu || 'Belum Diagih'}</strong><br>
+                <small style="color:#0284c7; font-weight:700;">${noRujukan}</small>
+            </td>
+            <td>${infoKenderaan}</td>
+            <td>
+                <strong style="color:#102a43;">${t.destinasi || t.lokasi}</strong><br>
+                <small style="color:#64748b;">Pemohon: ${t.nama_pemohon}</small>
+            </td>
+            <td>
+                <strong style="color:#334155;">${t.masa_bertolak || '-'}</strong><br>
+                <small style="color:#94a3b8;">${t.tarikh_pergi || '-'}</small>
+            </td>
+            <td>
+                <strong style="color:#334155;">${t.masa_balik || '-'}</strong><br>
+                <small style="color:#94a3b8;">${t.tarikh_balik || '-'}</small>
+            </td>
+            <td style="text-align:center;">
+                <button onclick="bukaBorangTugasan(${index})" class="btn" style="padding:6px 10px; font-size:12px; width:100%; ${btnStyle}">${btnTeks}</button>
+            </td>
+        </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    div.innerHTML = html;
+};
+
+// ==========================================
+// FUNGSI BUKA BORANG (MODAL POP-UP)
+// ==========================================
+window.bukaBorangTugasan = function(index) {
+    const t = window.cacheTugasanPemandu[index];
+    if (!t) return alert("Ralat: Rekod tidak dijumpai.");
+
+    const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+    const odoMula = t.odometer_mula || '';
+    const odoAkhir = t.odometer_akhir || '';
+    const linkResit = t.resit_minyak 
+        ? `<a href="${t.resit_minyak}" target="_blank" style="color:#0284c7; font-weight:600; text-decoration:underline;">📎 Lihat Resit Tersimpan</a>` 
+        : '<span style="color:#ef4444; font-size:12px;">Belum dimuat naik</span>';
+
+    const modalId = 'modalTugasanPemandu';
+    let sediaAda = document.getElementById(modalId);
+    if (sediaAda) sediaAda.remove();
+
+    const htmlModal = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; display:flex; justify-content:center; align-items:center;">
+        <div style="background:white; padding:25px; border-radius:12px; width:450px; max-width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-top:0; color:#102a43; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">🚗 Rekod Odometer & Resit</h3>
+            
+            <div style="margin-bottom:15px; background:#f8fafc; padding:12px; border-radius:8px; font-size:13px; line-height:1.6; border:1px solid #e2e8f0;">
+                <strong style="color:#0284c7; font-size:14px;">${noRujukan}</strong><br>
+                <strong>Pemandu:</strong> ${t.nama_pemandu}<br>
+                <strong>Destinasi:</strong> ${t.destinasi || t.lokasi}<br>
+                <strong>Tarikh Bertolak:</strong> ${t.tarikh_pergi}
+            </div>
+
+            <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+                <div style="flex:1; min-width: 140px;">
+                    <label style="font-size:12px; font-weight:600; color:#1e293b; display:block; margin-bottom:5px;">Odometer Mula (KM)</label>
+                    <input type="number" id="odoMulaForm" value="${odoMula}" placeholder="Cth: 125000" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box;">
+                </div>
+                <div style="flex:1; min-width: 140px;">
+                    <label style="font-size:12px; font-weight:600; color:#1e293b; display:block; margin-bottom:5px;">Odometer Akhir (KM)</label>
+                    <input type="number" id="odoAkhirForm" value="${odoAkhir}" placeholder="Cth: 125450" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box;">
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:6px; border:1px dashed #cbd5e1;">
+                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:#1e293b;">📸 Gambar Resit Minyak / Tol (Pilihan)</label>
+                <input type="file" id="resitForm" accept="image/*" capture="environment" style="font-size: 13px; width:100%; cursor:pointer;">
+                <div style="margin-top:8px;">Status: ${linkResit}</div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-light" style="padding:10px 15px;">Tutup</button>
+                <button id="btnSimpanPemandu" onclick="simpanRekodPemandu(${t.id})" class="btn btn-primary" style="padding:10px 15px;">💾 Simpan Rekod</button>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', htmlModal);
+};
+
+// ==========================================
+// FUNGSI SIMPAN REKOD
+// ==========================================
+window.simpanRekodPemandu = async function(id) {
+    const btn = document.getElementById('btnSimpanPemandu');
+    const teksAsal = btn.innerText;
+    btn.innerText = "⏳ Menyimpan...";
+    btn.disabled = true;
+
+    try {
+        const odoMula = document.getElementById('odoMulaForm').value;
+        const odoAkhir = document.getElementById('odoAkhirForm').value;
+        const resitInput = document.getElementById('resitForm').files[0];
+        let resitUrl = null;
+
+        // Proses kompres dan upload jika ada gambar baharu diambil
+        if (resitInput) {
+            const failMampat = await mampatkanGambar(resitInput);
+            const fName = `resit_${id}_${Date.now()}.${failMampat.name.split('.').pop()}`;
+            const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failMampat);
+            if (upErr) throw upErr;
+            resitUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+        }
+
+        // Susun data untuk dikemas kini
+        let updateData = {};
+        if (odoMula) updateData.odometer_mula = odoMula;
+        if (odoAkhir) updateData.odometer_akhir = odoAkhir;
+        if (resitUrl) updateData.resit_minyak = resitUrl;
+
+        if (Object.keys(updateData).length > 0) {
+            const { error } = await supabaseClient.from('tempahan').update(updateData).eq('id', id);
+            if (error) throw error;
+            
+            alert("✅ Rekod odometer dan resit berjaya disimpan!");
+            document.getElementById('modalTugasanPemandu').remove(); // Tutup form pop-up
+            
+            // Refresh jadual tapi kekalkan tarikh carian (jika ada)
+            const tMula = document.getElementById('cariTugasanMula') ? document.getElementById('cariTugasanMula').value : '';
+            const tAkhir = document.getElementById('cariTugasanAkhir') ? document.getElementById('cariTugasanAkhir').value : '';
+            muatTugasanPemandu(tMula, tAkhir); 
+            
+        } else {
+            alert("Sila isi sekurang-kurangnya Odometer atau muat naik resit.");
+        }
+    } catch (error) {
+        alert("Ralat sistem: " + error.message);
+    } finally {
+        btn.innerText = teksAsal;
+        btn.disabled = false;
+    }
+};
