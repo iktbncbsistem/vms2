@@ -187,8 +187,7 @@ window.tukarTab = function(tabName) {
         if(typeof muatTugasanPemandu === 'function') muatTugasanPemandu();
     }
 
-    const tabDibuka = document.getElementById(idTabBuka);
-    if (tabDibuka) {
+
     const tabDibuka = document.getElementById(idTabBuka);
     if (tabDibuka) {
         tabDibuka.classList.remove('hidden');
