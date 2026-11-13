@@ -38,7 +38,21 @@ window.onload = async function() {
 async function semakPeranan() {
     try {
         // 1. Semak profil pengguna dalam pangkalan data
-        let { data, error } = await supabaseClient.from('profil').select('peranan, nama').eq('id', currentUser.id).single();    
+    // 1. Semak profil pengguna dalam pangkalan data
+        let { data, error } = await supabaseClient.from('profil').select('peranan, nama, gambar_profil').eq('id', currentUser.id).single();    
+        
+        // PAPARKAN AVATAR DI HEADER
+        const headerAvatar = document.getElementById('headerAvatar');
+        if (headerAvatar) {
+            headerAvatar.classList.remove('hidden');
+            if (data && data.gambar_profil) {
+                headerAvatar.src = data.gambar_profil;
+            } else {
+                // Jika tiada gambar, guna huruf awalan nama (auto-generate)
+                const namaPapar = data && data.nama ? data.nama : currentUser.email;
+                headerAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(namaPapar)}&background=0284c7&color=fff&bold=true`;
+            }
+        }     
         window.userRole = data ? data.peranan : 'pemohon';
         
         // 2. Jika profil TIADA (pengguna baharu), daftar secara automatik!
