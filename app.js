@@ -1522,14 +1522,7 @@ async function muatDropdownBahagian() {
         });
     }
 }
-function formatMasaLogin(tarikh) {
-    if (!tarikh) return '<span style="color: #94a3b8; font-style: italic; font-size: 12px;">Belum log masuk</span>';
-    const d = new Date(tarikh);
-    return d.toLocaleString('ms-MY', { 
-        day: '2-digit', month: 'short', year: 'numeric', 
-        hour: '2-digit', minute: '2-digit', hour12: true 
-    });
-}
+
 // ==========================================
 // FUNGSI COMPRESS GAMBAR (JIMAT STORAGE)
 // ==========================================
