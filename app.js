@@ -1336,11 +1336,12 @@ async function muatSenaraiPengguna() {
                 <td>${badge}</td>
                 <td style="text-align: center;">
                     <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
-                        <select id="select-role-${u.id}" style="width: 130px; padding: 6px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                       <select id="select-role-${u.id}" style="width: 130px; padding: 6px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
                             <option value="pemohon" ${perananSemasa === 'pemohon' ? 'selected' : ''}>Akaun Tidak Aktif</option>
                             <option value="pemohon" ${perananSemasa === 'pemohon' ? 'selected' : ''}>Pemohon</option>
                             <option value="urusetia" ${perananSemasa === 'urusetia' ? 'selected' : ''}>Urusetia</option>
                             <option value="pelulus" ${perananSemasa === 'pelulus' ? 'selected' : ''}>Pelulus</option>
+                            <option value="pemandu" ${perananSemasa === 'pemandu' ? 'selected' : ''}>Pemandu</option>
                         </select>
                         <button class="btn btn-primary" onclick="simpanPerananUser('${u.id}')" style="padding: 6px 14px; font-size: 12px;">Simpan</button>
                     </div>
