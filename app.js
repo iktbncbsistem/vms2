@@ -1864,7 +1864,7 @@ window.muatTugasanPemandu = async function(tMula = '', tAkhir = '') {
         </thead>
         <tbody>`;
 
-    data.forEach((t, index) => {
+   data.forEach((t, index) => {
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
         let infoKenderaan = '-';
         if (t.id_kenderaan && senaraiKenderaan) {
@@ -1872,11 +1872,16 @@ window.muatTugasanPemandu = async function(tMula = '', tAkhir = '') {
             if (k) infoKenderaan = `<strong>${k.model || '-'}</strong><br><small style="color:#475569; font-weight:600;">${k.no_plat || '-'}</small>`;
         }
 
-        // Kalau tugasan milik pemandu login, warna row berbeza (highlight biru)
+        // Kalau tugasan milik pemandu login, warna row berbeza dan butang berbeza
         const adakahMilikSaya = (t.nama_pemandu === namaPemanduSemasa);
         const rowStyle = adakahMilikSaya ? 'background:#f0f9ff;' : '';
-        const btnStyle = adakahMilikSaya ? 'background:#0284c7; color:white; border-color:#0284c7;' : 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;';
-        const btnTeks = adakahMilikSaya ? '📝 Isi Rekod Saya' : 'Lihat / Edit';
+        
+        let tindakanHtml = '';
+        if (adakahMilikSaya) {
+            tindakanHtml = `<button onclick="bukaBorangTugasan(${index}, false)" class="btn" style="padding:6px 10px; font-size:12px; width:100%; background:#0284c7; color:white; border:1px solid #0284c7; font-weight:bold;">📝 Isi Rekod Saya</button>`;
+        } else {
+            tindakanHtml = `<button onclick="bukaBorangTugasan(${index}, true)" class="btn" style="padding:6px 10px; font-size:12px; width:100%; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">👁️ Lihat Sahaja</button>`;
+        }
 
         html += `
         <tr style="${rowStyle}">
@@ -1898,19 +1903,18 @@ window.muatTugasanPemandu = async function(tMula = '', tAkhir = '') {
                 <small style="color:#94a3b8;">${t.tarikh_balik || '-'}</small>
             </td>
             <td style="text-align:center;">
-                <button onclick="bukaBorangTugasan(${index})" class="btn" style="padding:6px 10px; font-size:12px; width:100%; ${btnStyle}">${btnTeks}</button>
+                ${tindakanHtml}
             </td>
         </tr>`;
     });
-
     html += `</tbody></table></div>`;
     div.innerHTML = html;
 };
 
 // ==========================================
-// FUNGSI BUKA BORANG (MODAL POP-UP)
+// FUNGSI BUKA BORANG (MODAL POP-UP / LIHAT SAHAJA)
 // ==========================================
-window.bukaBorangTugasan = function(index) {
+window.bukaBorangTugasan = function(index, hanyaLihat = false) {
     const t = window.cacheTugasanPemandu[index];
     if (!t) return alert("Ralat: Rekod tidak dijumpai.");
 
@@ -1925,11 +1929,27 @@ window.bukaBorangTugasan = function(index) {
     let sediaAda = document.getElementById(modalId);
     if (sediaAda) sediaAda.remove();
 
+    // Logik untuk Mod Lihat Sahaja (Read-Only)
+    const setDisabled = hanyaLihat ? 'disabled' : '';
+    const setBgInput = hanyaLihat ? 'background:#f1f5f9; cursor:not-allowed;' : '';
+    
+    // Sembunyikan input file dan butang simpan jika mode Lihat Sahaja
+    const ruanganUpload = hanyaLihat 
+        ? `<div style="margin-top:8px;">Status: ${linkResit}</div>`
+        : `<input type="file" id="resitForm" accept="image/*" capture="environment" style="font-size: 13px; width:100%; cursor:pointer;"><div style="margin-top:8px;">Status: ${linkResit}</div>`;
+        
+    const butangTindakan = hanyaLihat 
+        ? `<button onclick="document.getElementById('${modalId}').remove()" class="btn btn-light" style="padding:10px 15px;">Tutup Paparan</button>`
+        : `<button onclick="document.getElementById('${modalId}').remove()" class="btn btn-light" style="padding:10px 15px;">Batal</button>
+           <button id="btnSimpanPemandu" onclick="simpanRekodPemandu(${t.id})" class="btn btn-primary" style="padding:10px 15px;">💾 Simpan Rekod</button>`;
+
     const htmlModal = `
     <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; display:flex; justify-content:center; align-items:center;">
         <div style="background:white; padding:25px; border-radius:12px; width:450px; max-width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
             <h3 style="margin-top:0; color:#102a43; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">🚗 Rekod Odometer & Resit</h3>
             
+            ${hanyaLihat ? '<div style="background:#fef3c7; color:#b45309; padding:8px; border-radius:6px; font-size:12px; font-weight:bold; margin-bottom:10px; text-align:center;">Mod Paparan Sahaja - Tidak Boleh Diedit</div>' : ''}
+
             <div style="margin-bottom:15px; background:#f8fafc; padding:12px; border-radius:8px; font-size:13px; line-height:1.6; border:1px solid #e2e8f0;">
                 <strong style="color:#0284c7; font-size:14px;">${noRujukan}</strong><br>
                 <strong>Pemandu:</strong> ${t.nama_pemandu}<br>
@@ -1940,23 +1960,21 @@ window.bukaBorangTugasan = function(index) {
             <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
                 <div style="flex:1; min-width: 140px;">
                     <label style="font-size:12px; font-weight:600; color:#1e293b; display:block; margin-bottom:5px;">Odometer Mula (KM)</label>
-                    <input type="number" id="odoMulaForm" value="${odoMula}" placeholder="Cth: 125000" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box;">
+                    <input type="number" id="odoMulaForm" value="${odoMula}" placeholder="${hanyaLihat ? 'Tiada rekod' : 'Cth: 125000'}" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box; ${setBgInput}" ${setDisabled}>
                 </div>
                 <div style="flex:1; min-width: 140px;">
                     <label style="font-size:12px; font-weight:600; color:#1e293b; display:block; margin-bottom:5px;">Odometer Akhir (KM)</label>
-                    <input type="number" id="odoAkhirForm" value="${odoAkhir}" placeholder="Cth: 125450" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box;">
+                    <input type="number" id="odoAkhirForm" value="${odoAkhir}" placeholder="${hanyaLihat ? 'Tiada rekod' : 'Cth: 125450'}" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box; ${setBgInput}" ${setDisabled}>
                 </div>
             </div>
 
             <div style="margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:6px; border:1px dashed #cbd5e1;">
-                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:#1e293b;">📸 Gambar Resit Minyak / Tol (Pilihan)</label>
-                <input type="file" id="resitForm" accept="image/*" capture="environment" style="font-size: 13px; width:100%; cursor:pointer;">
-                <div style="margin-top:8px;">Status: ${linkResit}</div>
+                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:#1e293b;">📸 Gambar Resit Minyak / Tol</label>
+                ${ruanganUpload}
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:10px;">
-                <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-light" style="padding:10px 15px;">Tutup</button>
-                <button id="btnSimpanPemandu" onclick="simpanRekodPemandu(${t.id})" class="btn btn-primary" style="padding:10px 15px;">💾 Simpan Rekod</button>
+                ${butangTindakan}
             </div>
         </div>
     </div>
