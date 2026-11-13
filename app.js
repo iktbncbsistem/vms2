@@ -107,6 +107,11 @@ async function semakPeranan() {
             if (btnTabPelulus) btnTabPelulus.classList.remove('hidden');
             if (typeof muatSenaraiPelulus === 'function') muatSenaraiPelulus();
         }
+        else if (data.peranan === 'pemandu') {
+            const btnTabPemandu = document.getElementById('btnTabPemandu');
+            if (btnTabPemandu) btnTabPemandu.classList.remove('hidden');
+            tukarTab('pemandu');
+        }
     } catch (err) {
         console.error("Ralat semak peranan:", err);
     }
@@ -1336,6 +1341,9 @@ async function muatSenaraiPengguna() {
             badge = '<span style="background:#ffedd5; color:#c2410c; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Urusetia</span>';
         } else if (perananSemasa === 'pelulus') {
             badge = '<span style="background:#dcfce7; color:#15803d; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Pelulus</span>';
+        }
+        } else if (perananSemasa === 'pemandu') {
+            badge = '<span style="background:#fef08a; color:#854d0e; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Pemandu</span>';
         }
 
         html += `
