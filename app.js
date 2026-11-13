@@ -169,11 +169,7 @@ window.tukarTab = function(tabName) {
     else if (tabName === 'pelulus') { 
         idTabBuka = 'tab-dashboard-pelulus'; idBtnBuka = 'btnTabPelulus'; 
     }
-else if (tabName === 'bahagian') {
-        idTabBuka = 'tab-tetapan-bahagian';
-        idBtnBuka = 'btnTabBahagian';
-        muatSenaraiBahagian();
-    }
+
     else if (tabName === 'bahagian') {
         idTabBuka = 'tab-tetapan-bahagian';
         idBtnBuka = 'btnTabBahagian';
