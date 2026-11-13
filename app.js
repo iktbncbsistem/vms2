@@ -188,7 +188,7 @@ window.tukarTab = function(tabName) {
     }
 
 
-    const tabDibuka = document.getElementById(idTabBuka);
+const tabDibuka = document.getElementById(idTabBuka);
     if (tabDibuka) {
         tabDibuka.classList.remove('hidden');
         const borang = document.getElementById('ruangBorangPemohon');
