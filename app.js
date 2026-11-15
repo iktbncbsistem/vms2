@@ -1706,11 +1706,15 @@ window.padamTempahanAwam = async function(id) {
     }
 };
 // ==========================================
-// FUNGSI PROFIL: BUKA & SIMPAN AVATAR
+// FUNGSI PROFIL: BUKA & SIMPAN (NAMA & GAMBAR)
 // ==========================================
-window.bukaModalProfil = function() {
+window.bukaModalProfil = async function() {
     document.getElementById('modalProfil').classList.remove('hidden');
     document.getElementById('previewAvatar').src = document.getElementById('headerAvatar').src;
+    
+    // Tarik nama semasa dari database untuk dipaparkan dalam input
+    const { data } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
+    if (data) document.getElementById('inputNamaProfil').value = data.nama || '';
 };
 
 window.previewGambarProfil = function(input) {
@@ -1722,42 +1726,52 @@ window.previewGambarProfil = function(input) {
 };
 
 window.simpanProfil = async function() {
+    const inputNama = document.getElementById('inputNamaProfil').value.trim();
+    if (!inputNama) return alert("Sila masukkan nama penuh anda.");
+
     const file = document.getElementById('inputAvatar').files[0];
-    if(!file) return alert("Sila pilih gambar baharu dahulu.");
-    
     const btn = document.getElementById('btnSimpanProfil');
     const teksAsal = btn.innerText;
     btn.innerText = "⏳ Menyimpan...";
     btn.disabled = true;
     
     try {
-        const failMampat = await mampatkanGambar(file);
-        const fName = `avatar_${currentUser.id}_${Date.now()}.${failMampat.name.split('.').pop()}`;
+        let updateData = { nama: inputNama }; // Sedia untuk update nama
+
+        // Jika user ada upload gambar baru
+        if (file) {
+            const failMampat = await mampatkanGambar(file);
+            const fName = `avatar_${currentUser.id}_${Date.now()}.${failMampat.name.split('.').pop()}`;
+            const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failMampat);
+            if(upErr) throw upErr;
+            const avatarUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+            
+            updateData.gambar_profil = avatarUrl;
+            document.getElementById('headerAvatar').src = avatarUrl;
+        }
         
-        const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failMampat);
-        if(upErr) throw upErr;
-        
-        const avatarUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
-        
-        const { error: updateErr } = await supabaseClient.from('profil').update({ gambar_profil: avatarUrl }).eq('id', currentUser.id);
+        // Hantar update ke Supabase
+        const { error: updateErr } = await supabaseClient.from('profil').update(updateData).eq('id', currentUser.id);
         if(updateErr) throw updateErr;
         
-        document.getElementById('headerAvatar').src = avatarUrl;
-        alert("✅ Gambar profil berjaya dikemaskini!");
+        alert("✅ Maklumat profil berjaya dikemaskini!");
         document.getElementById('modalProfil').classList.add('hidden');
         
-        // Refresh jadual untuk tunjuk muka baharu
-        if(typeof muatTugasanPemandu === 'function' && document.getElementById('tab-tugasan-pemandu').classList.contains('hidden') === false) {
+        // Kemas kini paparan borang dan jadual serta-merta
+        const appNameField = document.getElementById('applicantName');
+        if (appNameField) appNameField.value = inputNama;
+        
+        semakJadualAwam('aktif');
+        if(typeof muatTugasanPemandu === 'function' && !document.getElementById('tab-tugasan-pemandu').classList.contains('hidden')) {
             muatTugasanPemandu();
         }
     } catch(e) {
-        alert("Ralat memuat naik gambar: " + e.message);
+        alert("Ralat mengemaskini profil: " + e.message);
     } finally {
         btn.innerText = teksAsal;
         btn.disabled = false;
     }
 };
-
 // ==========================================
 // FUNGSI KHAS PEMANDU: JADUAL TUGASAN & REKOD
 // ==========================================
