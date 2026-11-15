@@ -1051,6 +1051,17 @@ async function semakJadualAwam(mod = 'aktif') {
     if (error) { tbody.innerHTML = `<tr><td colspan="9" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`; return; }
     
     const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model, jenis_kenderaan');
+    
+    // KOD BAHARU: Tarik gambar profil untuk pemohon dan pemandu
+    const { data: senaraiProfil } = await supabaseClient.from('profil').select('id, nama, gambar_profil');
+    const petaAvatarNama = {};
+    const petaAvatarId = {};
+    if (senaraiProfil) {
+        senaraiProfil.forEach(p => {
+            petaAvatarNama[p.nama] = p.gambar_profil; // Untuk Pemandu
+            petaAvatarId[p.id] = p.gambar_profil; // Untuk Pemohon
+        });
+    }
 
     const dataDitapis = data.filter(t => {
         if (t.status === 'Lulus' || t.status === 'Selesai Diagih') return true;
@@ -1069,7 +1080,6 @@ async function semakJadualAwam(mod = 'aktif') {
     dataDitapis.forEach((t, i) => {
         t.indexAsal = i; 
         const pemandu = t.nama_pemandu || '⏳ Belum Diagih (Menunggu Urusetia)';
-        
         if (!jadualPemandu[pemandu]) jadualPemandu[pemandu] = [];
         jadualPemandu[pemandu].push(t);
     });
@@ -1104,23 +1114,27 @@ async function semakJadualAwam(mod = 'aktif') {
 
             html += `<tr>`;
             
+            // LOMPATAN BARIS PEMANDU (ROWSPAN) DENGAN AVATAR
             if (index === 0) {
                 const stylePemandu = pemandu.includes('Belum Diagih') ? 'color:#ef4444; font-style:italic;' : 'color:#1e293b; font-weight:700;';
-                html += `<td rowspan="${jumlahRow}" style="${stylePemandu} vertical-align: top; background: #f8fafc; border-right: 1px solid #e2e8f0; min-width: 150px;">
-                    <div style="display:flex; align-items:flex-start; gap:8px;">
-                        <span style="font-size:18px;">👨‍✈️</span>
-                        <span>${pemandu}</span>
+                const charAvatarD = pemandu.includes('Belum Diagih') ? '?' : pemandu;
+                const urlAvatarPemandu = petaAvatarNama[pemandu] || `https://ui-avatars.com/api/?name=${encodeURIComponent(charAvatarD)}&background=0f172a&color=fff`;
+
+                html += `<td rowspan="${jumlahRow}" style="${stylePemandu} vertical-align: top; background: #f8fafc; border-right: 1px solid #e2e8f0; min-width: 170px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="${urlAvatarPemandu}" alt="Pemandu" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid #cbd5e1; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                        <span style="line-height:1.2;">${pemandu}</span>
                     </div>
                 </td>`;
             }
 
             const tarikhMohon = t.created_at ? t.created_at.split('T')[0] : '-';
             const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+            const urlAvatarPemohon = petaAvatarId[t.id_pemohon] || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.nama_pemohon || 'P')}&background=0284c7&color=fff`;
 
             html += `
                 <td>
                     <strong style="color:#102a43;">${tarikhMohon}</strong><br>
-                    <!-- KOD BARU: HYPERLINK NO RUJUKAN -->
                     <a onclick="paparButiran(${t.indexAsal})" style="color: #0284c7; font-weight: 800; cursor: pointer; text-decoration: underline; font-size: 13px;" title="Klik untuk lihat borang">
                         ${noRujukan}
                     </a>
@@ -1138,17 +1152,19 @@ async function semakJadualAwam(mod = 'aktif') {
                     <small style="color:#94a3b8;">${t.tarikh_balik || '-'}</small>
                 </td>
                 
-                <td>
-                    <div style="font-weight:600; margin-bottom:6px;">${t.nama_pemohon || '-'}</div>
+                <!-- KOD BAHARU: PEMOHON DENGAN AVATAR -->
+                <td style="min-width: 160px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                        <img src="${urlAvatarPemohon}" alt="Pemohon" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">
+                        <div style="font-weight:600; font-size:12px; line-height:1.2;">${t.nama_pemohon || '-'}</div>
+                    </div>
                     <span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:4px 10px; border-radius:12px; font-size:11px;">${labelStatus}</span>
                 </td>
 
-               <!-- LAJUR TERAKHIR: CATATAN -->
                 <td style="color:#64748b; font-size:12px; max-width: 150px;">
                     ${t.catatan || t.tujuan || '-'}
                 </td>`;
 
-            // KOD BARU: TAMBAH BUTANG JIKA URUSETIA
             if (window.userRole === 'urusetia') {
                 html += `
                 <td style="text-align:center; white-space:nowrap; background:#f8fafc;">
@@ -1158,7 +1174,6 @@ async function semakJadualAwam(mod = 'aktif') {
             }
 
             html += `</tr>`;
-        
         });
     }
     
