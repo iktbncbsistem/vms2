@@ -117,11 +117,16 @@ async function semakPeranan() {
             if (btnTabBahagian) btnTabBahagian.classList.remove('hidden');
             if (typeof muatSenaraiUrusetia === 'function') muatSenaraiUrusetia();
         } 
-        else if (data.peranan === 'pelulus') {
+       else if (data.peranan === 'pelulus') {
             const btnTabPelulus = document.getElementById('btnTabPelulus');
             if (btnTabPelulus) btnTabPelulus.classList.remove('hidden');
+            
+            // KOD DITAMBAH DI SINI SUPAYA PELULUS BOLEH MOHON KENDERAAN
+            document.getElementById('btnTabMohon').classList.remove('hidden');
+            
             if (typeof muatSenaraiPelulus === 'function') muatSenaraiPelulus();
         }
+        
         else if (data.peranan === 'pemandu') {
             const btnTabPemandu = document.getElementById('btnTabPemandu');
             if (btnTabPemandu) btnTabPemandu.classList.remove('hidden');
