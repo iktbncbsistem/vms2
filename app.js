@@ -1187,8 +1187,8 @@ async function semakJadualAwam(mod = 'aktif') {
             if (window.userRole === 'urusetia') {
                 html += `
                 <td style="text-align:center; white-space:nowrap; background:#f8fafc;">
-                    <button class="btn-action-icon edit" onclick="editTempahanAwam(${t.id})" title="Ubah Tarikh / Masa">✏️</button>
-                    <button class="btn-action-icon delete" onclick="padamTempahanAwam(${t.id})" title="Padam Rekod">❌</button>
+                    <button class="btn-action-icon edit" disabled title="Fungsi dikunci untuk elak tersilap tekan" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none;">✏️</button>
+                    <button class="btn-action-icon delete" disabled title="Fungsi dikunci untuk elak tersilap tekan" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none;">❌</button>
                 </td>`;
             }
 
