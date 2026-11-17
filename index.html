@@ -211,19 +211,24 @@
         <div id="tab-jadual-awam">
             <h3 style="color: #102a43; margin: 0 0 15px 0;">Jadual Pergerakan Kenderaan</h3>
 
-            <div id="ruang-carian-jadual" class="air-search-bar hidden">
-                <div style="flex: 1; min-width: 150px;">
-                    <label style="font-size:12px; color:#64748b; display:block; margin-bottom:5px; font-weight:600;">Dari Tarikh</label>
-                    <input type="date" id="cariTarikhMula" class="air-search-input">
+            <!-- RUANG CARIAN JADUAL (KINI DIBUKA UNTUK SEMUA) -->
+            <div id="ruang-carian-jadual" style="background: linear-gradient(to right, #f8fafc, #f1f5f9); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.03); display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                <div style="flex: 2; min-width: 200px;">
+                    <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">🔍 Carian Teks</label>
+                    <input type="text" id="cariTeksJadual" placeholder="Cari pemandu, lokasi, kenderaan atau pemohon..." style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; outline:none; transition:0.2s;" onfocus="this.style.borderColor='#0284c7'">
                 </div>
-                <div style="flex: 1; min-width: 150px;">
-                    <label style="font-size:12px; color:#64748b; display:block; margin-bottom:5px; font-weight:600;">Hingga Tarikh</label>
-                    <input type="date" id="cariTarikhAkhir" class="air-search-input">
+                <div style="flex: 1; min-width: 140px;">
+                    <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">📅 Dari Tarikh</label>
+                    <input type="date" id="cariTarikhMula" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit;">
                 </div>
-                <div style="flex: 0 0 auto; display:flex; gap: 10px; align-items:flex-end;">
-                    <button onclick="semakJadualAwam('aktif')" class="btn btn-success" style="padding:12px 16px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">📅 Perjalanan Aktif</button>
-                    <button onclick="semakJadualAwam('sejarah')" class="btn btn-outline" style="padding:12px 16px; background:white;">🕰️ Sejarah Lepas</button>
-                    <button onclick="semakJadualAwam('cari')" class="btn btn-danger" style="padding:12px 16px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">🔍 Cari</button>
+                <div style="flex: 1; min-width: 140px;">
+                    <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">📅 Hingga Tarikh</label>
+                    <input type="date" id="cariTarikhAkhir" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit;">
+                </div>
+                <div style="flex: 0 0 auto; display:flex; gap:10px;">
+                    <button onclick="semakJadualAwam('cari')" class="btn btn-primary" style="padding:10px 20px; border-radius:8px; font-weight:600; box-shadow:0 4px 10px rgba(2, 132, 199, 0.2);">Cari</button>
+                    <button onclick="semakJadualAwam('sejarah')" class="btn btn-outline" style="padding:10px 20px; border-radius:8px; background:white; font-weight:600;">Sejarah Lepas</button>
+                    <button onclick="semakJadualAwam('aktif')" class="btn btn-success" style="padding:10px 20px; border-radius:8px; font-weight:600;">Jadual Aktif</button>
                 </div>
             </div>
 
