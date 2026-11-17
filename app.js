@@ -108,6 +108,7 @@ async function semakPeranan() {
             const thTindakan = document.getElementById('headerTindakanJadual');
             if(thTindakan) thTindakan.classList.remove('hidden');            
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
+            document.getElementById('btnTabMohon').classList.remove('hidden');
             const btnTabTetapan = document.getElementById('btnTabTetapan');
             if (btnTabTetapan) btnTabTetapan.classList.remove('hidden');
             const btnTabPengguna = document.getElementById('btnTabPengguna');
