@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary: #1767c2;
+    --primary-hover: #1255a3;
+    --header-bg: #102a43;
+    --card-head-bg: #2b5b84;
+    --success: #15945b;
+    --success-hover: #107a4a;
+    --danger: #dc3545;
+    --danger-hover: #c82333;
+    --bg-color: #f4f7f6;
+    --text-main: #334155;
+    --text-muted: #64748b;
+    --border-color: #cbd5e1;
+}
+
+* { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+body {
+    margin: 0;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 10px;
+    min-width: 1400px; /* Kekal paparan Desktop View */
+}
+
+.hidden { display: none !important; }
+
+/* Frame Berbingkai Untuk Modal Sahaja */
+#modalUrusetia {
+    border: 3px solid #cbd5e1;
+    border-radius: 16px;
+    background: #ffffff;
+    padding: 25px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+    width: 100%;
+    min-height: 80vh;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* Header */
+.header {
+    background-color: var(--header-bg);
+    color: white;
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    min-height: 120px;
+    border-radius: 12px;
+    max-width: 1400px;
+    margin: 0 auto 20px auto;
+}
+
+.header-bg-img {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    background-image: url('https://eazdfwzifcsfayapyshv.supabase.co/storage/v1/object/public/image/header.png');
+    background-size: cover;
+    background-position: right center;
+    opacity: 0.3;
+    mask-image: linear-gradient(to right, transparent, black 50%);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 50%);
+}
+
+.header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 40px;
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.logo-placeholder {
+    width: 65px;
+    height: 65px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+.header-titles {
