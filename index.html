@@ -12,37 +12,18 @@
 <body>
 
 <div style="width: 100%; max-width: 1400px; margin: 20px auto 0 auto; padding: 0 10px; box-sizing: border-box;">
-<header id="header-utama" class="hidden" style="position: relative; background: linear-gradient(90deg, #02112a 0%, #082959 45%, #053b75 100%); border-radius: 12px; border-bottom: 2px solid #facc15; box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2), 0px 4px 15px rgba(250, 204, 21, 0.2); overflow: hidden; display: flex; align-items: center; padding: 15px 30px; min-height: 95px; color: white;">
-
-    <!-- Latar Belakang Gambar Kenderaan (Efek Pudar di Kanan) -->
-    <div style="position: absolute; top: 0; right: 0; bottom: 0; width: 60%; background-image: url('https://eazdfwzifcsfayapyshv.supabase.co/storage/v1/object/public/image/3649151.jpg'); background-size: cover; background-position: center; opacity: 0.25; mask-image: linear-gradient(to right, transparent, black); -webkit-mask-image: linear-gradient(to right, transparent, black); pointer-events: none; z-index: 1;"></div>
-
-    <!-- Lengkung Emas di Penjuru Kiri Atas (Curve Design) -->
-    <div style="position: absolute; top: -20px; left: -20px; width: 100px; height: 100px; border-radius: 50%; border-top: 15px solid transparent; border-right: 15px solid #facc15; transform: rotate(-45deg); opacity: 0.8; z-index: 1;"></div>
-    <div style="position: absolute; top: -40px; left: -40px; width: 140px; height: 140px; border-radius: 50%; border-top: 25px solid transparent; border-right: 25px solid rgba(250, 204, 21, 0.3); transform: rotate(-45deg); z-index: 1;"></div>
+<header id="header-utama" class="hidden" style="position: relative; background-image: url('https://eazdfwzifcsfayapyshv.supabase.co/storage/v1/object/public/image/header2.png'); background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 12px; box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2); overflow: hidden; display: flex; align-items: center; justify-content: space-between; padding: 15px 30px; min-height: 95px; color: white;">
 
     <!-- 1. BAHAGIAN KIRI: Logo & Institusi -->
-    <div style="display: flex; align-items: center; gap: 15px; z-index: 2; border-right: 1px solid rgba(255,255,255,0.2); padding-right: 25px; margin-right: 25px;">
+    <div style="display: flex; align-items: center; gap: 15px; z-index: 2; padding-right: 25px;">
         <img src="https://eazdfwzifcsfayapyshv.supabase.co/storage/v1/object/public/image/logo.png" alt="Logo IKTBN" style="height: 60px; width: auto; object-fit: contain; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
-        <div style="line-height: 1.2;">
+        <div style="line-height: 1.2; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">
             <div style="font-size: 10px; font-weight: 600; color: #cbd5e1; letter-spacing: 1.5px;">KEMENTERIAN BELIA DAN SUKAN</div>
             <div style="font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">IKTBN CHEMBONG</div>
         </div>
     </div>
 
-    <!-- 2. BAHAGIAN TENGAH: Nama Sistem Bercahaya -->
-    <div style="z-index: 2; flex-grow: 1; font-style: italic;">
-        <h1 style="margin: 0 0 6px 0; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; text-shadow: 1px 1px 3px rgba(0,0,0,0.6);">
-            Sistem Pengurusan Kenderaan Jabatan 
-            <span style="color: #22d3ee; text-shadow: 0 0 10px rgba(34, 211, 238, 0.8), 0 0 20px rgba(34, 211, 238, 0.6);">(VMS)</span>
-        </h1>
-        <p style="margin: 0; font-size: 14px; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 8px;">
-            <span style="display:inline-block; width:12px; height:12px; background:#22c55e; border-radius:50%; box-shadow: 0 0 10px #22c55e, 0 0 15px #22c55e; border: 1px solid #bbf7d0;"></span>
-            Keselesaan Perjalanan Anda Keutamaan Kami
-        </p>
-    </div>
-
-    <!-- 3. BAHAGIAN KANAN: Avatar & Log Keluar (Efek Cincin Neon) -->
+    <!-- 2. BAHAGIAN KANAN: Avatar & Log Keluar (Efek Cincin Neon) -->
     <div style="display: flex; align-items: center; gap: 15px; z-index: 2;">
         
         <img id="headerAvatar" class="hidden" src="" alt="Profil" style="width:48px; height:48px; border-radius:50%; cursor:pointer; border:2px solid #22d3ee; object-fit:cover; box-shadow: 0 0 15px rgba(34, 211, 238, 0.6); transition: 0.3s;" onclick="bukaModalProfil()" title="Klik untuk kemaskini maklumat diri" onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 0 20px rgba(34, 211, 238, 0.9)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 15px rgba(34, 211, 238, 0.6)';">
