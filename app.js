@@ -103,16 +103,13 @@ async function semakPeranan() {
 
             if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
         }
-        else if (data.peranan === 'urusetia') {                           
-           
+        else if (data.peranan === 'urusetia') {                         
             const thTindakan = document.getElementById('headerTindakanJadual');
             if(thTindakan) thTindakan.classList.remove('hidden');            
             document.getElementById('btnTabUrusetia').classList.remove('hidden');
             document.getElementById('btnTabMohon').classList.remove('hidden');
             const btnTabTetapan = document.getElementById('btnTabTetapan');
             if (btnTabTetapan) btnTabTetapan.classList.remove('hidden');
-            const btnTabPengguna = document.getElementById('btnTabPengguna');
-            if (btnTabPengguna) btnTabPengguna.classList.remove('hidden');
             const btnTabBahagian = document.getElementById('btnTabBahagian');
             if (btnTabBahagian) btnTabBahagian.classList.remove('hidden');
             if (typeof muatSenaraiUrusetia === 'function') muatSenaraiUrusetia();
@@ -121,8 +118,12 @@ async function semakPeranan() {
             const btnTabPelulus = document.getElementById('btnTabPelulus');
             if (btnTabPelulus) btnTabPelulus.classList.remove('hidden');
             
-            // KOD DITAMBAH DI SINI SUPAYA PELULUS BOLEH MOHON KENDERAAN
+            // PELULUS BOLEH MOHON KENDERAAN
             document.getElementById('btnTabMohon').classList.remove('hidden');
+            
+            // PELULUS BOLEH KAWAL PERANAN PENGGUNA
+            const btnTabPengguna = document.getElementById('btnTabPengguna');
+            if (btnTabPengguna) btnTabPengguna.classList.remove('hidden');
             
             if (typeof muatSenaraiPelulus === 'function') muatSenaraiPelulus();
         }
