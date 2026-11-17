@@ -22,12 +22,14 @@
         <div class="header-titles">
             <h1>Sistem Pengurusan Kenderaan Jabatan (VMS)</h1>
             <p>Keselesaan Perjalanan Anda Keutamaan Kami</p>
-        </div>
   <div style="display:flex; align-items:center; gap:15px; z-index:2;">
             <!-- Gambar Profil -->
             <img id="headerAvatar" class="hidden" src="" alt="Profil" style="width:45px; height:45px; border-radius:50%; cursor:pointer; border:2px solid white; object-fit:cover; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;" onclick="bukaModalProfil()" title="Klik untuk kemaskini maklumat profil" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
             
-            <button id="btnLogout" class="btn btn-danger hidden" onclick="logout()">Log Keluar</button>
+            <!-- Butang Log Keluar Bulat (Ikon) -->
+            <button id="btnLogout" class="hidden" onclick="logout()" title="Log Keluar" style="width:45px; height:45px; border-radius:50%; background:#ef4444; color:white; border:2px solid white; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding:0; transition: 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+            </button>
         </div>
     </div>
 </header>
