@@ -1029,48 +1029,68 @@ if (btnReview) {
 // FUNGSI CARIAN JADUAL AWAM & PERMOHONAN SAYA
 // ==========================================
 async function semakJadualAwam(mod = 'aktif') {
-    const tMula = document.getElementById('cariTarikhMula').value;
-    const tAkhir = document.getElementById('cariTarikhAkhir').value;
+    const tMula = document.getElementById('cariTarikhMula') ? document.getElementById('cariTarikhMula').value : '';
+    const tAkhir = document.getElementById('cariTarikhAkhir') ? document.getElementById('cariTarikhAkhir').value : '';
+    const teksCari = document.getElementById('cariTeksJadual') ? document.getElementById('cariTeksJadual').value.toLowerCase() : '';
     const tbody = document.getElementById('isiJadualAwam');
     
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px;">Memuatkan rekod... ⏳</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px;">Memuatkan rekod... ⏳</td></tr>';
     
     const today = new Date().toISOString().split('T')[0];
     let query = supabaseClient.from('tempahan').select('*').order('tarikh_pergi', {ascending: true});
     
+    // Tetapan mod carian
     if (mod === 'sejarah') {
         query = query.lt('tarikh_pergi', today);
-    } else if (mod === 'cari' && (tMula || tAkhir)) {
+    } else if (mod === 'cari') {
         if (tMula) query = query.gte('tarikh_pergi', tMula);
         if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
     } else {
+        // Lalai (Aktif)
         query = query.gte('tarikh_pergi', today);
+        if (document.getElementById('cariTarikhMula')) document.getElementById('cariTarikhMula').value = '';
+        if (document.getElementById('cariTarikhAkhir')) document.getElementById('cariTarikhAkhir').value = '';
+        if (document.getElementById('cariTeksJadual')) document.getElementById('cariTeksJadual').value = '';
     }
     
     const { data, error } = await query;
-    if (error) { tbody.innerHTML = `<tr><td colspan="9" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`; return; }
+    if (error) { if(tbody) tbody.innerHTML = `<tr><td colspan="9" style="color:red; text-align:center; padding:30px;">Ralat: ${error.message}</td></tr>`; return; }
     
     const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model, jenis_kenderaan');
     
-    // KOD BAHARU: Tarik gambar profil untuk pemohon dan pemandu
+    // Tarik gambar profil untuk pemohon dan pemandu
     const { data: senaraiProfil } = await supabaseClient.from('profil').select('id, nama, gambar_profil');
     const petaAvatarNama = {};
     const petaAvatarId = {};
     if (senaraiProfil) {
         senaraiProfil.forEach(p => {
-            petaAvatarNama[p.nama] = p.gambar_profil; // Untuk Pemandu
-            petaAvatarId[p.id] = p.gambar_profil; // Untuk Pemohon
+            petaAvatarNama[p.nama] = p.gambar_profil; 
+            petaAvatarId[p.id] = p.gambar_profil; 
         });
     }
 
+    // Tapisan data: Status, Hak Milik, dan Carian Teks
     const dataDitapis = data.filter(t => {
-        if (t.status === 'Lulus' || t.status === 'Selesai Diagih') return true;
-        if (t.id_pemohon === currentUser.id) return true; 
-        return false;
+        let sah = false;
+        if (t.status === 'Lulus' || t.status === 'Selesai Diagih') sah = true;
+        if (t.id_pemohon === currentUser.id) sah = true; 
+        if (!sah) return false;
+
+        // Tambahan Logik Tapisan Carian Teks
+        if (mod === 'cari' && teksCari) {
+            const kenderaan = senaraiKenderaan && t.id_kenderaan ? senaraiKenderaan.find(x => x.id == t.id_kenderaan) : null;
+            const namaK = kenderaan ? `${kenderaan.no_plat} ${kenderaan.model}`.toLowerCase() : '';
+            return (t.destinasi && t.destinasi.toLowerCase().includes(teksCari)) || 
+                   (t.lokasi && t.lokasi.toLowerCase().includes(teksCari)) || 
+                   (t.nama_pemohon && t.nama_pemohon.toLowerCase().includes(teksCari)) ||
+                   (t.nama_pemandu && t.nama_pemandu.toLowerCase().includes(teksCari)) ||
+                   namaK.includes(teksCari);
+        }
+        return true;
     });
     
     if (!dataDitapis || dataDitapis.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">Tiada rekod perjalanan ditemui pada julat tarikh ini.</td></tr>`;
+        if(tbody) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:#64748b;">Tiada rekod perjalanan ditemui.</td></tr>`;
         return;
     }
     
@@ -1152,7 +1172,6 @@ async function semakJadualAwam(mod = 'aktif') {
                     <small style="color:#94a3b8;">${t.tarikh_balik || '-'}</small>
                 </td>
                 
-                <!-- KOD BAHARU: PEMOHON DENGAN AVATAR -->
                 <td style="min-width: 160px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
                         <img src="${urlAvatarPemohon}" alt="Pemohon" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">
@@ -1177,7 +1196,7 @@ async function semakJadualAwam(mod = 'aktif') {
         });
     }
     
-    tbody.innerHTML = html;
+    if(tbody) tbody.innerHTML = html;
 }
 // ==========================================
 // FUNGSI PENGURUSAN TETAPAN (URUSETIA SAHAJA)
