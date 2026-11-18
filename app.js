@@ -2131,3 +2131,72 @@ window.simpanRekodPemandu = async function(id) {
         btn.disabled = false;
     }
 };
+
+// ==========================================
+// FUNGSI LENCANA NOTIFIKASI BERKELIP (URUSETIA & PELULUS)
+// ==========================================
+window.kemaskiniLencanaTugasan = async function() {
+    // 1. Suntik gaya CSS animasi berkelip merah (sekali sahaja)
+    if (!document.getElementById('style-lencana-vms')) {
+        const style = document.createElement('style');
+        style.id = 'style-lencana-vms';
+        style.innerHTML = `
+            @keyframes kelipMerahVms {
+                0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+                50% { opacity: 0.75; transform: scale(1.12); box-shadow: 0 0 8px 3px rgba(239, 68, 68, 0.5); }
+            }
+            .lencana-tugasan-merah {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background-color: #ef4444;
+                color: #ffffff;
+                font-size: 11px;
+                font-weight: 800;
+                min-width: 20px;
+                height: 20px;
+                padding: 0 6px;
+                border-radius: 999px;
+                margin-left: 8px;
+                vertical-align: middle;
+                animation: kelipMerahVms 1.2s infinite ease-in-out;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Fungsi pembantu untuk papar atau sorok nombor pada butang tab
+    function setLencanaPadaButang(btnId, jumlah) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        let badge = btn.querySelector('.lencana-tugasan-merah');
+        if (jumlah > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'lencana-tugasan-merah';
+                btn.appendChild(badge);
+            }
+            badge.textContent = jumlah;
+        } else if (badge) {
+            badge.remove();
+        }
+    }
+
+    // 2. Kira tugasan Urusetia (Status: Menunggu Semakan & Lulus untuk agihan)
+    if (window.userRole === 'urusetia') {
+        const { count } = await supabaseClient
+            .from('tempahan')
+            .select('*', { count: 'exact', head: true })
+            .in('status', ['Menunggu Semakan', 'Lulus']);
+        setLencanaPadaButang('btnTabUrusetia', count || 0);
+    }
+
+    // 3. Kira tugasan Pelulus (Status: Menunggu Kelulusan)
+    if (window.userRole === 'pelulus') {
+        const { count } = await supabaseClient
+            .from('tempahan')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'Menunggu Kelulusan');
+        setLencanaPadaButang('btnTabPelulus', count || 0);
+    }
+};
