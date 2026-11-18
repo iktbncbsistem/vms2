@@ -2028,10 +2028,10 @@ window.bukaBorangTugasan = function(index, hanyaLihat = false) {
     const setDisabled = hanyaLihat ? 'disabled' : '';
     const setBgInput = hanyaLihat ? 'background:#f1f5f9; cursor:not-allowed;' : '';
     
-    // Sembunyikan input file dan butang simpan jika mode Lihat Sahaja
+   // Sembunyikan input file dan butang simpan jika mode Lihat Sahaja
     const ruanganUpload = hanyaLihat 
         ? `<div style="margin-top:8px;">Status: ${linkResit}</div>`
-        : `<input type="file" id="resitForm" accept="image/*" capture="environment" style="font-size: 13px; width:100%; cursor:pointer;"><div style="margin-top:8px;">Status: ${linkResit}</div>`;
+        : `<input type="file" id="resitForm" accept="image/*" style="font-size: 13px; width:100%; cursor:pointer;"><div style="margin-top:8px;">Status: ${linkResit}</div>`;
         
     const butangTindakan = hanyaLihat 
         ? `<button onclick="document.getElementById('${modalId}').remove()" class="btn btn-light" style="padding:10px 15px;">Tutup Paparan</button>`
