@@ -411,9 +411,10 @@ async function muatSenaraiUrusetia() {
             // DROPDOWN PEMANDU (AUTO-FILTER)
             // ==========================================
             html += `<select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
-                    <option value="">-- Pilih Pemandu --</option>`;
+                    html += `<select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
+                    <option value="">-- Pilih Pemandu --</option>
+                    <option value="${t.nama_pemohon}" style="font-weight:bold; color:#0284c7;">👉 [Pandu Sendiri] - ${t.nama_pemohon}</option>`;
             if (pemanduList) {
-                pemanduList.forEach(p => {
                     let clash = false;
                     if (tugasanAktif) {
                         for (let rekod of tugasanAktif) {
@@ -1121,9 +1122,9 @@ async function semakJadualAwam(mod = 'aktif') {
     }
     
 cacheUrusetia = dataDitapis; 
-    window.cacheTugasanPemandu = dataDitapis; // Hubungkan jadual awam dengan borang resit
+    window.cacheTugasanPemandu = dataDitapis; // Wajib ada untuk pautkan rekod
     
-    // Dapatkan nama pengguna semasa yang sedang login
+    // Tarik nama pengguna semasa yang sedang login
     let namaSaya = '';
     if (currentUser) {
         const { data: pData } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
@@ -1216,7 +1217,7 @@ cacheUrusetia = dataDitapis;
                     <span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:4px 10px; border-radius:12px; font-size:11px;">${labelStatus}</span>
                     
                     ${(t.id_pemohon === currentUser.id && t.nama_pemandu === namaSaya && (t.status === 'Selesai Diagih' || t.status === 'Lulus')) 
-                        ? `<div style="margin-top: 8px;"><button onclick="bukaBorangTugasan(${t.indexAsal}, false)" class="btn btn-primary" style="font-size:11px; padding:6px; width:100%; font-weight:bold; background:#0284c7; border:none;">📝 Isi Odometer & Resit</button></div>` 
+                        ? `<div style="margin-top: 10px;"><button onclick="bukaBorangTugasan(${t.indexAsal}, false)" class="btn" style="font-size:11px; padding:6px 10px; width:100%; background:#0284c7; color:white; border-radius:6px; border:none; font-weight:bold; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);">📝 Isi Odometer & Resit</button></div>` 
                         : ''}
                 </td>
 
@@ -1671,7 +1672,8 @@ window.editTempahanAwam = async function(id) {
     const { data: pemanduList } = await supabaseClient.from('pemandu').select('*');
     const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
 
-    let pemanduOpts = '<option value="">-- Pilih / Kosongkan Pemandu --</option>';
+   let pemanduOpts = `<option value="">-- Pilih / Kosongkan Pemandu --</option>
+                       <option value="${t.nama_pemohon}" ${t.nama_pemandu === t.nama_pemohon ? 'selected' : ''} style="font-weight:bold; color:#0284c7;">👉 [Pandu Sendiri] - ${t.nama_pemohon}</option>`;
     if (pemanduList) {
         pemanduList.forEach(p => {
             const isSelected = (t.nama_pemandu === p.nama) ? 'selected' : '';
