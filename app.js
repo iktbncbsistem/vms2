@@ -414,6 +414,7 @@ async function muatSenaraiUrusetia() {
                     <option value="">-- Pilih Pemandu --</option>
                     <option value="${t.nama_pemohon}" style="font-weight:bold; color:#0284c7;">👉 [Pandu Sendiri] - ${t.nama_pemohon}</option>`;
             if (pemanduList) {
+                pemanduList.forEach(p => {
                     let clash = false;
                     if (tugasanAktif) {
                         for (let rekod of tugasanAktif) {
