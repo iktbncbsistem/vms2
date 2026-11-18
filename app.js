@@ -411,7 +411,6 @@ async function muatSenaraiUrusetia() {
             // DROPDOWN PEMANDU (AUTO-FILTER)
             // ==========================================
             html += `<select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
-                    html += `<select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
                     <option value="">-- Pilih Pemandu --</option>
                     <option value="${t.nama_pemohon}" style="font-weight:bold; color:#0284c7;">👉 [Pandu Sendiri] - ${t.nama_pemohon}</option>`;
             if (pemanduList) {
