@@ -992,3 +992,104 @@ td input:focus { background: white; border: 1px solid var(--primary); }
     position: relative;
     z-index: 2;
 }
+
+/* ==========================================
+   UI/UX MODEN VMS (BERDASARKAN GAMBAR)
+========================================== */
+
+/* Header Biru Gelap (Senarai Menunggu Kelulusan) */
+.table-header-gradient {
+    background: linear-gradient(135deg, #003399 0%, #0066cc 100%);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px 12px 0 0;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Corak Garisan Senget di Kanan Header */
+.table-header-gradient::after {
+    content: '';
+    position: absolute;
+    right: -20px;
+    top: 0;
+    height: 100%;
+    width: 150px;
+    background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);
+}
+
+/* Jadual Utama */
+.vms-table-modern {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+}
+.vms-table-modern thead th {
+    background: #f8fafc;
+    color: #1e293b;
+    font-weight: 700;
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 2px solid #e2e8f0;
+    font-size: 14px;
+}
+.vms-table-modern tbody td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+.vms-table-modern tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Lencana No Rujukan (Pill Biru Cair) */
+.badge-rujukan {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    display: inline-block;
+}
+
+/* Butang Tindakan Moden */
+.btn-modern {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+.btn-modern:hover {
+    transform: translateY(-2px);
+}
+.btn-modern-butiran {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+.btn-modern-lulus {
+    background: #22c55e;
+    color: white;
+    box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);
+}
+.btn-modern-tolak {
+    background: #fef2f2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+}
