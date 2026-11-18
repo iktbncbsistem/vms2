@@ -1225,13 +1225,29 @@ cacheUrusetia = dataDitapis;
                     ${t.catatan || t.tujuan || '-'}
                 </td>`;
 
-            if (window.userRole === 'urusetia') {
+           if (window.userRole === 'urusetia') {
+            // Semak adakah tarikh pergi sudah berlalu berbanding hari ini
+            const tarikhPergi = new Date(t.tarikh_pergi);
+            tarikhPergi.setHours(0,0,0,0);
+            const hariIni = new Date();
+            hariIni.setHours(0,0,0,0);
+            
+            if (tarikhPergi < hariIni) {
+                // BUTANG KELABU: Hanya untuk trip yang dah lepas
                 html += `
                 <td style="text-align:center; white-space:nowrap; background:#f8fafc;">
-                    <button class="btn-action-icon edit" disabled title="Fungsi dikunci untuk elak tersilap tekan" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none;">✏️</button>
-                    <button class="btn-action-icon delete" disabled title="Fungsi dikunci untuk elak tersilap tekan" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none;">❌</button>
+                    <button class="btn-action-icon edit" disabled title="Fungsi dikunci: Trip telah berlalu" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none;">✏️</button>
+                    <button class="btn-action-icon delete" disabled title="Fungsi dikunci: Trip telah berlalu" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none;">❌</button>
+                </td>`;
+            } else {
+                // BUTANG AKTIF: Untuk trip hari ini dan akan datang (Butang Padam dikekalkan kelabu untuk keselamatan)
+                html += `
+                <td style="text-align:center; white-space:nowrap; background:#f8fafc;">
+                    <button onclick="editTempahanAwam(${t.id})" class="btn-action-icon edit" title="Kemaskini Tempahan" style="cursor:pointer;">✏️</button>
+                    <button class="btn-action-icon delete" disabled title="Fungsi padam dikunci" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none;">❌</button>
                 </td>`;
             }
+        }
 
             html += `</tr>`;
         });
