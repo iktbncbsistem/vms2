@@ -755,22 +755,7 @@ async function agihKenderaan(id) {
                             </tr>
                             ${alasanPerubahanHtml}
                         </table>
-<!-- BAHAGIAN 6: REKOD ODOMETER & RESIT -->
-                        <div class="sheet-section-title">Bahagian 6: Rekod Perjalanan & Tuntutan (Oleh Pemandu)</div>
-                        <table class="sheet-table-info">
-                            <tr>
-                                <td class="label-cell">Odometer Mula</td>
-                                <td class="val-cell"><strong>${t.odometer_mula ? vmsEscape(t.odometer_mula) + ' KM' : '-'}</strong></td>
-                                <td class="label-cell">Odometer Akhir</td>
-                                <td class="val-cell"><strong>${t.odometer_akhir ? vmsEscape(t.odometer_akhir) + ' KM' : '-'}</strong></td>
-                            </tr>
-                            <tr>
-                                <td class="label-cell">Salinan Resit / Tol</td>
-                                <td class="val-cell" colspan="3">
-                                    ${t.resit_minyak ? `<a href="${vmsEscape(t.resit_minyak)}" target="_blank" style="color:#0284c7; font-weight:700; text-decoration:underline;">📎 Buka Dokumen Resit / Bukti Bayaran</a>` : `<span style="color:#94a3b8; font-style:italic;">Belum dimuat naik oleh pemandu</span>`}
-                                </td>
-                            </tr>
-                        </table>
+
                         <!-- PETAK TANDATANGAN RASMI -->
                         <div class="sheet-sign-box">
                             <div class="sign-card">
