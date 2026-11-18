@@ -111,10 +111,12 @@ async function semakPeranan() {
             const btnTabTetapan = document.getElementById('btnTabTetapan');
             if (btnTabTetapan) btnTabTetapan.classList.remove('hidden');
             const btnTabBahagian = document.getElementById('btnTabBahagian');
-            if (btnTabBahagian) btnTabBahagian.classList.remove('hidden');
+           if (btnTabBahagian) btnTabBahagian.classList.remove('hidden');
+            
+            if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
             if (typeof muatSenaraiUrusetia === 'function') muatSenaraiUrusetia();
         } 
-       else if (data.peranan === 'pelulus') {
+        else if (data.peranan === 'pelulus') {
             const btnTabPelulus = document.getElementById('btnTabPelulus');
             if (btnTabPelulus) btnTabPelulus.classList.remove('hidden');
             
@@ -125,6 +127,7 @@ async function semakPeranan() {
             const btnTabPengguna = document.getElementById('btnTabPengguna');
             if (btnTabPengguna) btnTabPengguna.classList.remove('hidden');
             
+            if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
             if (typeof muatSenaraiPelulus === 'function') muatSenaraiPelulus();
         }
         
