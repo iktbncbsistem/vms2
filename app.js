@@ -327,7 +327,7 @@ if(vehicleForm) {
             const tarikhWA = document.getElementById('tripDate').value;
             
             // Susun ayat mesej
-            const teksWA = `*PERMOHONAN KENDERAAN BAHARU (VMS)* 🚐\n\nSalam Urusetia, terdapat permohonan baharu yang memerlukan semakan awal:\n\n👤 *Pemohon:* ${namaWA}\n📍 *Destinasi:* ${destinasiWA}\n📅 *Tarikh:* ${tarikhWA}\n\nSila log masuk ke sistem VMS untuk tindakan lanjut. Terima kasih!`;
+            const teksWA = `*PERMOHONAN KENDERAAN BAHARU (VMS)* 🚐\n\nSalam Urusetia, terdapat permohonan baharu yang memerlukan semakan awal:\n\n👤 *Pemohon:* ${namaWA}\n📍 *Destinasi:* ${destinasiWA}\n📅 *Tarikh:* ${tarikhWA}\n\nSila log masuk ke sistem VMS https://vms.is.iktbnchembong.com untuk tindakan lanjut. Terima kasih!`;
             
             // Buka tetingkap WhatsApp secara automatik
             const urlWA = `https://api.whatsapp.com/send?phone=${nomborUrusetia}&text=${encodeURIComponent(teksWA)}`;
