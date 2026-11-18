@@ -129,9 +129,8 @@ async function semakPeranan() {
             
             if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
             if (typeof muatSenaraiPelulus === 'function') muatSenaraiPelulus();
-        }
+        }        
         
-        pt
         else if (data.peranan === 'pemandu') {
             const btnTabPemandu = document.getElementById('btnTabPemandu');
             if (btnTabPemandu) btnTabPemandu.classList.remove('hidden');
