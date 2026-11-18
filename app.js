@@ -836,36 +836,46 @@ async function muatSenaraiPelulus() {
         return; 
     }
 
-    let html = `<table class="vms-table" style="min-width: 100%;">
-        <thead>
-            <tr>
-                <th>No. Rujukan</th>
-                <th>Pemohon & Destinasi</th>
-                <th>Tarikh Perjalanan</th>
-                <th>Tindakan Pelulus</th>
-            </tr>
-        </thead>
-        <tbody>`;
-        
+    let html = `
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
+        <div class="table-header-gradient">
+            ⏳ Senarai Menunggu Kelulusan
+        </div>
+        <table class="vms-table-modern">
+            <thead>
+                <tr>
+                    <th style="width:15%;">No. Rujukan</th>
+                    <th style="width:35%;">Pemohon & Destinasi</th>
+                    <th style="width:20%;">Tarikh Perjalanan</th>
+                    <th style="width:30%; text-align:center;">Tindakan Pelulus</th>
+                </tr>
+            </thead>
+            <tbody>`;
+            
     tempahan.forEach((t, index) => {
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
         cacheUrusetia[index] = t; 
 
         html += `<tr>
-            <td><strong>${noRujukan}</strong></td>
-            <td><strong>${t.nama_pemohon}</strong><br><small>${t.destinasi || t.lokasi}</small></td>
-            <td>${t.tarikh_pergi}</td>
+            <td><span class="badge-rujukan">${noRujukan}</span></td>
             <td>
-                <button class="btn btn-light" onclick="paparButiran(${index})" style="font-size:12px; margin-bottom:5px; width:100%;">🔍 Butiran Penuh</button>
-                <button class="btn btn-success" onclick="updateStatus(${t.id}, 'Lulus')" style="font-size:12px; margin-bottom:5px; width:100%;">✅ Lulus</button>
-                <button class="btn btn-danger" onclick="updateStatus(${t.id}, 'Tolak')" style="font-size:12px; width:100%;">❌ Tolak</button>
+                <strong style="color:#0f172a; font-size:15px; display:block; margin-bottom:4px;">${t.nama_pemohon}</strong>
+                <span style="color:#64748b; font-size:13px; display:flex; align-items:center; gap:6px;">📍 ${t.destinasi || t.lokasi}</span>
+            </td>
+            <td>
+                <span style="color:#0f172a; font-weight:700; display:flex; align-items:center; gap:8px; font-size:14px;">📅 ${t.tarikh_pergi}</span>
+            </td>
+            <td style="text-align:center;">
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${index})">🔍 Butiran</button>
+                    <button class="btn-modern btn-modern-lulus" onclick="updateStatus(${t.id}, 'Lulus')">✔️ Lulus</button>
+                    <button class="btn-modern btn-modern-tolak" onclick="updateStatus(${t.id}, 'Tolak')">❌ Tolak</button>
+                </div>
             </td>
         </tr>`;
     });
     
-    div.innerHTML = html + `</tbody></table>`;
-}
-
+    div.innerHTML = html + `</tbody></table></div>`;
 // ==========================================
 // FUNGSI KEMAS KINI STATUS (DIGUNAKAN OLEH URUSETIA & PELULUS)
 // ==========================================
