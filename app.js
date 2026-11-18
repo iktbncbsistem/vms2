@@ -131,11 +131,13 @@ async function semakPeranan() {
             if (typeof muatSenaraiPelulus === 'function') muatSenaraiPelulus();
         }
         
+        pt
         else if (data.peranan === 'pemandu') {
             const btnTabPemandu = document.getElementById('btnTabPemandu');
             if (btnTabPemandu) btnTabPemandu.classList.remove('hidden');
             tukarTab('pemandu');
         }
+        if (typeof kemaskiniLencanaTugasan === 'function') kemaskiniLencanaTugasan();
     } catch (err) {
         console.error("Ralat semak peranan:", err);
     }
@@ -353,6 +355,8 @@ if(vehicleForm) {
 // URUSETIA: PAPAR & AGIH KENDERAAN
 // ==========================================
 async function muatSenaraiUrusetia() {
+    if (typeof kemaskiniLencanaTugasan === 'function') kemaskiniLencanaTugasan();
+
     const div = document.getElementById('senarai-tempahan-urusetia');
     if(!div) return;
     div.innerHTML = "<p style='padding: 20px; color:#64748b; text-align:center;'>Memuatkan data... ⏳</p>";
@@ -810,6 +814,8 @@ async function agihKenderaan(id) {
 // PELULUS: LULUS ATAU TOLAK PERMOHONAN
 // ==========================================
 async function muatSenaraiPelulus() {
+    if (typeof kemaskiniLencanaTugasan === 'function') kemaskiniLencanaTugasan();
+    
     const div = document.getElementById('senarai-tempahan-pelulus');
     if (!div) return;
     
