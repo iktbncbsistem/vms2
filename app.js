@@ -1120,9 +1120,19 @@ async function semakJadualAwam(mod = 'aktif') {
         return;
     }
     
-    cacheUrusetia = dataDitapis; 
+cacheUrusetia = dataDitapis; 
+    window.cacheTugasanPemandu = dataDitapis; // Hubungkan jadual awam dengan borang resit
+    
+    // Dapatkan nama pengguna semasa yang sedang login
+    let namaSaya = '';
+    if (currentUser) {
+        const { data: pData } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
+        if (pData) namaSaya = pData.nama;
+    }
     
     const jadualPemandu = {};
+
+    
     dataDitapis.forEach((t, i) => {
         t.indexAsal = i; 
         const pemandu = t.nama_pemandu || '⏳ Belum Diagih (Menunggu Urusetia)';
@@ -1198,12 +1208,16 @@ async function semakJadualAwam(mod = 'aktif') {
                     <small style="color:#94a3b8;">${t.tarikh_balik || '-'}</small>
                 </td>
                 
-                <td style="min-width: 160px;">
+<td style="min-width: 160px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
                         <img src="${urlAvatarPemohon}" alt="Pemohon" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">
                         <div style="font-weight:600; font-size:12px; line-height:1.2;">${t.nama_pemohon || '-'}</div>
                     </div>
                     <span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:4px 10px; border-radius:12px; font-size:11px;">${labelStatus}</span>
+                    
+                    ${(t.id_pemohon === currentUser.id && t.nama_pemandu === namaSaya && (t.status === 'Selesai Diagih' || t.status === 'Lulus')) 
+                        ? `<div style="margin-top: 8px;"><button onclick="bukaBorangTugasan(${t.indexAsal}, false)" class="btn btn-primary" style="font-size:11px; padding:6px; width:100%; font-weight:bold; background:#0284c7; border:none;">📝 Isi Odometer & Resit</button></div>` 
+                        : ''}
                 </td>
 
                 <td style="color:#64748b; font-size:12px; max-width: 150px;">
