@@ -881,13 +881,34 @@ async function muatSenaraiPelulus() {
 // FUNGSI KEMAS KINI STATUS (DIGUNAKAN OLEH URUSETIA & PELULUS)
 // ==========================================
 async function updateStatus(id, statusBaru) {
-    if(!confirm(`Adakah anda pasti untuk menukar status kepada: ${statusBaru}?`)) return;
+    let dataUpdate = { status: statusBaru };
+
+    // 1. Jika butang 'Tolak' ditekan
+    if (statusBaru === 'Tolak') {
+        // Pop-up minta catatan (tidak wajib / bukan asterisk)
+        const alasan = prompt(`PERMOHONAN DITOLAK\nSila masukkan catatan/sebab (Pilihan - Boleh biarkan kosong):`);
+        
+        // Jika pengguna tekan butang "Cancel" pada pop-up, batalkan proses
+        if (alasan === null) return; 
+        
+        // Jika ada catatan ditaip, simpan ke dalam database (audit trail)
+        if (alasan.trim() !== '') {
+            dataUpdate.alasan_perubahan = `[Ditolak] Catatan: ${alasan.trim()}`;
+        }
+    } else {
+        // 2. Jika butang 'Lulus' ditekan (Pengesahan biasa)
+        if(!confirm(`Adakah anda pasti untuk menukar status kepada: ${statusBaru}?`)) return;
+    }
+    
+    document.body.style.cursor = 'wait';
     
     const { error } = await supabaseClient
         .from('tempahan')
-        .update({ status: statusBaru })
+        .update(dataUpdate)
         .eq('id', id);
         
+    document.body.style.cursor = 'default';
+    
     if (error) {
         alert("Ralat mengemas kini status: " + error.message);
     } else {
