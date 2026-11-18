@@ -876,6 +876,7 @@ async function muatSenaraiPelulus() {
     });
     
     div.innerHTML = html + `</tbody></table></div>`;
+}
 // ==========================================
 // FUNGSI KEMAS KINI STATUS (DIGUNAKAN OLEH URUSETIA & PELULUS)
 // ==========================================
