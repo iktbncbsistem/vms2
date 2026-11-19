@@ -398,7 +398,7 @@ async function muatSenaraiUrusetia() {
             </td>
             <td><span style="background:#fef3c7; color:#d97706; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">${t.status}</span></td>
             <td style="text-align:center;">
-                <button class="btn btn-light" onclick="paparButiran(${index})" style="margin-bottom:8px; font-size:12px; width:100%;">🔍 Butiran Penuh</button><br>
+                <button class="btn btn-light" onclick="paparButiran(${t.id})" style="margin-bottom:8px; font-size:12px; width:100%;">🔍 Butiran Penuh</button><br>
         `;
 
         if (t.status === 'Menunggu Semakan') {
@@ -870,7 +870,7 @@ async function muatSenaraiPelulus() {
             </td>
             <td style="text-align:center;">
                 <div style="display:flex; gap:10px; justify-content:center;">
-                    <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${index})">🔍 Butiran</button>
+                    <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})">🔍 Butiran</button>
                     <button class="btn-modern btn-modern-lulus" onclick="updateStatus(${t.id}, 'Lulus')">✔️ Lulus</button>
                     <button class="btn-modern btn-modern-tolak" onclick="updateStatus(${t.id}, 'Tolak')">❌ Tolak</button>
                 </div>
@@ -1232,7 +1232,7 @@ cacheUrusetia = dataDitapis;
             html += `
                 <td>
                     <strong style="color:#102a43;">${tarikhMohon}</strong><br>
-                    <a onclick="paparButiran(${t.indexAsal})" style="color: #0284c7; font-weight: 800; cursor: pointer; text-decoration: underline; font-size: 13px;" title="Klik untuk lihat borang">
+                   <a onclick="paparButiran(${t.id})" style="color: #0284c7; font-weight: 800; cursor: pointer; text-decoration: underline; font-size: 13px;" title="Klik untuk lihat borang">
                         ${noRujukan}
                     </a>
                 </td>
