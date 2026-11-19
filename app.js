@@ -1181,6 +1181,9 @@ if (btnReview) {
 // ==========================================
 // FUNGSI CARIAN JADUAL AWAM & PERMOHONAN SAYA
 // ==========================================
+// ==========================================
+// FUNGSI CARIAN JADUAL AWAM & PERMOHONAN SAYA
+// ==========================================
 async function semakJadualAwam(mod = 'aktif') {
     const tMula = document.getElementById('cariTarikhMula') ? document.getElementById('cariTarikhMula').value : '';
     const tAkhir = document.getElementById('cariTarikhAkhir') ? document.getElementById('cariTarikhAkhir').value : '';
@@ -1229,7 +1232,6 @@ async function semakJadualAwam(mod = 'aktif') {
         if (t.id_pemohon === currentUser.id) sah = true; 
         if (!sah) return false;
 
-        // Tambahan Logik Tapisan Carian Teks
         if (mod === 'cari' && teksCari) {
             const kenderaan = senaraiKenderaan && t.id_kenderaan ? senaraiKenderaan.find(x => x.id == t.id_kenderaan) : null;
             const namaK = kenderaan ? `${kenderaan.no_plat} ${kenderaan.model}`.toLowerCase() : '';
@@ -1247,10 +1249,9 @@ async function semakJadualAwam(mod = 'aktif') {
         return;
     }
     
-cacheUrusetia = dataDitapis; 
-    window.cacheTugasanPemandu = dataDitapis; // Wajib ada untuk pautkan rekod
+    cacheUrusetia = dataDitapis; 
+    window.cacheTugasanPemandu = dataDitapis;
     
-    // Tarik nama pengguna semasa yang sedang login
     let namaSaya = '';
     if (currentUser) {
         const { data: pData } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
@@ -1259,7 +1260,6 @@ cacheUrusetia = dataDitapis;
     
     const jadualPemandu = {};
 
-    
     dataDitapis.forEach((t, i) => {
         t.indexAsal = i; 
         let pemandu = t.nama_pemandu;
@@ -1303,7 +1303,6 @@ cacheUrusetia = dataDitapis;
             
             // LOMPATAN BARIS PEMANDU (ROWSPAN) DENGAN AVATAR
             if (index === 0) {
-                if (index === 0) {
                 const stylePemandu = (pemandu.includes('Belum Diagih') || pemandu.includes('Dibatalkan')) ? 'color:#ef4444; font-style:italic;' : 'color:#1e293b; font-weight:700;';
                 const charAvatarD = pemandu.includes('Belum Diagih') ? '?' : (pemandu.includes('Dibatalkan') ? 'X' : pemandu);
                 const urlAvatarPemandu = petaAvatarNama[pemandu] || `https://ui-avatars.com/api/?name=${encodeURIComponent(charAvatarD)}&background=0f172a&color=fff`;
@@ -1340,7 +1339,7 @@ cacheUrusetia = dataDitapis;
                     <small style="color:#94a3b8;">${t.tarikh_balik || '-'}</small>
                 </td>
                 
-<td style="min-width: 160px;">
+                <td style="min-width: 160px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
                         <img src="${urlAvatarPemohon}" alt="Pemohon" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">
                         <div style="font-weight:600; font-size:12px; line-height:1.2;">${t.nama_pemohon || '-'}</div>
@@ -1352,21 +1351,19 @@ cacheUrusetia = dataDitapis;
                         : ''}
                 </td>
 
-               <td style="color:#64748b; font-size:12px; max-width: 150px;">
-    ${t.status === 'Tolak' && t.alasan_perubahan 
-        ? `<span style="color:#ef4444; font-weight:600;">${t.alasan_perubahan}</span>` 
-        : (t.catatan || t.tujuan || '-')}
-</td>`;
+                <td style="color:#64748b; font-size:12px; max-width: 150px;">
+                    ${t.status === 'Tolak' && t.alasan_perubahan 
+                        ? `<span style="color:#ef4444; font-weight:600;">${t.alasan_perubahan}</span>` 
+                        : (t.catatan || t.tujuan || '-')}
+                </td>`;
 
           if (window.userRole === 'urusetia') {
-            // Semak adakah tarikh pergi sudah berlalu berbanding hari ini
             const tarikhPergi = new Date(t.tarikh_pergi);
             tarikhPergi.setHours(0,0,0,0);
             const hariIni = new Date();
             hariIni.setHours(0,0,0,0);
             
             if (tarikhPergi < hariIni) {
-                // BUTANG KELABU: Hanya untuk trip yang dah lepas (Ikon mata kekal aktif untuk semakan)
                 html += `
                 <td style="text-align:center; white-space:nowrap; background:#f8fafc;">
                     <button onclick="bukaBorangTugasan(${t.indexAsal}, true)" class="btn-action-icon" title="Lihat Odometer & Resit" style="cursor:pointer; font-size:15px; margin:0 3px; background:none; border:none;">👁️</button>
@@ -1374,7 +1371,6 @@ cacheUrusetia = dataDitapis;
                     <button class="btn-action-icon delete" disabled title="Fungsi dikunci: Trip telah berlalu" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none;">❌</button>
                 </td>`;
             } else {
-                // BUTANG AKTIF: Untuk trip hari ini dan akan datang (Butang Padam dikekalkan kelabu untuk keselamatan)
                 html += `
                 <td style="text-align:center; white-space:nowrap; background:#f8fafc;">
                     <button onclick="bukaBorangTugasan(${t.indexAsal}, true)" class="btn-action-icon" title="Lihat Odometer & Resit" style="cursor:pointer; font-size:15px; margin:0 3px; background:none; border:none;">👁️</button>
@@ -1389,6 +1385,7 @@ cacheUrusetia = dataDitapis;
     }
     
     if(tbody) tbody.innerHTML = html;
+}
 }
 // ==========================================
 // FUNGSI PENGURUSAN TETAPAN (URUSETIA SAHAJA)
