@@ -687,11 +687,12 @@ async function agihKenderaan(id) {
             ? `<a href="${vmsEscape(t.fail_surat)}" target="_blank" style="color:#0284c7; font-weight:700; text-decoration:underline;">📎 Buka Dokumen Lampiran (Surat Arahan)</a>`
             : `<span style="color:#94a3b8; font-style:italic;">Tiada lampiran</span>`;
 
-        // Lencana Status
+// Lencana Status
         let statusBadgeColor = '#f59e0b';
         if (t.status === 'Lulus' || t.status === 'Selesai Diagih') statusBadgeColor = '#10b981';
         else if (t.status === 'Tolak') statusBadgeColor = '#ef4444';
-// Paparan Alasan Perubahan untuk semua yang berkenaan
+
+        // Paparan Alasan Perubahan untuk semua yang berkenaan
         let alasanPerubahanHtml = '';
         if (t.alasan_perubahan) {
             alasanPerubahanHtml = `
@@ -702,13 +703,7 @@ async function agihKenderaan(id) {
                 </td>
             </tr>`;
         }
-            <tr>
-                <td class="label-cell" style="color:#b91c1c; background:#fee2e2;">Rekod Perubahan (Audit)</td>
-                <td class="val-cell" colspan="3" style="color:#b91c1c; background:#fef2f2; font-style:italic;">
-                    ${vmsEscape(t.alasan_perubahan)}
-                </td>
-            </tr>`;
-        }
+
         const modalHtml = `
             <div class="vms-sheet-container">
                 <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
