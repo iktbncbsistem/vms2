@@ -1262,7 +1262,11 @@ cacheUrusetia = dataDitapis;
     
     dataDitapis.forEach((t, i) => {
         t.indexAsal = i; 
-        const pemandu = t.nama_pemandu || '⏳ Belum Diagih (Menunggu Urusetia)';
+        let pemandu = t.nama_pemandu;
+        // Logik baharu: Jika ditolak, tak perlu tunggu Urusetia lagi
+        if (!pemandu) {
+            pemandu = (t.status === 'Tolak') ? '❌ Dibatalkan (Permohonan Ditolak)' : '⏳ Belum Diagih (Menunggu Urusetia)';
+        }
         if (!jadualPemandu[pemandu]) jadualPemandu[pemandu] = [];
         jadualPemandu[pemandu].push(t);
     });
@@ -1299,8 +1303,9 @@ cacheUrusetia = dataDitapis;
             
             // LOMPATAN BARIS PEMANDU (ROWSPAN) DENGAN AVATAR
             if (index === 0) {
-                const stylePemandu = pemandu.includes('Belum Diagih') ? 'color:#ef4444; font-style:italic;' : 'color:#1e293b; font-weight:700;';
-                const charAvatarD = pemandu.includes('Belum Diagih') ? '?' : pemandu;
+                if (index === 0) {
+                const stylePemandu = (pemandu.includes('Belum Diagih') || pemandu.includes('Dibatalkan')) ? 'color:#ef4444; font-style:italic;' : 'color:#1e293b; font-weight:700;';
+                const charAvatarD = pemandu.includes('Belum Diagih') ? '?' : (pemandu.includes('Dibatalkan') ? 'X' : pemandu);
                 const urlAvatarPemandu = petaAvatarNama[pemandu] || `https://ui-avatars.com/api/?name=${encodeURIComponent(charAvatarD)}&background=0f172a&color=fff`;
 
                 html += `<td rowspan="${jumlahRow}" style="${stylePemandu} vertical-align: top; background: #f8fafc; border-right: 1px solid #e2e8f0; min-width: 170px;">
