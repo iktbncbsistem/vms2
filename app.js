@@ -337,14 +337,13 @@ if(vehicleForm) {
             const teksWA = `*PERMOHONAN KENDERAAN BAHARU (VMS)* 🚐\n\nSalam Urusetia, terdapat permohonan baharu yang memerlukan semakan awal:\n\n📌 *No. Rujukan:* ${noRujBaru}\n👤 *Pemohon:* ${document.getElementById('applicantName').value}\n📍 *Destinasi:* ${document.getElementById('location').value}\n📅 *Tarikh:* ${document.getElementById('tripDate').value}\n\nSila log masuk ke sistem VMS https://vms.is.iktbnchembong.com untuk tindakan lanjut. Terima kasih!`;
             window.open(`https://api.whatsapp.com/send?phone=${nomborUrusetia}&text=${encodeURIComponent(teksWA)}`, '_blank');
             
-            vehicleForm.reset();
-       }
-                     
+           vehicleForm.reset();
             
             if(currentUser) localStorage.removeItem('vms_draft_' + currentUser.id);
             
             tukarTab('jadual');
             muatSejarahPemohon();
+            
         } catch (error) {
             alert("Ralat menghantar permohonan: " + error.message);
         } finally {
@@ -353,6 +352,7 @@ if(vehicleForm) {
         }
     });
 }
+            
 
 
 
