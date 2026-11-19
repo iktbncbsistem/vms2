@@ -338,24 +338,8 @@ if(vehicleForm) {
             window.open(`https://api.whatsapp.com/send?phone=${nomborUrusetia}&text=${encodeURIComponent(teksWA)}`, '_blank');
             
             vehicleForm.reset();
-       }
-           // ==========================================
-            // NOTIFIKASI WHATSAPP KE URUSETIA
-            // ==========================================
-            // TUKAR NOMBOR INI KEPADA NOMBOR TELEFON URUSETIA (Mesti bermula dengan 6, tanpa simbol + atau -)
-            const nomborUrusetia = '60172243822'; 
-            
-            const namaWA = document.getElementById('applicantName').value;
-            const destinasiWA = document.getElementById('location').value;
-            const tarikhWA = document.getElementById('tripDate').value;
-            
-            // Susun ayat mesej
-            const teksWA = `*PERMOHONAN KENDERAAN BAHARU (VMS)* 🚐\n\nSalam Urusetia, terdapat permohonan baharu yang memerlukan semakan awal:\n\n👤 *Pemohon:* ${namaWA}\n📍 *Destinasi:* ${destinasiWA}\n📅 *Tarikh:* ${tarikhWA}\n\nSila log masuk ke sistem VMS https://vms.is.iktbnchembong.com untuk tindakan lanjut. Terima kasih!`;
-            
-            // Buka tetingkap WhatsApp secara automatik
-            const urlWA = `https://api.whatsapp.com/send?phone=${nomborUrusetia}&text=${encodeURIComponent(teksWA)}`;
-            window.open(urlWA, '_blank');
-            vehicleForm.reset();
+       
+                     
             
             if(currentUser) localStorage.removeItem('vms_draft_' + currentUser.id);
             
