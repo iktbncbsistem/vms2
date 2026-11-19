@@ -691,10 +691,17 @@ async function agihKenderaan(id) {
         let statusBadgeColor = '#f59e0b';
         if (t.status === 'Lulus' || t.status === 'Selesai Diagih') statusBadgeColor = '#10b981';
         else if (t.status === 'Tolak') statusBadgeColor = '#ef4444';
-// Pengehadan Paparan Alasan Perubahan (Hanya Urusetia & Pelulus)
+// Paparan Alasan Perubahan untuk semua yang berkenaan
         let alasanPerubahanHtml = '';
-        if ((window.userRole === 'urusetia' || window.userRole === 'pelulus') && t.alasan_perubahan) {
+        if (t.alasan_perubahan) {
             alasanPerubahanHtml = `
+            <tr>
+                <td class="label-cell" style="color:#b91c1c; background:#fee2e2;">Catatan Tindakan</td>
+                <td class="val-cell" colspan="3" style="color:#b91c1c; background:#fef2f2; font-style:italic; font-weight:bold;">
+                    ${vmsEscape(t.alasan_perubahan)}
+                </td>
+            </tr>`;
+        }
             <tr>
                 <td class="label-cell" style="color:#b91c1c; background:#fee2e2;">Rekod Perubahan (Audit)</td>
                 <td class="val-cell" colspan="3" style="color:#b91c1c; background:#fef2f2; font-style:italic;">
@@ -1345,9 +1352,11 @@ cacheUrusetia = dataDitapis;
                         : ''}
                 </td>
 
-                <td style="color:#64748b; font-size:12px; max-width: 150px;">
-                    ${t.catatan || t.tujuan || '-'}
-                </td>`;
+               <td style="color:#64748b; font-size:12px; max-width: 150px;">
+    ${t.status === 'Tolak' && t.alasan_perubahan 
+        ? `<span style="color:#ef4444; font-weight:600;">${t.alasan_perubahan}</span>` 
+        : (t.catatan || t.tujuan || '-')}
+</td>`;
 
           if (window.userRole === 'urusetia') {
             // Semak adakah tarikh pergi sudah berlalu berbanding hari ini
