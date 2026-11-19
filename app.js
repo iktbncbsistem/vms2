@@ -607,6 +607,20 @@ async function agihKenderaan(id) {
         }).eq('id', id);
 
         if (error) throw error;
+        // 4. AUTO-EMEL KEPADA PEMOHON DAN PEMANDU YANG DIAGIH
+        const noRuj = `VMS-${id.toString().padStart(4, '0')}`;
+        
+        // Emel kepada Pemohon
+        const { data: pemohonProfil } = await supabaseClient.from('profil').select('email').eq('id', t.id_pemohon).single();
+        if (pemohonProfil && pemohonProfil.email) {
+            hantarEmelNotifikasi(t.nama_pemohon, pemohonProfil.email, noRuj, "Selesai Diagih", `Kenderaan dan Pemandu (${namaPemandu}) telah ditetapkan untuk perjalanan anda.`);
+        }
+        
+        // Emel kepada Pemandu (Boleh cari Pemandu Gantian/Bawa Sendiri yang berdaftar di sistem)
+        const { data: pemanduProfil } = await supabaseClient.from('profil').select('nama, email').ilike('nama', namaPemandu).single();
+        if (pemanduProfil && pemanduProfil.email) {
+            hantarEmelNotifikasi(pemanduProfil.nama, pemanduProfil.email, noRuj, "Tugasan Baharu 🚗", `Anda telah ditugaskan sebagai pemandu untuk perjalanan ini (Lokasi: ${t.destinasi || t.lokasi}). Sila semak tab 'Tugasan Saya' di sistem.`);
+        }
         
         alert("✅ Mantap bos! Pemandu dan Kenderaan telah berjaya diagihkan."); 
         muatSenaraiUrusetia();
