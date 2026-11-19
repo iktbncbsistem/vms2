@@ -363,7 +363,18 @@ async function muatSenaraiUrusetia() {
     // 1. Tarik permohonan yang perlu tindakan (Menunggu Semakan & Lulus)
     const { data: tempahan, error } = await supabaseClient.from('tempahan').select('*').in('status', ['Menunggu Semakan', 'Lulus']).order('id', {ascending: false});
     if (error) return div.innerHTML = "Ralat: " + error.message;
-    if (!tempahan || tempahan.length === 0) return div.innerHTML = "<p style='padding: 20px; color:#64748b; text-align:center;'>Tiada permohonan baharu.</p>";
+    
+    // Jika tiada permohonan
+    if (!tempahan || tempahan.length === 0) {
+        return div.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
+            <div class="table-header-gradient" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>📋 Senarai Tindakan & Pengesahan Urusetia</span>
+                <button class="btn btn-light" onclick="muatSenaraiUrusetia()" style="padding:6px 12px; font-size:12px; color:#0f172a; border-radius:6px; cursor:pointer; font-weight:bold; border:none;">🔄 Segarkan</button>
+            </div>
+            <div style="padding: 30px; text-align:center; color:#64748b;">Tiada permohonan baharu buat masa ini.</div>
+        </div>`;
+    }
 
     cacheUrusetia = tempahan; 
     
@@ -371,41 +382,61 @@ async function muatSenaraiUrusetia() {
     const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
     const { data: pemanduList } = await supabaseClient.from('pemandu').select('*');
 
-    // 3. Tarik senarai TUGASAN AKTIF (Selesai Diagih) untuk sistem semak pertindihan (clash)
+    // 3. Tarik senarai TUGASAN AKTIF (Selesai Diagih) untuk sistem semak pertindihan
     const { data: tugasanAktif } = await supabaseClient.from('tempahan')
         .select('nama_pemandu, id_kenderaan, tarikh_pergi, masa_bertolak, tarikh_balik, masa_balik')
         .eq('status', 'Selesai Diagih');
 
-    let html = `<table class="sistem-table" style="min-width: 900px; width: 100%;">
-        <thead>
-            <tr><th>No. Rujukan</th><th>Pemohon & Lokasi</th><th>Tarikh Perjalanan</th><th>Status</th><th>Tindakan Urusetia</th></tr>
-        </thead>
-        <tbody>`;
+    let html = `
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
+        <div class="table-header-gradient" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>📋 Senarai Tindakan & Pengesahan Urusetia</span>
+            <button class="btn btn-light" onclick="muatSenaraiUrusetia()" style="padding:6px 12px; font-size:12px; color:#0f172a; border-radius:6px; cursor:pointer; font-weight:bold; border:none; box-shadow:0 2px 4px rgba(0,0,0,0.1);">🔄 Segarkan</button>
+        </div>
+        <table class="vms-table-modern">
+            <thead>
+                <tr>
+                    <th style="width:15%;">No. Rujukan</th>
+                    <th style="width:25%;">Pemohon & Lokasi</th>
+                    <th style="width:20%;">Tarikh Perjalanan</th>
+                    <th style="width:15%; text-align:center;">Status</th>
+                    <th style="width:25%; text-align:center;">Tindakan Urusetia</th>
+                </tr>
+            </thead>
+            <tbody>`;
     
-    tempahan.forEach((t, index) => {
+    tempahan.forEach((t) => {
         const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
 
         // Sistem kira masa permohonan INI untuk dibandingkan
         const semasaMula = new Date(`${t.tarikh_pergi}T${t.masa_bertolak || '00:00:00'}`);
         const semasaTamat = new Date(`${t.tarikh_balik}T${t.masa_balik || '23:59:00'}`);
 
+        let badgeWarna = t.status === 'Menunggu Semakan' ? '#d97706' : '#10b981';
+        let badgeBg = t.status === 'Menunggu Semakan' ? '#fef3c7' : '#d1fae5';
+
         html += `<tr>
-            <td><strong>${noRujukan}</strong></td>
-            <td><strong>${t.nama_pemohon}</strong><br><small>${t.destinasi || t.lokasi}</small></td>
+            <td><span class="badge-rujukan">${noRujukan}</span></td>
             <td>
-                <strong style="color:#334155;">${t.tarikh_pergi}</strong><br>
-                <small>${t.masa_bertolak || '-'}</small>
+                <strong style="color:#0f172a; font-size:15px; display:block; margin-bottom:4px;">${t.nama_pemohon}</strong>
+                <span style="color:#64748b; font-size:13px; display:flex; align-items:center; gap:6px;">📍 ${t.destinasi || t.lokasi}</span>
             </td>
-            <td><span style="background:#fef3c7; color:#d97706; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">${t.status}</span></td>
+            <td>
+                <span style="color:#0f172a; font-weight:700; display:flex; align-items:center; gap:8px; font-size:14px;">📅 ${t.tarikh_pergi}</span>
+                <small style="color:#64748b; margin-left:24px; display:block; margin-top:4px;">⏰ ${t.masa_bertolak || '-'}</small>
+            </td>
             <td style="text-align:center;">
-                <button class="btn btn-light" onclick="paparButiran(${t.id})" style="margin-bottom:8px; font-size:12px; width:100%;">🔍 Butiran Penuh</button><br>
+                <span style="background:${badgeBg}; color:${badgeWarna}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; display:inline-block;">${t.status}</span>
+            </td>
+            <td style="text-align:center;">
+                <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})" style="margin-bottom:10px; width:100%; justify-content:center;">🔍 Butiran Penuh</button>
         `;
 
         if (t.status === 'Menunggu Semakan') {
             html += `
-                <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <button class="btn btn-primary" onclick="sahkanUrusetia(${t.id})" style="font-size:12px; width:100%;">✅ Sahkan & Hantar</button>
-                    <button class="btn btn-danger" onclick="updateStatus(${t.id}, 'Tolak')" style="font-size:12px; width:100%;">❌ Tolak (Tidak Lengkap)</button>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button class="btn-modern btn-modern-lulus" onclick="sahkanUrusetia(${t.id})" style="width:100%; justify-content:center;">✅ Sahkan & Hantar</button>
+                    <button class="btn-modern btn-modern-tolak" onclick="updateStatus(${t.id}, 'Tolak')" style="width:100%; justify-content:center;">❌ Tolak (Tidak Lengkap)</button>
                 </div>
             `;
         } else if (t.status === 'Lulus') {
@@ -413,7 +444,7 @@ async function muatSenaraiUrusetia() {
             // ==========================================
             // DROPDOWN PEMANDU (AUTO-FILTER)
             // ==========================================
-            html += `<select id="pemandu-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
+            html += `<select id="pemandu-${t.id}" style="margin-bottom:8px; width:100%; padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; outline:none; font-family:inherit;">
                     <option value="">-- Pilih Pemandu --</option>
                     <option value="${t.nama_pemohon}" style="font-weight:bold; color:#0284c7;">👉 [Pandu Sendiri] - ${t.nama_pemohon}</option>`;
             if (pemanduList) {
@@ -430,7 +461,7 @@ async function muatSenaraiUrusetia() {
                     }
                     const labelNama = p.kategori === 'Gantian' ? `${p.nama} (Gantian)` : p.nama;
                     if (clash) {
-                        html += `<option value="${labelNama}" disabled style="color:#ef4444; background:#fee2e2;">⛔ ${labelNama} (Sedang Bertugas)</option>`;
+                        html += `<option value="${labelNama}" disabled style="color:#ef4444; background:#fee2e2;">⛔ ${labelNama} (Bertugas)</option>`;
                     } else {
                         html += `<option value="${labelNama}">${labelNama}</option>`;
                     }
@@ -440,8 +471,8 @@ async function muatSenaraiUrusetia() {
             // ==========================================
             // DROPDOWN KENDERAAN (AUTO-FILTER)
             // ==========================================
-            html += `</select><br>
-                <select id="kenderaan-${t.id}" style="margin-bottom:5px; width:100%; padding:5px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;">
+            html += `</select>
+                <select id="kenderaan-${t.id}" style="margin-bottom:10px; width:100%; padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; outline:none; font-family:inherit;">
                     <option value="">-- Pilih Kenderaan --</option>`;
             if (kenderaanList) {
                kenderaanList.forEach(k => {
@@ -457,18 +488,18 @@ async function muatSenaraiUrusetia() {
                     }
                     const labelKategori = k.jenis_kenderaan ? `[${k.jenis_kenderaan}] ` : '';
                     if (clash) {
-                        html += `<option value="${k.id}" disabled style="color:#ef4444; background:#fee2e2;">⛔ ${labelKategori}${k.model} (${k.no_plat}) (Telah Ditempah)</option>`;
+                        html += `<option value="${k.id}" disabled style="color:#ef4444; background:#fee2e2;">⛔ ${labelKategori}${k.model} (${k.no_plat}) (Ditempah)</option>`;
                     } else {
                         html += `<option value="${k.id}">${labelKategori}${k.model} (${k.no_plat})</option>`;
                     }
                 });
             }
-            html += `</select><br>
-                <button class="btn btn-success" onclick="agihKenderaan(${t.id})" style="font-size:12px; width:100%;">Sahkan Agihan</button>`;
+            html += `</select>
+                <button class="btn-modern btn-modern-lulus" onclick="agihKenderaan(${t.id})" style="width:100%; justify-content:center; box-shadow:none;">🚙 Sahkan Agihan</button>`;
         }
         html += `</td></tr>`;
     });
-    div.innerHTML = html + `</tbody></table>`;
+    div.innerHTML = html + `</tbody></table></div>`;
 }
 // ==========================================
 // FUNGSI PENGESAHAN URUSETIA (BAHAGIAN B)
