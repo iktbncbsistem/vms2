@@ -338,7 +338,7 @@ if(vehicleForm) {
             window.open(`https://api.whatsapp.com/send?phone=${nomborUrusetia}&text=${encodeURIComponent(teksWA)}`, '_blank');
             
             vehicleForm.reset();
-       
+       }
                      
             
             if(currentUser) localStorage.removeItem('vms_draft_' + currentUser.id);
