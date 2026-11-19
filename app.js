@@ -912,44 +912,69 @@ async function muatSenaraiPelulus() {
     div.innerHTML = html + `</tbody></table></div>`;
 }
 // ==========================================
-// FUNGSI KEMAS KINI STATUS (DIGUNAKAN OLEH URUSETIA & PELULUS)
+// FUNGSI KEMAS KINI STATUS & AUTO-EMEL 
 // ==========================================
-async function updateStatus(id, statusBaru) {
+window.updateStatus = async function(id, statusBaru) {
     let dataUpdate = { status: statusBaru };
+    let catatanEmel = "-"; // Menyimpan catatan untuk dihantar ke emel
 
     // 1. Jika butang 'Tolak' ditekan
     if (statusBaru === 'Tolak') {
-        // Pop-up minta catatan (tidak wajib / bukan asterisk)
+        // Pop-up minta catatan
         const alasan = prompt(`PERMOHONAN DITOLAK\nSila masukkan catatan/sebab (Pilihan - Boleh biarkan kosong):`);
         
-        // Jika pengguna tekan butang "Cancel" pada pop-up, batalkan proses
+        // Jika pengguna tekan butang "Cancel", batalkan proses
         if (alasan === null) return; 
         
-        // Jika ada catatan ditaip, simpan ke dalam database (audit trail)
+        // Jika ada catatan ditaip, simpan ke database dan e-mel
         if (alasan.trim() !== '') {
             dataUpdate.alasan_perubahan = `[Ditolak] Catatan: ${alasan.trim()}`;
+            catatanEmel = alasan.trim();
         }
     } else {
-        // 2. Jika butang 'Lulus' ditekan (Pengesahan biasa)
+        // 2. Jika butang 'Lulus' ditekan
         if(!confirm(`Adakah anda pasti untuk menukar status kepada: ${statusBaru}?`)) return;
     }
     
     document.body.style.cursor = 'wait';
     
+    // Kemas kini status di database
     const { error } = await supabaseClient
         .from('tempahan')
         .update(dataUpdate)
         .eq('id', id);
         
-    document.body.style.cursor = 'default';
-    
     if (error) {
+        document.body.style.cursor = 'default';
         alert("Ralat mengemas kini status: " + error.message);
-    } else {
-        alert(`Berjaya! Permohonan telah dikemas kini kepada status: ${statusBaru}`);
-        if(currentUser) semakPeranan(); 
+        return;
     }
-}
+
+    // ==========================================
+    // PROSES AUTO-HANTAR EMEL KEPADA PEMOHON
+    // ==========================================
+    try {
+        // Tarik ID Pemohon dari permohonan
+        const { data: tData } = await supabaseClient.from('tempahan').select('id_pemohon, nama_pemohon').eq('id', id).single();
+        if (tData && tData.id_pemohon) {
+            // Tarik alamat E-mel dari profil pemohon
+            const { data: pData } = await supabaseClient.from('profil').select('email').eq('id', tData.id_pemohon).single();
+            if (pData && pData.email) {
+                const noRujukan = `VMS-${id.toString().padStart(4, '0')}`;
+                
+                // Tembak E-mel!
+                hantarEmelNotifikasi(tData.nama_pemohon, pData.email, noRujukan, statusBaru, catatanEmel);
+            }
+        }
+    } catch(err) {
+        console.log("Ralat menarik data email: ", err);
+    }
+    
+    document.body.style.cursor = 'default';
+    alert(`Berjaya! Permohonan telah dikemas kini kepada status: ${statusBaru}`);
+    
+    if(currentUser) semakPeranan(); 
+};
 // ==========================================
 // FUNGSI BUTANG TAMBAH PENUMPANG & PERALATAN
 // ==========================================
@@ -2270,4 +2295,36 @@ window.kemaskiniLencanaTugasan = async function() {
             .eq('status', 'Menunggu Kelulusan');
         setLencanaPadaButang('btnTabPelulus', count || 0);
     }
+};
+// ==========================================
+// FUNGSI NOTIFIKASI EMAILJS
+// ==========================================
+// 1. Hidupkan enjin EmailJS (Menggunakan Public Key)
+if (typeof emailjs !== 'undefined') {
+    emailjs.init("o9Nr-qrxQqfnY6Moy");
+}
+
+window.hantarEmelNotifikasi = function(namaPenerima, emelPenerima, noRujukan, status, mesejTambahan) {
+    if (!emelPenerima) {
+        console.log("Tiada e-mel penerima, notifikasi e-mel dibatalkan.");
+        return;
+    }
+
+    // Parameter yang akan dihantar ke template EmailJS bos
+    const templateParams = {
+        to_name: namaPenerima,
+        to_email: emelPenerima,
+        no_rujukan: noRujukan,
+        status_permohonan: status,
+        mesej: mesejTambahan || 'Tiada catatan tambahan.',
+        link_sistem: "https://vms.is.iktbnchembong.com"
+    };
+
+    // Menghantar emel menggunakan Service ID & Template ID
+    emailjs.send('service_fos3mh5', 'template_bglvxw3', templateParams)
+        .then(function(response) {
+            console.log('✅ EMEL BERJAYA DIHANTAR!', response.status, response.text);
+        }, function(error) {
+            console.error('❌ GAGAL HANTAR EMEL...', error);
+        });
 };
