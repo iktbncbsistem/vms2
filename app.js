@@ -295,7 +295,8 @@ if(vehicleForm) {
             });
 
             // Hantar semua data ke Database Supabase
-            const { error: insertError } = await supabaseClient.from('tempahan').insert([{
+            // Hantar semua data ke Database Supabase & tarik ID baharu (.select)
+            const { data: insertData, error: insertError } = await supabaseClient.from('tempahan').insert([{
                 id_pemohon: currentUser.id,
                 nama_pemohon: document.getElementById('applicantName').value,
                 no_telefon: document.getElementById('phone').value,
@@ -308,15 +309,35 @@ if(vehicleForm) {
                 masa_bertolak: document.getElementById('departTime').value,
                 masa_balik: document.getElementById('returnTime').value,
                 fail_surat: fileUrl,
-                fail_penumpang: filePenumpangUrl, // Link upload penumpang
-                fail_peralatan: filePeralatanUrl, // Link upload peralatan
+                fail_penumpang: filePenumpangUrl, 
+                fail_peralatan: filePeralatanUrl, 
                 senarai_penumpang: passengers,
                 senarai_peralatan: equipments,
                 status: 'Menunggu Semakan'
-            }]);
+            }]).select();
 
             if (insertError) throw insertError;
+            
+            // Dapatkan ID permohonan yang baru dicipta
+            const newId = insertData[0].id;
+            const noRujBaru = `VMS-${newId.toString().padStart(4, '0')}`;
+            
+            // 1. AUTO-EMEL KEPADA SEMUA URUSETIA
+            const { data: senaraiUrusetia } = await supabaseClient.from('profil').select('nama, email').eq('peranan', 'urusetia');
+            if (senaraiUrusetia) {
+                senaraiUrusetia.forEach(u => {
+                    if(u.email) hantarEmelNotifikasi(u.nama, u.email, noRujBaru, "Permohonan Baharu", `Terdapat permohonan baharu dari ${document.getElementById('applicantName').value} yang memerlukan semakan awal pihak Urusetia.`);
+                });
+            }
+
             alert("Permohonan berjaya dihantar!");
+            
+            // Pilihan Notifikasi WhatsApp (Kekal sebagai backup)
+            const nomborUrusetia = '60172243822'; 
+            const teksWA = `*PERMOHONAN KENDERAAN BAHARU (VMS)* 🚐\n\nSalam Urusetia, terdapat permohonan baharu yang memerlukan semakan awal:\n\n📌 *No. Rujukan:* ${noRujBaru}\n👤 *Pemohon:* ${document.getElementById('applicantName').value}\n📍 *Destinasi:* ${document.getElementById('location').value}\n📅 *Tarikh:* ${document.getElementById('tripDate').value}\n\nSila log masuk ke sistem VMS https://vms.is.iktbnchembong.com untuk tindakan lanjut. Terima kasih!`;
+            window.open(`https://api.whatsapp.com/send?phone=${nomborUrusetia}&text=${encodeURIComponent(teksWA)}`, '_blank');
+            
+            vehicleForm.reset();
            // ==========================================
             // NOTIFIKASI WHATSAPP KE URUSETIA
             // ==========================================
@@ -501,14 +522,33 @@ async function muatSenaraiUrusetia() {
     });
     div.innerHTML = html + `</tbody></table></div>`;
 }
+
 // ==========================================
 // FUNGSI PENGESAHAN URUSETIA (BAHAGIAN B)
 // ==========================================
 async function sahkanUrusetia(id) {
     if(!confirm("Adakah anda pasti borang ini lengkap dan terdapat kenderaan/pemandu yang tersedia pada tarikh tersebut?")) return;
+    
+    document.body.style.cursor = 'wait';
     const { error } = await supabaseClient.from('tempahan').update({ status: 'Menunggu Kelulusan' }).eq('id', id);
-    if(error) alert("Ralat: " + error.message);
-    else { alert("Pengesahan berjaya! Permohonan telah dihantar kepada Pelulus."); muatSenaraiUrusetia(); }
+    
+    if(error) {
+        document.body.style.cursor = 'default';
+        alert("Ralat: " + error.message);
+    } else { 
+        // 2. AUTO-EMEL KEPADA SEMUA PELULUS
+        const { data: senaraiPelulus } = await supabaseClient.from('profil').select('nama, email').eq('peranan', 'pelulus');
+        const noRuj = `VMS-${id.toString().padStart(4, '0')}`;
+        if (senaraiPelulus) {
+            senaraiPelulus.forEach(p => {
+                if(p.email) hantarEmelNotifikasi(p.nama, p.email, noRuj, "Menunggu Kelulusan", "Permohonan ini telah disemak logistiknya oleh Urusetia dan kini sedia untuk kelulusan anda.");
+            });
+        }
+        
+        document.body.style.cursor = 'default';
+        alert("Pengesahan berjaya! Permohonan dan notifikasi e-mel telah dihantar kepada Pelulus."); 
+        muatSenaraiUrusetia(); 
+    }
 }
 
 // ==========================================
@@ -916,33 +956,21 @@ async function muatSenaraiPelulus() {
 // ==========================================
 window.updateStatus = async function(id, statusBaru) {
     let dataUpdate = { status: statusBaru };
-    let catatanEmel = "-"; // Menyimpan catatan untuk dihantar ke emel
+    let catatanEmel = "-"; 
 
-    // 1. Jika butang 'Tolak' ditekan
     if (statusBaru === 'Tolak') {
-        // Pop-up minta catatan
         const alasan = prompt(`PERMOHONAN DITOLAK\nSila masukkan catatan/sebab (Pilihan - Boleh biarkan kosong):`);
-        
-        // Jika pengguna tekan butang "Cancel", batalkan proses
         if (alasan === null) return; 
-        
-        // Jika ada catatan ditaip, simpan ke database dan e-mel
         if (alasan.trim() !== '') {
             dataUpdate.alasan_perubahan = `[Ditolak] Catatan: ${alasan.trim()}`;
             catatanEmel = alasan.trim();
         }
     } else {
-        // 2. Jika butang 'Lulus' ditekan
         if(!confirm(`Adakah anda pasti untuk menukar status kepada: ${statusBaru}?`)) return;
     }
     
     document.body.style.cursor = 'wait';
-    
-    // Kemas kini status di database
-    const { error } = await supabaseClient
-        .from('tempahan')
-        .update(dataUpdate)
-        .eq('id', id);
+    const { error } = await supabaseClient.from('tempahan').update(dataUpdate).eq('id', id);
         
     if (error) {
         document.body.style.cursor = 'default';
@@ -951,28 +979,29 @@ window.updateStatus = async function(id, statusBaru) {
     }
 
     // ==========================================
-    // PROSES AUTO-HANTAR EMEL KEPADA PEMOHON
+    // PROSES AUTO-HANTAR EMEL 
     // ==========================================
-    try {
-        // Tarik ID Pemohon dari permohonan
-        const { data: tData } = await supabaseClient.from('tempahan').select('id_pemohon, nama_pemohon').eq('id', id).single();
-        if (tData && tData.id_pemohon) {
-            // Tarik alamat E-mel dari profil pemohon
-            const { data: pData } = await supabaseClient.from('profil').select('email').eq('id', tData.id_pemohon).single();
-            if (pData && pData.email) {
-                const noRujukan = `VMS-${id.toString().padStart(4, '0')}`;
-                
-                // Tembak E-mel!
-                hantarEmelNotifikasi(tData.nama_pemohon, pData.email, noRujukan, statusBaru, catatanEmel);
-            }
+    const noRujukan = `VMS-${id.toString().padStart(4, '0')}`;
+    
+    if (statusBaru === 'Lulus') {
+        // 3. JIKA LULUS: EMEL KEPADA SEMUA URUSETIA
+        const { data: urusetiaList } = await supabaseClient.from('profil').select('nama, email').eq('peranan', 'urusetia');
+        if (urusetiaList) {
+            urusetiaList.forEach(u => {
+                if(u.email) hantarEmelNotifikasi(u.nama, u.email, noRujukan, "Lulus (Menunggu Agihan)", "Pelulus telah MELULUSKAN permohonan ini. Sila laksanakan agihan kenderaan dan pemandu segera.");
+            });
         }
-    } catch(err) {
-        console.log("Ralat menarik data email: ", err);
+    } else if (statusBaru === 'Tolak') {
+        // JIKA TOLAK: EMEL KEPADA PEMOHON SAHAJA
+        const { data: tData } = await supabaseClient.from('tempahan').select('id_pemohon, nama_pemohon').eq('id', id).single();
+        if (tData) {
+            const { data: pData } = await supabaseClient.from('profil').select('email').eq('id', tData.id_pemohon).single();
+            if (pData && pData.email) hantarEmelNotifikasi(tData.nama_pemohon, pData.email, noRujukan, "Ditolak", catatanEmel);
+        }
     }
     
     document.body.style.cursor = 'default';
     alert(`Berjaya! Permohonan telah dikemas kini kepada status: ${statusBaru}`);
-    
     if(currentUser) semakPeranan(); 
 };
 // ==========================================
