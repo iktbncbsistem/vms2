@@ -1386,7 +1386,7 @@ async function semakJadualAwam(mod = 'aktif') {
     
     if(tbody) tbody.innerHTML = html;
 }
-}
+
 // ==========================================
 // FUNGSI PENGURUSAN TETAPAN (URUSETIA SAHAJA)
 // ==========================================
