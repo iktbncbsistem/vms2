@@ -563,18 +563,21 @@ async function agihKenderaan(id) {
         });
     }
 
-    window.paparButiran = function (index) {
-        const sumberCache = (typeof cacheUrusetia !== 'undefined') ? cacheUrusetia : window.cacheUrusetia;
-        const t = sumberCache && sumberCache[index];
+   window.paparButiran = async function (id) {
+        document.body.style.cursor = 'wait';
+        
+        // Tarik data paling terkini secara terus dari pangkalan data (Selesaikan isu cache)
+        const { data: t, error } = await supabaseClient.from('tempahan').select('*').eq('id', id).single();
+            
+        document.body.style.cursor = 'default';
 
-        if (!t) {
-            alert('Rekod permohonan tidak dijumpai.');
+        if (error || !t) {
+            alert('Rekod permohonan tidak dijumpai dalam sistem.');
             return;
         }
        
-        const noRujukan = 'VMS-' + String(t.id ?? Number(index) + 1).padStart(4, '0');       
+        const noRujukan = 'VMS-' + String(t.id).padStart(4, '0');       
         const tarikhDihantar = t.created_at ? new Date(t.created_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
-
         // Senarai Penumpang Table
         const penumpang = Array.isArray(t.senarai_penumpang) ? t.senarai_penumpang : [];
         let rowsPenumpang = '';
@@ -1721,7 +1724,7 @@ async function mampatkanGambar(file) {
 // FUNGSI EDIT & PADAM DI JADUAL AWAM (URUSETIA SAHAJA)
 // ==========================================
 window.editTempahanAwam = async function(id) {
-    const t = cacheUrusetia.find(x => x.id === id);
+    const t = window.cacheTugasanPemandu.find(x => x.id === id);
     if (!t) return alert("Rekod tidak dijumpai.");
 
     const { data: pemanduList } = await supabaseClient.from('pemandu').select('*');
