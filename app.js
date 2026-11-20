@@ -359,12 +359,18 @@ if(vehicleForm) {
 // ==========================================
 // URUSETIA: PAPAR & AGIH KENDERAAN
 // ==========================================
-async function muatSenaraiUrusetia() {
+window.muatSenaraiUrusetia = async function() {
     if (typeof kemaskiniLencanaTugasan === 'function') kemaskiniLencanaTugasan();
 
     const div = document.getElementById('senarai-tempahan-urusetia');
     if(!div) return;
-    div.innerHTML = "<p style='padding: 20px; color:#64748b; text-align:center;'>Memuatkan data... ⏳</p>";
+    
+    // Kosongkan cache lama dan tunjuk status loading dengan jelas
+    cacheUrusetia = [];
+    div.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
+            <p style='padding: 20px; color:#0284c7; text-align:center; font-weight:bold;'>🔄 reloading... ⏳</p>
+        </div>`;
 
     // 1. Tarik permohonan yang perlu tindakan (Menunggu Semakan & Lulus)
     const { data: tempahan, error } = await supabaseClient.from('tempahan').select('*').in('status', ['Menunggu Semakan', 'Lulus']).order('id', {ascending: false});
