@@ -382,7 +382,7 @@ window.muatSenaraiUrusetia = async function() {
         <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
             <div class="table-header-gradient" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>📋 Senarai Tindakan & Pengesahan Urusetia</span>
-                <button class="btn btn-light" onclick="muatSenaraiUrusetia()" style="padding:6px 12px; font-size:12px; color:#0f172a; border-radius:6px; cursor:pointer; font-weight:bold; border:none;">🔄 Segarkan</button>
+                <button class="btn btn-light" onclick="muatSenaraiUrusetia()" style="padding:6px 12px; font-size:12px; color:#0f172a; border-radius:6px; cursor:pointer; font-weight:bold; border:none;">🔄 Refresh</button>
             </div>
             <div style="padding: 30px; text-align:center; color:#64748b;">Tiada permohonan baharu buat masa ini.</div>
         </div>`;
@@ -403,7 +403,7 @@ window.muatSenaraiUrusetia = async function() {
     <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
         <div class="table-header-gradient" style="display:flex; justify-content:space-between; align-items:center;">
             <span>📋 Senarai Tindakan & Pengesahan Urusetia</span>
-            <button class="btn btn-light" onclick="muatSenaraiUrusetia()" style="padding:6px 12px; font-size:12px; color:#0f172a; border-radius:6px; cursor:pointer; font-weight:bold; border:none; box-shadow:0 2px 4px rgba(0,0,0,0.1);">🔄 Segarkan</button>
+            <button class="btn btn-light" onclick="muatSenaraiUrusetia()" style="padding:6px 12px; font-size:12px; color:#0f172a; border-radius:6px; cursor:pointer; font-weight:bold; border:none; box-shadow:0 2px 4px rgba(0,0,0,0.1);">🔄 Refresh</button>
         </div>
         <table class="vms-table-modern">
             <thead>
