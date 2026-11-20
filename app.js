@@ -1,0 +1,2271 @@
+// GUNA KUNCI SUPABASE BOS
+const supabaseUrl = 'https://eazdfwzifcsfayapyshv.supabase.co';
+const supabaseKey = 'sb_publishable_IVJA3hCseLo_d39XX9RzMg_Nz4p8az2';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+// ==========================================
+// FUNGSI KESELAMATAN GLOBAL (ANTI-XSS)
+// ==========================================
+window.vmsEscape = function(value) {
+    if (value === null || value === undefined) return '-';
+    return String(value).replace(/[&<>"']/g, function (char) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[char];
+    });
+};
+
+let currentUser = null;
+let cacheUrusetia = []; // Untuk simpan data permohonan modal
+
+// Utility tambah baris jadual pemohon
+function tambahBaris(tableId) {
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    const tr = tbody.querySelector('tr').cloneNode(true);
+    tr.querySelectorAll('input').forEach(input => input.value = '');
+    tbody.appendChild(tr);
+}
+
+// ==========================================
+// PENGURUSAN SESI LOG MASUK & PERANAN
+// ==========================================
+async function loginGoogle() {
+    await supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
+}
+async function logout() {
+    await supabaseClient.auth.signOut();
+    location.reload();
+}
+window.onload = async function() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+        currentUser = session.user;
+        document.getElementById('btnLogout').classList.remove('hidden');
+        semakPeranan(); 
+    } else {
+        document.getElementById('skrin-login').classList.remove('hidden');
+    }
+};
+
+async function semakPeranan() {
+    try {
+        // 1. Semak profil pengguna dalam pangkalan data
+        let { data, error } = await supabaseClient.from('profil').select('peranan, nama, gambar_profil').eq('id', currentUser.id).single();    
+        
+        // PAPARKAN AVATAR DI HEADER
+        const headerAvatar = document.getElementById('headerAvatar');
+        if (headerAvatar) {
+            headerAvatar.classList.remove('hidden');
+            if (data && data.gambar_profil) {
+                headerAvatar.src = data.gambar_profil;
+            } else {
+                // Jika tiada gambar, guna huruf awalan nama (auto-generate)
+                const namaPapar = data && data.nama ? data.nama : currentUser.email;
+                headerAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(namaPapar)}&background=0284c7&color=fff&bold=true`;
+            }
+        }     
+        window.userRole = data ? data.peranan : 'pemohon';
+        
+        // 2. Jika profil TIADA (pengguna baharu), daftar secara automatik!
+        if (!data) {
+            const { error: insertErr } = await supabaseClient.from('profil').insert([{
+                id: currentUser.id,
+                email: currentUser.email,
+                nama: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
+                peranan: 'pemohon',
+                log_terakhir: new Date().toISOString()
+            }]);
+
+            if (insertErr) {
+                console.error("Ralat pendaftaran automatik:", insertErr);
+                alert("Gagal mendaftar! Sila pastikan sistem RLS (Row Level Security) di Supabase diaktifkan dengan polisi INSERT yang betul.");
+                return;
+            }
+            
+            // Tetapkan data lalai sementara
+            data = { peranan: 'pemohon', nama: currentUser.user_metadata?.full_name || currentUser.email };
+        } else {
+            // Jika profil wujud, kemas kini masa log masuk
+            await supabaseClient.from('profil').update({
+                email: currentUser.email,
+                log_terakhir: new Date().toISOString()
+            }).eq('id', currentUser.id);
+        }
+
+        // 3. Paparan UI selepas disahkan berjaya
+        document.getElementById('skrin-login').classList.add('hidden');
+        document.getElementById('sistem-tab-utama').classList.remove('hidden');
+        const headerUtama = document.getElementById('header-utama');
+        if (headerUtama) headerUtama.classList.remove('hidden');
+
+        if (typeof semakJadualAwam === 'function') semakJadualAwam('aktif');
+
+        // 4. Buka tab mengikut peranan
+        if (data.peranan === 'pemohon') {
+            const btnTabMohon = document.getElementById('btnTabMohon');
+            const ruangCarian = document.getElementById('ruang-carian-jadual');
+            if (btnTabMohon) btnTabMohon.classList.remove('hidden');
+            if (ruangCarian) ruangCarian.classList.remove('hidden');
+            
+            const appNameField = document.getElementById('applicantName');
+            if (appNameField) appNameField.value = data.nama;
+
+            if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
+        }
+        else if (data.peranan === 'urusetia') {                         
+            const thTindakan = document.getElementById('headerTindakanJadual');
+            if(thTindakan) thTindakan.classList.remove('hidden');            
+            document.getElementById('btnTabUrusetia').classList.remove('hidden');
+            document.getElementById('btnTabMohon').classList.remove('hidden');
+            const btnTabTetapan = document.getElementById('btnTabTetapan');
+            if (btnTabTetapan) btnTabTetapan.classList.remove('hidden');
+            const btnTabBahagian = document.getElementById('btnTabBahagian');
+           if (btnTabBahagian) btnTabBahagian.classList.remove('hidden');
+            
+            if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
+            if (typeof muatSenaraiUrusetia === 'function') muatSenaraiUrusetia();
+        } 
+        else if (data.peranan === 'pelulus') {
+            const btnTabPelulus = document.getElementById('btnTabPelulus');
+            if (btnTabPelulus) btnTabPelulus.classList.remove('hidden');
+            
+            // PELULUS BOLEH MOHON KENDERAAN
+            document.getElementById('btnTabMohon').classList.remove('hidden');
+            
+            // PELULUS BOLEH KAWAL PERANAN PENGGUNA
+            const btnTabPengguna = document.getElementById('btnTabPengguna');
+            if (btnTabPengguna) btnTabPengguna.classList.remove('hidden');
+            
+            if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
+            if (typeof muatSenaraiPelulus === 'function') muatSenaraiPelulus();
+        }        
+        
+        else if (data.peranan === 'pemandu') {
+            const btnTabPemandu = document.getElementById('btnTabPemandu');
+            if (btnTabPemandu) btnTabPemandu.classList.remove('hidden');
+            tukarTab('pemandu');
+        }
+        if (typeof kemaskiniLencanaTugasan === 'function') kemaskiniLencanaTugasan();
+    } catch (err) {
+        console.error("Ralat semak peranan:", err);
+    }
+}
+
+// ==========================================
+// FUNGSI TOGGLE TAB UTAMA (KALIS RALAT)
+// ==========================================
+window.tukarTab = function(tabName) {
+    const semuaTab = [
+        'tab-jadual-awam', 
+        'tab-mohon-kenderaan', 
+        'dashboard-pemohon', 
+        'tab-dashboard-urusetia', 
+        'tab-tetapan-urusetia', 
+        'tab-tetapan-pengguna', 
+        'tab-dashboard-pelulus',
+        'tab-tetapan-bahagian',
+        'tab-tugasan-pemandu'
+    ];
+    semuaTab.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
+
+    const semuaButang = ['btnTabJadual', 'btnTabMohon', 'btnTabUrusetia', 'btnTabTetapan', 'btnTabPengguna', 'btnTabPelulus', 'btnTabBahagian'];
+    semuaButang.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.style.background = '#f1f5f9';
+            btn.style.color = '#64748b';
+            btn.style.fontWeight = '600';
+            btn.style.borderBottom = '1px solid #cbd5e1';
+        }
+    });
+
+    let idTabBuka = '';
+    let idBtnBuka = '';
+
+    if (tabName === 'jadual') { 
+        idTabBuka = 'tab-jadual-awam'; idBtnBuka = 'btnTabJadual'; 
+    }
+    else if (tabName === 'mohon') {
+        idTabBuka = document.getElementById('tab-mohon-kenderaan') ? 'tab-mohon-kenderaan' : 'dashboard-pemohon';
+        idBtnBuka = 'btnTabMohon';
+        if(typeof muatDraf === 'function') muatDraf(); 
+    }
+    else if (tabName === 'urusetia') { 
+        idTabBuka = 'tab-dashboard-urusetia'; idBtnBuka = 'btnTabUrusetia'; 
+        muatSenaraiUrusetia();
+    }
+    else if (tabName === 'tetapan') { 
+        idTabBuka = 'tab-tetapan-urusetia'; idBtnBuka = 'btnTabTetapan'; 
+        if(typeof muatTetapan === 'function') muatTetapan();
+    }
+    else if (tabName === 'pengguna') { 
+        idTabBuka = 'tab-tetapan-pengguna'; idBtnBuka = 'btnTabPengguna'; 
+        muatSenaraiPengguna();
+    }
+    else if (tabName === 'pelulus') { 
+        idTabBuka = 'tab-dashboard-pelulus'; idBtnBuka = 'btnTabPelulus'; 
+    }
+    else if (tabName === 'bahagian') {
+        idTabBuka = 'tab-tetapan-bahagian';
+        idBtnBuka = 'btnTabBahagian';
+        muatSenaraiBahagian();
+    }
+    else if (tabName === 'pemandu') { 
+        idTabBuka = 'tab-tugasan-pemandu'; 
+        idBtnBuka = 'btnTabPemandu'; 
+        if(typeof muatTugasanPemandu === 'function') muatTugasanPemandu();
+    }
+
+    const tabDibuka = document.getElementById(idTabBuka);
+    if (tabDibuka) {
+        tabDibuka.classList.remove('hidden');
+        const borang = document.getElementById('ruangBorangPemohon');
+        if (borang) borang.classList.remove('hidden');
+    }
+
+    const btnDibuka = document.getElementById(idBtnBuka);
+    if (btnDibuka) {
+        btnDibuka.style.background = 'white';
+        btnDibuka.style.color = '#1767c2';
+        btnDibuka.style.fontWeight = '700';
+        btnDibuka.style.borderBottom = 'none';
+    }
+};
+window.muatSejarahPemohon = function() { semakJadualAwam('aktif'); };
+
+// ==========================================
+// PEMOHON: HANTAR BORANG KE SUPABASE
+// ==========================================
+const vehicleForm = document.getElementById('vehicleForm');
+if(vehicleForm) {
+    vehicleForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btnSubmit = document.getElementById('btnSubmit');
+        const originalText = btnSubmit.innerHTML;
+        
+        // PENGESAHAN KESELAMATAN INPUT (ANTI-XSS & FORMAT Validation)
+        const applicantName = document.getElementById('applicantName').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        
+        if (applicantName.length > 150 || /<[^>]*>/g.test(applicantName)) {
+            return alert("Ralat: Format nama tidak sah atau mengandungi aksara terlarang.");
+        }
+        if (!/^[\d\-\+\s]+$/.test(phone)) {
+            return alert("Ralat: Sila masukkan format nombor telefon yang betul.");
+        }
+
+        btnSubmit.innerHTML = '⏳ Menghantar...';
+        btnSubmit.disabled = true;
+
+       try {
+            // Upload Fail Surat Arahan Rasmi
+            let fileUpload = document.getElementById('fileUpload').files[0];
+            let fileUrl = null;
+            if (fileUpload) {
+                fileUpload = await mampatkanGambar(fileUpload);
+                const fileName = `surat_${Date.now()}_${Math.floor(Math.random()*1000)}.${fileUpload.name.split('.').pop()}`;
+                const { error: uploadError } = await supabaseClient.storage.from('dokumen_sokongan').upload(fileName, fileUpload);
+                if (uploadError) throw uploadError;
+                fileUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fileName).data.publicUrl;
+            }
+
+            // Upload Fail Senarai Penumpang (Jika Ada)
+            let failPenumpang = document.getElementById('failSenaraiPenumpang') ? document.getElementById('failSenaraiPenumpang').files[0] : null;
+            let filePenumpangUrl = null;
+            if (failPenumpang) {
+                failPenumpang = await mampatkanGambar(failPenumpang);
+                const fName = `penumpang_${Date.now()}_${Math.floor(Math.random()*1000)}.${failPenumpang.name.split('.').pop()}`;
+                const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failPenumpang);
+                if (upErr) throw upErr;
+                filePenumpangUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+            }
+
+            // Upload Fail Senarai Peralatan (Jika Ada)
+            let failPeralatan = document.getElementById('failSenaraiPeralatan') ? document.getElementById('failSenaraiPeralatan').files[0] : null;
+            let filePeralatanUrl = null;
+            if (failPeralatan) {
+                failPeralatan = await mampatkanGambar(failPeralatan);
+                const fName = `peralatan_${Date.now()}_${Math.floor(Math.random()*1000)}.${failPeralatan.name.split('.').pop()}`;
+                const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failPeralatan);
+                if (upErr) throw upErr;
+                filePeralatanUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+            }
+
+            // Kumpul Data Penumpang (Jadual)
+            const passengers = [];
+            document.querySelectorAll('#tblPassengers tbody tr').forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                if (inputs.length >= 4 && inputs[0].value.trim()) {
+                    passengers.push({ nama: window.vmsEscape(inputs[0].value), kp: window.vmsEscape(inputs[1].value), telefon: window.vmsEscape(inputs[2].value), bahagian: window.vmsEscape(inputs[3].value) });
+                }
+            });
+            
+            // Kumpul Data Peralatan (Jadual)
+            const equipments = [];
+            document.querySelectorAll('#tblEquipment tbody tr').forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                if (inputs.length >= 4 && inputs[0].value.trim()) {
+                    equipments.push({ nama: window.vmsEscape(inputs[0].value), kuantiti: window.vmsEscape(inputs[1].value), unit: window.vmsEscape(inputs[2].value), catatan: window.vmsEscape(inputs[3].value) });
+                }
+            });
+
+            // Hantar semua data ke Database Supabase & tarik ID baharu (.select)
+            const { data: insertData, error: insertError } = await supabaseClient.from('tempahan').insert([{
+                id_pemohon: currentUser.id,
+                nama_pemohon: applicantName,
+                no_telefon: phone,
+                bahagian: document.getElementById('pilihanBahagian').value,
+                tujuan: document.getElementById('tujuanPermohonan').value,
+                destinasi: document.getElementById('location').value,
+                lokasi: document.getElementById('location').value, // backup column
+                tarikh_pergi: document.getElementById('tripDate').value,
+                tarikh_balik: document.getElementById('returnDate').value,                
+                masa_bertolak: document.getElementById('departTime').value,
+                masa_balik: document.getElementById('returnTime').value,
+                fail_surat: fileUrl,
+                fail_penumpang: filePenumpangUrl, 
+                fail_peralatan: filePeralatanUrl, 
+                senarai_penumpang: passengers,
+                senarai_peralatan: equipments,
+                status: 'Menunggu Semakan'
+            }]).select();
+
+            if (insertError) throw insertError;
+            
+            // Dapatkan ID permohonan yang baru dicipta
+            const newId = insertData[0].id;
+            const noRujBaru = `VMS-${newId.toString().padStart(4, '0')}`;
+            
+            // 1. AUTO-EMEL KEPADA SEMUA URUSETIA
+            const { data: senaraiUrusetia } = await supabaseClient.from('profil').select('nama, email').eq('peranan', 'urusetia');
+            if (senaraiUrusetia) {
+                senaraiUrusetia.forEach(u => {
+                    if(u.email) hantarEmelNotifikasi(u.nama, u.email, noRujBaru, "Permohonan Baharu", `Terdapat permohonan baharu dari ${applicantName} yang memerlukan semakan awal pihak Urusetia.`);
+                });
+            }
+
+            alert("Permohonan berjaya dihantar!");
+            
+            // Pilihan Notifikasi WhatsApp
+            const nomborUrusetia = '60172243822'; 
+            const teksWA = `*PERMOHONAN KENDERAAN BAHARU (VMS)* 🚐\n\nSalam Urusetia, terdapat permohonan baharu yang memerlukan semakan awal:\n\n📌 *No. Rujukan:* ${noRujBaru}\n👤 *Pemohon:* ${applicantName}\n📍 *Destinasi:* ${document.getElementById('location').value}\n📅 *Tarikh:* ${document.getElementById('tripDate').value}\n\nSila log masuk ke sistem VMS https://vms.is.iktbnchembong.com untuk tindakan lanjut. Terima kasih!`;
+            window.open(`https://api.whatsapp.com/send?phone=${nomborUrusetia}&text=${encodeURIComponent(teksWA)}`, '_blank');
+            
+           vehicleForm.reset();
+            
+            if(currentUser) localStorage.removeItem('vms_draft_' + currentUser.id);
+            
+            tukarTab('jadual');
+            muatSejarahPemohon();
+            
+        } catch (error) {
+            alert("Ralat menghantar permohonan: " + error.message);
+        } finally {
+            btnSubmit.innerHTML = originalText;
+            btnSubmit.disabled = false;
+        }
+    });
+}
+            
+
+// ==========================================
+// URUSETIA: PAPAR & AGIH KENDERAAN
+// ==========================================
+window.muatSenaraiUrusetia = async function(btn = null) {
+    if (typeof kemaskiniLencanaTugasan === 'function') kemaskiniLencanaTugasan();
+
+    const div = document.getElementById('senarai-tempahan-urusetia');
+    if(!div) return;
+
+    if (btn) {
+        btn.innerHTML = '⏳ Menyegarkan...';
+        btn.style.opacity = '0.7';
+        await new Promise(r => setTimeout(r, 400));
+    }
+
+    const { data: tempahan, error } = await supabaseClient.from('tempahan').select('*').in('status', ['Menunggu Semakan', 'Lulus']).order('id', {ascending: false});
+    if (error) return div.innerHTML = "<p style='color:red;'>Ralat: " + window.vmsEscape(error.message) + "</p>";
+    
+    if (!tempahan || tempahan.length === 0) {
+        return div.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
+            <div class="table-header-gradient" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>📋 Senarai Tindakan & Pengesahan Urusetia</span>
+                <button class="btn-modern btn-modern-butiran" onclick="muatSenaraiUrusetia(this)" style="background: rgba(255,255,255,0.9); color: #0f172a; border: none; padding: 6px 12px; z-index: 10;">🔄 Segarkan</button>
+            </div>
+            <div style="padding: 40px; text-align:center; color:#64748b;">
+                <span style="font-size:30px; display:block; margin-bottom:10px;">📭</span>
+                Tiada permohonan baharu buat masa ini.
+            </div>
+        </div>`;
+    }
+
+    cacheUrusetia = tempahan; 
+    
+    const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
+    const { data: pemanduList } = await supabaseClient.from('pemandu').select('*');
+    const { data: tugasanAktif } = await supabaseClient.from('tempahan')
+        .select('nama_pemandu, id_kenderaan, tarikh_pergi, masa_bertolak, tarikh_balik, masa_balik')
+        .eq('status', 'Selesai Diagih');
+
+    let html = `
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
+        <div class="table-header-gradient" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>📋 Senarai Tindakan & Pengesahan Urusetia</span>
+            <button class="btn-modern btn-modern-butiran" onclick="muatSenaraiUrusetia(this)" style="background: rgba(255,255,255,0.9); color: #0f172a; border: none; padding: 6px 12px; z-index: 10;">🔄 Segarkan</button>
+        </div>
+        <table class="vms-table-modern">
+            <thead>
+                <tr>
+                    <th style="width:15%;">No. Rujukan</th>
+                    <th style="width:25%;">Pemohon & Lokasi</th>
+                    <th style="width:20%;">Tarikh Perjalanan</th>
+                    <th style="width:15%; text-align:center;">Status</th>
+                    <th style="width:25%; text-align:center;">Tindakan Urusetia</th>
+                </tr>
+            </thead>
+            <tbody>`;
+    
+    tempahan.forEach((t) => {
+        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+
+        const semasaMula = new Date(`${t.tarikh_pergi}T${t.masa_bertolak || '00:00:00'}`);
+        const semasaTamat = new Date(`${t.tarikh_balik}T${t.masa_balik || '23:59:00'}`);
+
+        let badgeWarna = t.status === 'Menunggu Semakan' ? '#d97706' : '#10b981';
+        let badgeBg = t.status === 'Menunggu Semakan' ? '#fef3c7' : '#d1fae5';
+
+        html += `<tr>
+            <td><span class="badge-rujukan">${noRujukan}</span></td>
+            <td>
+                <strong style="color:#0f172a; font-size:15px; display:block; margin-bottom:4px;">${window.vmsEscape(t.nama_pemohon)}</strong>
+                <span style="color:#64748b; font-size:13px; display:flex; align-items:center; gap:6px;">📍 ${window.vmsEscape(t.destinasi || t.lokasi)}</span>
+            </td>
+            <td>
+                <span style="color:#0f172a; font-weight:700; display:flex; align-items:center; gap:8px; font-size:14px;">📅 ${window.vmsEscape(t.tarikh_pergi)}</span>
+                <small style="color:#64748b; margin-left:24px; display:block; margin-top:4px;">⏰ ${window.vmsEscape(t.masa_bertolak || '-')}</small>
+            </td>
+            <td style="text-align:center;">
+                <span style="background:${badgeBg}; color:${badgeWarna}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; display:inline-block;">${window.vmsEscape(t.status)}</span>
+            </td>
+            <td style="text-align:center;">
+        `;
+
+        if (t.status === 'Menunggu Semakan') {
+            html += `
+                <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                    <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})">🔍 Butiran</button>
+                    <button class="btn-modern btn-modern-lulus" onclick="sahkanUrusetia(${t.id})">✅ Sahkan</button>
+                    <button class="btn-modern btn-modern-tolak" onclick="updateStatus(${t.id}, 'Tolak')">❌ Tolak</button>
+                </div>
+            `;
+        } else if (t.status === 'Lulus') {
+            html += `
+                <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})" style="margin-bottom:8px; width:100%; justify-content:center;">🔍 Butiran Penuh</button>
+            `;
+            
+            html += `<select id="pemandu-${t.id}" style="margin-bottom:8px; width:100%; padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; outline:none; font-family:inherit;">
+                    <option value="">-- Pilih Pemandu --</option>
+                    <option value="${window.vmsEscape(t.nama_pemohon)}" style="font-weight:bold; color:#0284c7;">👉 [Pandu Sendiri] - ${window.vmsEscape(t.nama_pemohon)}</option>`;
+            if (pemanduList) {
+                pemanduList.forEach(p => {
+                    let clash = false;
+                    if (tugasanAktif) {
+                        for (let rekod of tugasanAktif) {
+                            if (rekod.nama_pemandu === p.nama) {
+                                const rekodMula = new Date(`${rekod.tarikh_pergi}T${rekod.masa_bertolak || '00:00:00'}`);
+                                const rekodTamat = new Date(`${rekod.tarikh_balik}T${rekod.masa_balik || '23:59:00'}`);
+                                if (semasaMula < rekodTamat && semasaTamat > rekodMula) { clash = true; break; }
+                            }
+                        }
+                    }
+                    const labelNama = p.kategori === 'Gantian' ? `${p.nama} (Gantian)` : p.nama;
+                    if (clash) {
+                        html += `<option value="${window.vmsEscape(labelNama)}" disabled style="color:#ef4444; background:#fee2e2;">⛔ ${window.vmsEscape(labelNama)} (Bertugas)</option>`;
+                    } else {
+                        html += `<option value="${window.vmsEscape(labelNama)}">${window.vmsEscape(labelNama)}</option>`;
+                    }
+                });
+            }
+            
+            html += `</select>
+                <select id="kenderaan-${t.id}" style="margin-bottom:10px; width:100%; padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; outline:none; font-family:inherit;">
+                    <option value="">-- Pilih Kenderaan --</option>`;
+            if (kenderaanList) {
+               kenderaanList.forEach(k => {
+                    let clash = false;
+                    if (tugasanAktif) {
+                        for (let rekod of tugasanAktif) {
+                            if (rekod.id_kenderaan == k.id) {
+                                const rekodMula = new Date(`${rekod.tarikh_pergi}T${rekod.masa_bertolak || '00:00:00'}`);
+                                const rekodTamat = new Date(`${rekod.tarikh_balik}T${rekod.masa_balik || '23:59:00'}`);
+                                if (semasaMula < rekodTamat && semasaTamat > rekodMula) { clash = true; break; }
+                            }
+                        }
+                    }
+                    const labelKategori = k.jenis_kenderaan ? `[${k.jenis_kenderaan}] ` : '';
+                    if (clash) {
+                        html += `<option value="${window.vmsEscape(k.id)}" disabled style="color:#ef4444; background:#fee2e2;">⛔ ${window.vmsEscape(labelKategori)}${window.vmsEscape(k.model)} (${window.vmsEscape(k.no_plat)}) (Ditempah)</option>`;
+                    } else {
+                        html += `<option value="${window.vmsEscape(k.id)}">${window.vmsEscape(labelKategori)}${window.vmsEscape(k.model)} (${window.vmsEscape(k.no_plat)})</option>`;
+                    }
+                });
+            }
+            html += `</select>
+                <button class="btn-modern btn-modern-lulus" onclick="agihKenderaan(${t.id})" style="width:100%; justify-content:center; box-shadow:none;">🚙 Sahkan Agihan</button>`;
+        }
+        html += `</td></tr>`;
+    });
+    div.innerHTML = html + `</tbody></table></div>`;
+}
+
+
+// ==========================================
+// FUNGSI PENGESAHAN URUSETIA (BAHAGIAN B)
+// ==========================================
+async function sahkanUrusetia(id) {
+    if(!confirm("Adakah anda pasti borang ini lengkap dan terdapat kenderaan/pemandu yang tersedia pada tarikh tersebut?")) return;
+    
+    document.body.style.cursor = 'wait';
+    const { error } = await supabaseClient.from('tempahan').update({ status: 'Menunggu Kelulusan' }).eq('id', id);
+    
+    if(error) {
+        document.body.style.cursor = 'default';
+        alert("Ralat: " + error.message);
+    } else { 
+        const { data: senaraiPelulus } = await supabaseClient.from('profil').select('nama, email').eq('peranan', 'pelulus');
+        const noRuj = `VMS-${id.toString().padStart(4, '0')}`;
+        if (senaraiPelulus) {
+            senaraiPelulus.forEach(p => {
+                if(p.email) hantarEmelNotifikasi(p.nama, p.email, noRuj, "Menunggu Kelulusan", "Permohonan ini telah disemak logistiknya oleh Urusetia dan kini sedia untuk kelulusan anda.");
+            });
+        }
+        
+        document.body.style.cursor = 'default';
+        alert("Pengesahan berjaya! Permohonan dan notifikasi e-mel telah dihantar kepada Pelulus."); 
+        muatSenaraiUrusetia(); 
+    }
+}
+
+// ==========================================
+// FUNGSI AGIHAN KENDERAAN & PEMANDU (URUSETIA)
+// ==========================================
+async function agihKenderaan(id) {
+    const idKenderaan = document.getElementById(`kenderaan-${id}`).value;
+    const namaPemandu = document.getElementById(`pemandu-${id}`).value;
+    
+    if (!idKenderaan || !namaPemandu) {
+        alert("Sila pastikan bos telah memilih Pemandu DAN Kenderaan!");
+        return;
+    }
+
+    document.body.style.cursor = 'wait'; 
+
+    try {
+        const t = (typeof cacheUrusetia !== 'undefined') ? cacheUrusetia.find(x => x.id === id) : null;
+        if (!t) throw new Error("Maklumat tempahan tidak dijumpai dalam memori.");
+
+        const semasaMula = new Date(`${t.tarikh_pergi}T${t.masa_bertolak || '00:00:00'}`);
+        const semasaTamat = new Date(`${t.tarikh_balik}T${t.masa_balik || '23:59:00'}`);
+
+        const { data: semakan, error: ralatSemakan } = await supabaseClient
+            .from('tempahan')
+            .select('id, nama_pemandu, id_kenderaan, tarikh_pergi, masa_bertolak, tarikh_balik, masa_balik')
+            .eq('status', 'Selesai Diagih')
+            .neq('id', id) 
+            .or(`id_kenderaan.eq.${idKenderaan},nama_pemandu.eq.${namaPemandu}`); 
+
+        if (ralatSemakan) throw ralatSemakan;
+
+        if (semakan && semakan.length > 0) {
+            for (let rekod of semakan) {
+                const rekodMula = new Date(`${rekod.tarikh_pergi}T${rekod.masa_bertolak || '00:00:00'}`);
+                const rekodTamat = new Date(`${rekod.tarikh_balik}T${rekod.masa_balik || '23:59:00'}`);
+
+                if (semasaMula < rekodTamat && semasaTamat > rekodMula) {
+                    let mesejBentrokan = rekod.nama_pemandu === namaPemandu 
+                        ? `👨‍✈️ Pemandu (${window.vmsEscape(namaPemandu)}) sedang bertugas.` 
+                        : `🚘 Kenderaan tersebut sedang digunakan.`;
+                    
+                    alert(`🛑 AGIHAN DITOLAK!\n\n${mesejBentrokan}\nSistem mendapati ia telah dijadualkan untuk tugasan lain dari:\n\n🗓️ ${rekod.tarikh_pergi} (${rekod.masa_bertolak})\nhingga\n🗓️ ${rekod.tarikh_balik} (${rekod.masa_balik})\n\nSila pilih pemandu / kenderaan yang lain.`);
+                    
+                    document.body.style.cursor = 'default';
+                    return; 
+                }
+            }
+        }
+
+        const { error } = await supabaseClient.from('tempahan').update({ 
+            id_kenderaan: idKenderaan, 
+            nama_pemandu: namaPemandu, 
+            status: 'Selesai Diagih' 
+        }).eq('id', id);
+
+        if (error) throw error;
+        
+        const noRuj = `VMS-${id.toString().padStart(4, '0')}`;
+        
+        const { data: pemohonProfil } = await supabaseClient.from('profil').select('email').eq('id', t.id_pemohon).single();
+        if (pemohonProfil && pemohonProfil.email) {
+            hantarEmelNotifikasi(t.nama_pemohon, pemohonProfil.email, noRuj, "Selesai Diagih", `Kenderaan dan Pemandu (${namaPemandu}) telah ditetapkan untuk perjalanan anda.`);
+        }
+        
+        const { data: pemanduProfil } = await supabaseClient.from('profil').select('nama, email').ilike('nama', namaPemandu).single();
+        if (pemanduProfil && pemanduProfil.email) {
+            hantarEmelNotifikasi(pemanduProfil.nama, pemanduProfil.email, noRuj, "Tugasan Baharu 🚗", `Anda telah ditugaskan sebagai pemandu untuk perjalanan ini (Lokasi: ${t.destinasi || t.lokasi}). Sila semak tab 'Tugasan Saya' di sistem.`);
+        }
+        
+        alert("✅ Mantap bos! Pemandu dan Kenderaan telah berjaya diagihkan."); 
+        muatSenaraiUrusetia();
+        
+    } catch (error) {
+        alert("Ralat sistem: " + error.message);
+    }
+    
+    document.body.style.cursor = 'default';
+}
+
+/* VMS - PAPARAN BUTIRAN FORMAT BORANG FIZIKAL RASMI */
+window.paparButiran = async function (id) {
+    document.body.style.cursor = 'wait';
+    
+    const { data: t, error } = await supabaseClient.from('tempahan').select('*').eq('id', id).single();
+        
+    document.body.style.cursor = 'default';
+
+    if (error || !t) {
+        alert('Rekod permohonan tidak dijumpai dalam sistem.');
+        return;
+    }
+   
+    const noRujukan = 'VMS-' + String(t.id).padStart(4, '0');       
+    const tarikhDihantar = t.created_at ? new Date(t.created_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
+    
+    const penumpang = Array.isArray(t.senarai_penumpang) ? t.senarai_penumpang : [];
+    let rowsPenumpang = '';
+    if (penumpang.length > 0) {
+        rowsPenumpang = penumpang.map((p, i) => `
+            <tr>
+                <td style="text-align:center; width: 40px;">${i + 1}</td>
+                <td><strong>${window.vmsEscape(p.nama)}</strong></td>
+                <td style="text-align:center;">${window.vmsEscape(p.kp)}</td>
+                <td style="text-align:center;">${window.vmsEscape(p.telefon)}</td>
+                <td>${window.vmsEscape(p.bahagian)}</td>
+            </tr>
+        `).join('');
+    } else {
+        rowsPenumpang = `<tr><td colspan="5" style="text-align:center; color:#64748b; font-style:italic; padding:10px;">Tiada penumpang berdaftar (atau butiran dalam lampiran).</td></tr>`;
+    }
+
+    const alatan = Array.isArray(t.senarai_peralatan) ? t.senarai_peralatan : [];
+    let rowsAlatan = '';
+    if (alatan.length > 0) {
+        rowsAlatan = alatan.map((a, i) => `
+            <tr>
+                <td style="text-align:center; width: 40px;">${i + 1}</td>
+                <td><strong>${window.vmsEscape(a.nama)}</strong></td>
+                <td style="text-align:center;">${window.vmsEscape(a.kuantiti)}</td>
+                <td style="text-align:center;">${window.vmsEscape(a.unit)}</td>
+                <td>${window.vmsEscape(a.catatan)}</td>
+            </tr>
+        `).join('');
+    } else {
+        rowsAlatan = `<tr><td colspan="5" style="text-align:center; color:#64748b; font-style:italic; padding:8px;">Tiada peralatan dibawa.</td></tr>`;
+    }
+
+    const failSuratHtml = t.fail_surat 
+        ? `<a href="${window.vmsEscape(t.fail_surat)}" target="_blank" style="color:#0284c7; font-weight:700; text-decoration:underline;">📎 Buka Dokumen Lampiran (Surat Arahan)</a>`
+        : `<span style="color:#94a3b8; font-style:italic;">Tiada lampiran</span>`;
+
+    let statusBadgeColor = '#f59e0b';
+    if (t.status === 'Lulus' || t.status === 'Selesai Diagih') statusBadgeColor = '#10b981';
+    else if (t.status === 'Tolak') statusBadgeColor = '#ef4444';
+
+    let alasanPerubahanHtml = '';
+    if (t.alasan_perubahan) {
+        alasanPerubahanHtml = `
+        <tr>
+            <td class="label-cell" style="color:#b91c1c; background:#fee2e2;">Catatan Tindakan</td>
+            <td class="val-cell" colspan="3" style="color:#b91c1c; background:#fef2f2; font-style:italic; font-weight:bold;">
+                ${window.vmsEscape(t.alasan_perubahan)}
+            </td>
+        </tr>`;
+    }
+
+    const modalHtml = `
+        <div class="vms-sheet-container">
+            <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
+                
+                <div class="sheet-actions-bar no-print">
+                    <button type="button" id="btnTutupVms" class="btn btn-outline" style="background:#fff; color:#0f172a; font-weight:600;">
+                        ← Kembali ke Jadual
+                    </button>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" onclick="window.print()" class="btn btn-primary" style="background:#0284c7; color:#fff;">
+                            🖨️ Cetak / Simpan PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="vms-sheet">
+                    <div class="sheet-header">
+                        <img src="https://eazdfwzifcsfayapyshv.supabase.co/storage/v1/object/public/image/logo.png" alt="Logo" class="sheet-logo">
+                        <div class="sheet-header-text">
+                            <h2>Institut Kemahiran Tinggi Belia Negara Chembong</h2>
+                            <p style="font-weight:600; text-transform:uppercase;">Borang Permohonan Penggunaan Kenderaan Rasmi Jabatan</p>
+                            <p style="font-size:11px; color:#64748b;">Kementerian Belia dan Sukan Malaysia</p>
+                        </div>
+                        <div class="sheet-doc-badge">
+                            No. Rujukan:
+                            <strong>${window.vmsEscape(noRujukan)}</strong>
+                            <span style="display:block; margin-top:4px;">Tarikh: ${window.vmsEscape(tarikhDihantar)}</span>
+                        </div>
+                    </div>
+
+                    <div class="sheet-section-title">Bahagian 1: Maklumat Pemohon</div>
+                    <table class="sheet-table-info">
+                        <tr>
+                            <td class="label-cell">Nama Penuh Pemohon</td>
+                            <td class="val-cell"><strong>${window.vmsEscape(t.nama_pemohon)}</strong></td>
+                            <td class="label-cell">No. Telefon</td>
+                            <td class="val-cell">${window.vmsEscape(t.no_telefon)}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Bahagian / Cawangan</td>
+                            <td class="val-cell">${window.vmsEscape(t.bahagian)}</td>
+                            <td class="label-cell">Tujuan Permohonan</td>
+                            <td class="val-cell">${window.vmsEscape(t.tujuan)}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Dokumen Sokongan</td>
+                            <td class="val-cell" colspan="3">${failSuratHtml}</td>
+                        </tr>
+                    </table>
+
+                    <div class="sheet-section-title">Bahagian 2: Butiran Perjalanan & Lokasi</div>
+                    <table class="sheet-table-info">
+                        <tr>
+                            <td class="label-cell">Destinasi / Lokasi</td>
+                            <td class="val-cell" colspan="3"><strong>${window.vmsEscape(t.destinasi || t.lokasi)}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Tarikh Bertolak</td>
+                            <td class="val-cell">${window.vmsEscape(t.tarikh_pergi)}</td>
+                            <td class="label-cell">Masa Bertolak</td>
+                            <td class="val-cell">${window.vmsEscape(t.masa_bertolak)}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Tarikh Pulang</td>
+                            <td class="val-cell">${window.vmsEscape(t.tarikh_balik)}</td>
+                            <td class="label-cell">Masa Pulang</td>
+                            <td class="val-cell">${window.vmsEscape(t.masa_balik)}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Keperluan Pemandu</td>
+                            <td class="val-cell">${window.vmsEscape(t.keperluan_pemandu || 'Tunggu / Mengikut Urusan')}</td>
+                            <td class="label-cell">Catatan Permohonan</td>
+                            <td class="val-cell">${window.vmsEscape(t.catatan || '-')}</td>
+                        </tr>
+                    </table>
+
+                    <div class="sheet-section-title">Bahagian 3: Senarai Penumpang (${penumpang.length} Orang)</div>
+                    <table class="sheet-data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px; text-align:center;">Bil</th>
+                                <th>Nama Penuh</th>
+                                <th style="text-align:center;">No. Kad Pengenalan</th>
+                                <th style="text-align:center;">No. Telefon</th>
+                                <th>Bahagian / Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsPenumpang}
+                        </tbody>
+                    </table>
+                    ${t.fail_penumpang ? `<div style="padding: 8px 10px; background: #f8fafc; border: 1px solid #94a3b8; border-top: none; font-size: 12px;"><a href="${window.vmsEscape(t.fail_penumpang)}" target="_blank" style="color:#0284c7; font-weight:700; text-decoration:underline;">📎 Klik di sini untuk membuka Dokumen Lampiran Senarai Penumpang</a></div>` : ''}
+
+                    <div class="sheet-section-title">Bahagian 4: Peralatan / Kelengkapan Dibawa</div>
+                    <table class="sheet-data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px; text-align:center;">Bil</th>
+                                <th>Nama Peralatan</th>
+                                <th style="text-align:center; width:80px;">Kuantiti</th>
+                                <th style="text-align:center; width:80px;">Unit</th>
+                                <th>Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsAlatan}
+                        </tbody>
+                    </table>
+                    ${t.fail_peralatan ? `<div style="padding: 8px 10px; background: #f8fafc; border: 1px solid #94a3b8; border-top: none; font-size: 12px;"><a href="${window.vmsEscape(t.fail_peralatan)}" target="_blank" style="color:#0284c7; font-weight:700; text-decoration:underline;">📎 Klik di sini untuk membuka Dokumen Lampiran Senarai Peralatan</a></div>` : ''}
+                   
+                    <div class="sheet-section-title">Bahagian 5: Pengesahan & Kelulusan Rasmi</div>
+                    <table class="sheet-table-info">
+                        <tr>
+                            <td class="label-cell">Status Permohonan</td>
+                            <td class="val-cell">
+                                <span class="sign-status-box" style="background:${statusBadgeColor}20; color:${statusBadgeColor}; border:1px solid ${statusBadgeColor};">
+                                    ${window.vmsEscape(t.status)}
+                                </span>
+                            </td>
+                            <td class="label-cell">Pemandu Ditugaskan</td>
+                            <td class="val-cell"><strong>${window.vmsEscape(t.nama_pemandu || 'Belum Diagih')}</strong></td>
+                        </tr>
+                        ${alasanPerubahanHtml}
+                    </table>
+
+                    <div class="sheet-sign-box">
+                        <div class="sign-card">
+                            <div class="sign-card-title">1. Perakuan Pemohon</div>
+                            <p style="margin: 0; color:#475569; font-size:10px;">Saya memperakui bahawa permohonan ini adalah bagi tujuan urusan rasmi kerajaan.</p>
+                            <div style="height: 45px;"></div>
+                            <div style="border-top: 1px dotted #94a3b8; padding-top:4px;">
+                                <strong>Nama:</strong> ${window.vmsEscape(t.nama_pemohon)}<br>
+                                <strong>Tarikh:</strong> ${window.vmsEscape(tarikhDihantar)}
+                            </div>
+                        </div>
+
+                        <div class="sign-card">
+                            <div class="sign-card-title">2. Pengesahan Urusetia / Pelulus</div>
+                            <p style="margin: 0; color:#475569; font-size:10px;">Permohonan telah disemak ketersediaan logistik dan kelulusan rasmi.</p>
+                            <div style="height: 45px;"></div>
+                            <div style="border-top: 1px dotted #94a3b8; padding-top:4px;">
+                                <strong>Status:</strong> ${window.vmsEscape(t.status)}<br>
+                                <strong>Tarikh Disemak:</strong> ${window.vmsEscape(tarikhDihantar)}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+
+    const isiModal = document.getElementById('isiModalUrusetia');
+    const modal = document.getElementById('modalUrusetia');
+    const tabUtama = document.getElementById('sistem-tab-utama');
+
+    if (!isiModal || !modal) return;
+
+    isiModal.innerHTML = modalHtml;
+
+    if (tabUtama) tabUtama.classList.add('hidden');
+    modal.classList.remove('hidden');
+    window.scrollTo(0, 0);
+
+    const btnTutup = document.getElementById('btnTutupVms');
+    if (btnTutup) {
+        btnTutup.addEventListener('click', function () {
+            modal.classList.add('hidden');
+            if (tabUtama) tabUtama.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        });
+    }
+};
+
+// ==========================================
+// PELULUS: LULUS ATAU TOLAK PERMOHONAN
+// ==========================================
+async function muatSenaraiPelulus() {
+    if (typeof kemaskiniLencanaTugasan === 'function') kemaskiniLencanaTugasan();
+    
+    const div = document.getElementById('senarai-tempahan-pelulus');
+    if (!div) return;
+    
+    div.innerHTML = "Memuatkan data kelulusan...";
+
+    const { data: tempahan, error } = await supabaseClient
+        .from('tempahan')
+        .select('*')
+        .eq('status', 'Menunggu Kelulusan')
+        .order('id', {ascending: false});
+        
+    if (error) { 
+        div.innerHTML = "Ralat: " + window.vmsEscape(error.message); 
+        return; 
+    }
+    
+    if (!tempahan || tempahan.length === 0) { 
+        div.innerHTML = "<p style='padding: 15px;'>Tiada kelulusan diperlukan setakat ini.</p>"; 
+        return; 
+    }
+
+    let html = `
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
+        <div class="table-header-gradient">
+            ⏳ Senarai Menunggu Kelulusan
+        </div>
+        <table class="vms-table-modern">
+            <thead>
+                <tr>
+                    <th style="width:15%;">No. Rujukan</th>
+                    <th style="width:35%;">Pemohon & Destinasi</th>
+                    <th style="width:20%;">Tarikh Perjalanan</th>
+                    <th style="width:30%; text-align:center;">Tindakan Pelulus</th>
+                </tr>
+            </thead>
+            <tbody>`;
+            
+    tempahan.forEach((t, index) => {
+        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+        cacheUrusetia[index] = t; 
+
+        html += `<tr>
+            <td><span class="badge-rujukan">${noRujukan}</span></td>
+            <td>
+                <strong style="color:#0f172a; font-size:15px; display:block; margin-bottom:4px;">${window.vmsEscape(t.nama_pemohon)}</strong>
+                <span style="color:#64748b; font-size:13px; display:flex; align-items:center; gap:6px;">📍 ${window.vmsEscape(t.destinasi || t.lokasi)}</span>
+            </td>
+            <td>
+                <span style="color:#0f172a; font-weight:700; display:flex; align-items:center; gap:8px; font-size:14px;">📅 ${window.vmsEscape(t.tarikh_pergi)}</span>
+            </td>
+            <td style="text-align:center;">
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})">🔍 Butiran</button>
+                    <button class="btn-modern btn-modern-lulus" onclick="updateStatus(${t.id}, 'Lulus')">✔️ Lulus</button>
+                    <button class="btn-modern btn-modern-tolak" onclick="updateStatus(${t.id}, 'Tolak')">❌ Tolak</button>
+                </div>
+            </td>
+        </tr>`;
+    });
+    
+    div.innerHTML = html + `</tbody></table></div>`;
+}
+
+// ==========================================
+// FUNGSI KEMAS KINI STATUS & AUTO-EMEL 
+// ==========================================
+window.updateStatus = async function(id, statusBaru) {
+    let dataUpdate = { status: statusBaru };
+    let catatanEmel = "-"; 
+
+    if (statusBaru === 'Tolak') {
+        const alasan = prompt(`PERMOHONAN DITOLAK\nSila masukkan catatan/sebab (Pilihan - Boleh biarkan kosong):`);
+        if (alasan === null) return; 
+        if (alasan.trim() !== '') {
+            dataUpdate.alasan_perubahan = `[Ditolak] Catatan: ${alasan.trim()}`;
+            catatanEmel = alasan.trim();
+        }
+    } else {
+        if(!confirm(`Adakah anda pasti untuk menukar status kepada: ${statusBaru}?`)) return;
+    }
+    
+    document.body.style.cursor = 'wait';
+    const { error } = await supabaseClient.from('tempahan').update(dataUpdate).eq('id', id);
+        
+    if (error) {
+        document.body.style.cursor = 'default';
+        alert("Ralat mengemas kini status: " + error.message);
+        return;
+    }
+
+    const noRujukan = `VMS-${id.toString().padStart(4, '0')}`;
+    
+    if (statusBaru === 'Lulus') {
+        const { data: urusetiaList } = await supabaseClient.from('profil').select('nama, email').eq('peranan', 'urusetia');
+        if (urusetiaList) {
+            urusetiaList.forEach(u => {
+                if(u.email) hantarEmelNotifikasi(u.nama, u.email, noRujukan, "Lulus (Menunggu Agihan)", "Pelulus telah MELULUSKAN permohonan ini. Sila laksanakan agihan kenderaan dan pemandu segera.");
+            });
+        }
+    } else if (statusBaru === 'Tolak') {
+        const { data: tData } = await supabaseClient.from('tempahan').select('id_pemohon, nama_pemohon').eq('id', id).single();
+        if (tData) {
+            const { data: pData } = await supabaseClient.from('profil').select('email').eq('id', tData.id_pemohon).single();
+            if (pData && pData.email) hantarEmelNotifikasi(tData.nama_pemohon, pData.email, noRujukan, "Ditolak", catatanEmel);
+        }
+    }
+    
+    document.body.style.cursor = 'default';
+    alert(`Berjaya! Permohonan telah dikemas kini kepada status: ${statusBaru}`);
+    if(currentUser) semakPeranan(); 
+};
+
+// ==========================================
+// FUNGSI BUTANG TAMBAH PENUMPANG & PERALATAN
+// ==========================================
+window.kemaskiniBil = function(tableId) {
+    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+    rows.forEach((row, index) => {
+        row.cells[0].innerText = index + 1;
+    });
+};
+
+const btnAddPassenger = document.getElementById('btnAddPassenger');
+if (btnAddPassenger) {
+    btnAddPassenger.addEventListener('click', function() {
+        const tbody = document.querySelector('#tblPassengers tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="text-align:center; font-weight:600;"></td>
+            <td><input type="text" placeholder="Nama Penuh" class="form-control" name="nama_penumpang[]" oninput="this.value = this.value.toUpperCase();" style="text-transform: uppercase; width: 100%;"></td>
+            <td><input type="text" placeholder="No. K/P" class="form-control" name="kp_penumpang[]" maxlength="14" oninput="this.value = this.value.replace(/[^0-9-]/g, '');" style="width: 100%;"></td>
+            <td><input type="tel" placeholder="No. Telefon" class="form-control" name="tel_penumpang[]" style="width: 100%;"></td>
+            <td><input type="text" placeholder="Bahagian" class="form-control" name="bahagian_penumpang[]" oninput="this.value = this.value.toUpperCase();" style="text-transform: uppercase; width: 100%;"></td>
+            <td style="text-align:center;"><button type="button" class="btn-delete" onclick="this.closest('tr').remove(); kemaskiniBil('tblPassengers')" title="Padam">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+        kemaskiniBil('tblPassengers');
+    });
+}
+
+const btnAddEquipment = document.getElementById('btnAddEquipment');
+if (btnAddEquipment) {
+    btnAddEquipment.addEventListener('click', function() {
+        const tbody = document.querySelector('#tblEquipment tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="text-align:center; font-weight:600;"></td>
+            <td><input type="text" placeholder="Nama Peralatan" required></td>
+            <td><input type="number" placeholder="Kuantiti" min="1" required></td>
+            <td><input type="text" placeholder="Unit (Cth: Kotak)" required></td>
+            <td><input type="text" placeholder="Catatan"></td>
+            <td style="text-align:center;"><button type="button" class="btn-delete" onclick="this.closest('tr').remove(); kemaskiniBil('tblEquipment')" title="Padam">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+        kemaskiniBil('tblEquipment');
+    });
+}
+
+// ==========================================
+// FUNGSI SIMPAN DRAF (LOCAL STORAGE)
+// ==========================================
+const btnDraft = document.getElementById('btnDraft');
+if (btnDraft) {
+    btnDraft.addEventListener('click', function() {
+        if (!currentUser) return alert("Sila log masuk dahulu.");
+
+        const draftData = {
+            phone: document.getElementById('phone') ? document.getElementById('phone').value : '',
+            department: document.getElementById('department') ? document.getElementById('department').value : '',
+            purpose: document.getElementById('purpose') ? document.getElementById('purpose').value : '',
+            tripDate: document.getElementById('tripDate') ? document.getElementById('tripDate').value : '',
+            returnDate: document.getElementById('returnDate') ? document.getElementById('returnDate').value : '',
+            departTime: document.getElementById('departTime') ? document.getElementById('departTime').value : '',
+            returnTime: document.getElementById('returnTime') ? document.getElementById('returnTime').value : '',
+            location: document.getElementById('location') ? document.getElementById('location').value : '',
+            tripPurpose: document.getElementById('tripPurpose') ? document.getElementById('tripPurpose').value : '',
+            passengerCount: document.getElementById('passengerCount') ? document.getElementById('passengerCount').value : '1'
+        };
+
+        const checkedDriver = document.querySelector('input[name="driver"]:checked');
+        if (checkedDriver) draftData.driver = checkedDriver.value;
+
+        const passengers = [];
+        document.querySelectorAll('#tblPassengers tbody tr').forEach(tr => {
+            const inputs = tr.querySelectorAll('input');
+            if (inputs.length >= 4) {
+                passengers.push({ nama: window.vmsEscape(inputs[0].value), kp: window.vmsEscape(inputs[1].value), telefon: window.vmsEscape(inputs[2].value), bahagian: window.vmsEscape(inputs[3].value) });
+            }
+        });
+        draftData.passengers = passengers;
+
+        const equipments = [];
+        document.querySelectorAll('#tblEquipment tbody tr').forEach(tr => {
+            const inputs = tr.querySelectorAll('input');
+            if (inputs.length >= 4) {
+                equipments.push({ nama: window.vmsEscape(inputs[0].value), kuantiti: window.vmsEscape(inputs[1].value), unit: window.vmsEscape(inputs[2].value), catatan: window.vmsEscape(inputs[3].value) });
+            }
+        });
+        draftData.equipments = equipments;
+
+        localStorage.setItem('vms_draft_' + currentUser.id, JSON.stringify(draftData));
+        alert("✅ Draf berjaya disimpan!\nAnda boleh sambung isi borang ini pada bila-bila masa (dari peranti ini).\n\nNota: Lampiran surat rasmi perlu dimuat naik semula semasa penghantaran.");
+    });
+}
+
+function muatDraf() {
+    if (!currentUser) return;
+    const saved = localStorage.getItem('vms_draft_' + currentUser.id);
+    if (saved) {
+        try {
+            const draftData = JSON.parse(saved);
+            
+            if(document.getElementById('phone') && draftData.phone) document.getElementById('phone').value = draftData.phone;
+            if(document.getElementById('department') && draftData.department) document.getElementById('department').value = draftData.department;
+            if(document.getElementById('purpose') && draftData.purpose) document.getElementById('purpose').value = draftData.purpose;
+            if(document.getElementById('tripDate') && draftData.tripDate) document.getElementById('tripDate').value = draftData.tripDate;
+            if(document.getElementById('returnDate') && draftData.returnDate) document.getElementById('returnDate').value = draftData.returnDate;
+            if(document.getElementById('departTime') && draftData.departTime) document.getElementById('departTime').value = draftData.departTime;
+            if(document.getElementById('returnTime') && draftData.returnTime) document.getElementById('returnTime').value = draftData.returnTime;
+            if(document.getElementById('location') && draftData.location) document.getElementById('location').value = draftData.location;
+            if(document.getElementById('tripPurpose') && draftData.tripPurpose) document.getElementById('tripPurpose').value = draftData.tripPurpose;
+            if(document.getElementById('passengerCount') && draftData.passengerCount) document.getElementById('passengerCount').value = draftData.passengerCount;
+            
+            if (draftData.driver) {
+                const radio = document.querySelector(`input[name="driver"][value="${draftData.driver}"]`);
+                if (radio) radio.checked = true;
+            }
+
+            const tbodyP = document.querySelector('#tblPassengers tbody');
+            if (tbodyP && draftData.passengers && draftData.passengers.length > 0) {
+                tbodyP.innerHTML = '';
+                draftData.passengers.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="text-align:center; font-weight:600;"></td>
+                        <td><input type="text" placeholder="Nama Penuh" required value="${p.nama}"></td>
+                        <td><input type="text" placeholder="No. K/P" required value="${p.kp}"></td>
+                        <td><input type="tel" placeholder="No. Telefon" required value="${p.telefon}"></td>
+                        <td><input type="text" placeholder="Bahagian" required value="${p.bahagian}"></td>
+                        <td style="text-align:center;"><button type="button" class="btn-delete" onclick="this.closest('tr').remove(); kemaskiniBil('tblPassengers')" title="Padam">✕</button></td>
+                    `;
+                    tbodyP.appendChild(tr);
+                });
+                kemaskiniBil('tblPassengers');
+            }
+
+            const tbodyE = document.querySelector('#tblEquipment tbody');
+            if (tbodyE && draftData.equipments && draftData.equipments.length > 0) {
+                tbodyE.innerHTML = '';
+                draftData.equipments.forEach(e => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="text-align:center; font-weight:600;"></td>
+                        <td><input type="text" placeholder="Nama Peralatan" required value="${e.nama}"></td>
+                        <td><input type="number" placeholder="Kuantiti" min="1" required value="${e.kuantiti}"></td>
+                        <td><input type="text" placeholder="Unit (Cth: Kotak)" required value="${e.unit}"></td>
+                        <td><input type="text" placeholder="Catatan" value="${e.catatan}"></td>
+                        <td style="text-align:center;"><button type="button" class="btn-delete" onclick="this.closest('tr').remove(); kemaskiniBil('tblEquipment')" title="Padam">✕</button></td>
+                    `;
+                    tbodyE.appendChild(tr);
+                });
+                kemaskiniBil('tblEquipment');
+            }
+        } catch (e) {
+            console.error("Ralat memuatkan draf:", e);
+        }
+    }
+}
+
+// ==========================================
+// FUNGSI CARIAN JADUAL AWAM & PERMOHONAN SAYA
+// ==========================================
+async function semakJadualAwam(mod = 'aktif') {
+    const tMula = document.getElementById('cariTarikhMula') ? document.getElementById('cariTarikhMula').value : '';
+    const tAkhir = document.getElementById('cariTarikhAkhir') ? document.getElementById('cariTarikhAkhir').value : '';
+    const teksCari = document.getElementById('cariTeksJadual') ? document.getElementById('cariTeksJadual').value.toLowerCase() : '';
+    const tbody = document.getElementById('isiJadualAwam');
+    
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px;">Memuatkan rekod... ⏳</td></tr>';
+    
+    const today = new Date().toISOString().split('T')[0];
+    let query = supabaseClient.from('tempahan').select('*').order('tarikh_pergi', {ascending: true});
+    
+    if (mod === 'sejarah') {
+        query = query.lt('tarikh_pergi', today);
+    } else if (mod === 'cari') {
+        if (tMula) query = query.gte('tarikh_pergi', tMula);
+        if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
+    } else {
+        query = query.gte('tarikh_pergi', today);
+        if (document.getElementById('cariTarikhMula')) document.getElementById('cariTarikhMula').value = '';
+        if (document.getElementById('cariTarikhAkhir')) document.getElementById('cariTarikhAkhir').value = '';
+        if (document.getElementById('cariTeksJadual')) document.getElementById('cariTeksJadual').value = '';
+    }
+    
+    const { data, error } = await query;
+    if (error) { if(tbody) tbody.innerHTML = `<tr><td colspan="9" style="color:red; text-align:center; padding:30px;">Ralat: ${window.vmsEscape(error.message)}</td></tr>`; return; }
+    
+    const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model, jenis_kenderaan');
+    
+    const { data: senaraiProfil } = await supabaseClient.from('profil').select('id, nama, gambar_profil');
+    const petaAvatarNama = {};
+    const petaAvatarId = {};
+    if (senaraiProfil) {
+        senaraiProfil.forEach(p => {
+            petaAvatarNama[p.nama] = p.gambar_profil; 
+            petaAvatarId[p.id] = p.gambar_profil; 
+        });
+    }
+
+    const dataDitapis = data.filter(t => {
+        let sah = false;
+        if (t.status === 'Lulus' || t.status === 'Selesai Diagih') sah = true;
+        if (currentUser && t.id_pemohon === currentUser.id) sah = true; 
+        if (!sah) return false;
+
+        if (mod === 'cari' && teksCari) {
+            const kenderaan = senaraiKenderaan && t.id_kenderaan ? senaraiKenderaan.find(x => x.id == t.id_kenderaan) : null;
+            const namaK = kenderaan ? `${kenderaan.no_plat} ${kenderaan.model}`.toLowerCase() : '';
+            return (t.destinasi && t.destinasi.toLowerCase().includes(teksCari)) || 
+                   (t.lokasi && t.lokasi.toLowerCase().includes(teksCari)) || 
+                   (t.nama_pemohon && t.nama_pemohon.toLowerCase().includes(teksCari)) ||
+                   (t.nama_pemandu && t.nama_pemandu.toLowerCase().includes(teksCari)) ||
+                   namaK.includes(teksCari);
+        }
+        return true;
+    });
+    
+    if (!dataDitapis || dataDitapis.length === 0) {
+        if(tbody) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:#64748b;">Tiada rekod perjalanan ditemui.</td></tr>`;
+        return;
+    }
+    
+    cacheUrusetia = dataDitapis; 
+    window.cacheTugasanPemandu = dataDitapis;
+    
+    let namaSaya = '';
+    if (currentUser) {
+        const { data: pData } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
+        if (pData) namaSaya = pData.nama;
+    }
+    
+    const jadualPemandu = {};
+
+    dataDitapis.forEach((t, i) => {
+        t.indexAsal = i; 
+        let pemandu = t.nama_pemandu;
+        if (!pemandu) {
+            pemandu = (t.status === 'Tolak') ? '❌ Dibatalkan (Permohonan Ditolak)' : '⏳ Belum Diagih (Menunggu Urusetia)';
+        }
+        if (!jadualPemandu[pemandu]) jadualPemandu[pemandu] = [];
+        jadualPemandu[pemandu].push(t);
+    });
+
+    let html = '';
+    
+    for (const pemandu in jadualPemandu) {
+        const senaraiTrip = jadualPemandu[pemandu];
+        const jumlahRow = senaraiTrip.length;
+
+        senaraiTrip.forEach((t, index) => {
+            let statusWarna = '#f59e0b'; 
+            let labelStatus = 'Dalam Proses';
+            
+            if (t.status === 'Lulus' || t.status === 'Selesai Diagih') { statusWarna = '#10b981'; labelStatus = 'Sedia'; }
+            else if (t.status === 'Tolak') { statusWarna = '#ef4444'; labelStatus = 'Tidak Diluluskan'; }
+
+            let infoKenderaan = '-';
+            if (t.id_kenderaan && senaraiKenderaan) {
+                const kenderaan = senaraiKenderaan.find(k => k.id == t.id_kenderaan);
+                if (kenderaan) {
+                    const badgeKategori = kenderaan.jenis_kenderaan 
+                        ? `<span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; display:inline-block; margin-bottom:2px;">${window.vmsEscape(kenderaan.jenis_kenderaan)}</span><br>` 
+                        : '';
+                    infoKenderaan = `
+                        ${badgeKategori}
+                        <strong>${window.vmsEscape(kenderaan.model || '-')}</strong><br>
+                        <small style="color:#475569; font-weight:600;">${window.vmsEscape(kenderaan.no_plat || '-')}</small>
+                    `;
+                }
+            }
+
+            html += `<tr>`;
+            
+            if (index === 0) {
+                const stylePemandu = (pemandu.includes('Belum Diagih') || pemandu.includes('Dibatalkan')) ? 'color:#ef4444; font-style:italic;' : 'color:#1e293b; font-weight:700;';
+                const charAvatarD = pemandu.includes('Belum Diagih') ? '?' : (pemandu.includes('Dibatalkan') ? 'X' : pemandu);
+                const urlAvatarPemandu = petaAvatarNama[pemandu] || `https://ui-avatars.com/api/?name=${encodeURIComponent(charAvatarD)}&background=0f172a&color=fff`;
+
+                html += `<td rowspan="${jumlahRow}" style="${stylePemandu} vertical-align: top; background: #f8fafc; border-right: 1px solid #e2e8f0; min-width: 170px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="${window.vmsEscape(urlAvatarPemandu)}" alt="Pemandu" style="width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid #cbd5e1; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                        <span style="line-height:1.2;">${window.vmsEscape(pemandu)}</span>
+                    </div>
+                </td>`;
+            }
+
+            const tarikhMohon = t.created_at ? t.created_at.split('T')[0] : '-';
+            const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+            const urlAvatarPemohon = petaAvatarId[t.id_pemohon] || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.nama_pemohon || 'P')}&background=0284c7&color=fff`;
+
+            html += `
+                <td>
+                    <strong style="color:#102a43;">${window.vmsEscape(tarikhMohon)}</strong><br>
+                   <a onclick="paparButiran(${t.id})" style="color: #0284c7; font-weight: 800; cursor: pointer; text-decoration: underline; font-size: 13px;" title="Klik untuk lihat borang">
+                        ${window.vmsEscape(noRujukan)}
+                    </a>
+                </td>
+                <td>${infoKenderaan}</td>
+                <td>${window.vmsEscape(t.destinasi || t.lokasi || '-')}</td>
+                
+                <td>
+                    <strong style="color:#334155;">${window.vmsEscape(t.masa_bertolak || '-')}</strong><br>
+                    <small style="color:#94a3b8;">${window.vmsEscape(t.tarikh_pergi || '-')}</small>
+                </td>
+                
+                <td>
+                    <strong style="color:#334155;">${window.vmsEscape(t.masa_balik || '-')}</strong><br>
+                    <small style="color:#94a3b8;">${window.vmsEscape(t.tarikh_balik || '-')}</small>
+                </td>
+                
+                <td style="min-width: 160px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                        <img src="${window.vmsEscape(urlAvatarPemohon)}" alt="Pemohon" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">
+                        <div style="font-weight:600; font-size:12px; line-height:1.2;">${window.vmsEscape(t.nama_pemohon || '-')}</div>
+                    </div>
+                    <span style="color:${statusWarna}; font-weight:700; background:${statusWarna}15; padding:4px 10px; border-radius:12px; font-size:11px;">${labelStatus}</span>
+                    
+                    ${(currentUser && t.id_pemohon === currentUser.id && t.nama_pemandu === namaSaya && (t.status === 'Selesai Diagih' || t.status === 'Lulus')) 
+                        ? `<div style="margin-top: 10px;"><button onclick="bukaBorangTugasan(${t.indexAsal}, false)" class="btn" style="font-size:11px; padding:6px 10px; width:100%; background:#0284c7; color:white; border-radius:6px; border:none; font-weight:bold; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);">📝 Isi Odometer & Resit</button></div>` 
+                        : ''}
+                </td>
+
+                <td style="color:#64748b; font-size:12px; max-width: 150px;">
+                    ${t.status === 'Tolak' && t.alasan_perubahan 
+                        ? `<span style="color:#ef4444; font-weight:600;">${window.vmsEscape(t.alasan_perubahan)}</span>` 
+                        : window.vmsEscape(t.catatan || t.tujuan || '-')}
+                </td>`;
+
+          if (window.userRole === 'urusetia') {
+            const tarikhPergi = new Date(t.tarikh_pergi);
+            tarikhPergi.setHours(0,0,0,0);
+            const hariIni = new Date();
+            hariIni.setHours(0,0,0,0);
+            
+            if (tarikhPergi < hariIni) {
+                html += `
+                <td style="text-align:center; white-space:nowrap; background:#f8fafc;">
+                    <button onclick="bukaBorangTugasan(${t.indexAsal}, true)" class="btn-action-icon" title="Lihat Odometer & Resit" style="cursor:pointer; font-size:15px; margin:0 3px; background:none; border:none;">👁️</button>
+                    <button class="btn-action-icon edit" disabled title="Fungsi dikunci: Trip telah berlalu" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none;">✏️</button>
+                    <button class="btn-action-icon delete" disabled title="Fungsi dikunci: Trip telah berlalu" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none;">❌</button>
+                </td>`;
+            } else {
+                html += `
+                <td style="text-align:center; white-space:nowrap; background:#f8fafc;">
+                    <button onclick="bukaBorangTugasan(${t.indexAsal}, true)" class="btn-action-icon" title="Lihat Odometer & Resit" style="cursor:pointer; font-size:15px; margin:0 3px; background:none; border:none;">👁️</button>
+                    <button onclick="editTempahanAwam(${t.id})" class="btn-action-icon edit" title="Kemaskini Tempahan" style="cursor:pointer; margin:0 3px;">✏️</button>
+                    <button class="btn-action-icon delete" disabled title="Fungsi padam dikunci" style="opacity:0.3; cursor:not-allowed; filter:grayscale(100%); pointer-events:none; margin:0 3px;">❌</button>
+                </td>`;
+            }
+        }
+
+            html += `</tr>`;
+        });
+    }
+    
+    if(tbody) tbody.innerHTML = html;
+}
+
+// ==========================================
+// FUNGSI PENGURUSAN TETAPAN (URUSETIA SAHAJA)
+// ==========================================
+async function muatTetapan() {
+    const tbodyP = document.getElementById('jadualTetapanPemandu');
+    if(tbodyP) tbodyP.innerHTML = '<tr><td colspan="3" style="text-align:center;">Memuatkan...</td></tr>';
+    
+    const { data: pData } = await supabaseClient.from('pemandu').select('*').order('id', {ascending: true});
+    if(tbodyP) {
+        if(pData && pData.length > 0) {
+            let htmlP = '';
+            pData.forEach(p => {
+                let badge = p.kategori === 'Gantian' 
+                    ? '<span style="background:#fef3c7; color:#d97706; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Gantian</span>' 
+                    : '<span style="background:#f1f5f9; color:#475569; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Tetap</span>';
+                
+                htmlP += `<tr>
+                            <td><strong>${window.vmsEscape(p.nama)}</strong></td>
+                            <td>${badge}</td>
+                            <td style="text-align:center; white-space:nowrap;">
+                                <button type="button" onclick="editPemandu(${p.id}, '${window.vmsEscape(p.nama)}', '${window.vmsEscape(p.kategori || 'Tetap')}')" title="Kemaskini" style="background:none; border:none; cursor:pointer; font-size:15px; padding:2px 4px; margin:0 3px;">✏️</button>
+                                <button type="button" onclick="padamPemandu(${p.id})" title="Padam" style="background:none; border:none; cursor:pointer; font-size:15px; padding:2px 4px; margin:0 3px; color:#ef4444; font-weight:bold;">✕</button>
+                            </td>
+                          </tr>`;
+            });
+            tbodyP.innerHTML = htmlP;
+        } else {
+            tbodyP.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b;">Tiada rekod pemandu.</td></tr>';
+        }
+    }
+
+    const tbodyK = document.getElementById('jadualTetapanKenderaan');
+    if(tbodyK) tbodyK.innerHTML = '<tr><td colspan="4" style="text-align:center;">Memuatkan...</td></tr>';
+    
+    const { data: kData } = await supabaseClient.from('kenderaan').select('*').order('id', {ascending: true});
+    if(tbodyK) {
+        if(kData && kData.length > 0) {
+            let htmlK = '';
+            kData.forEach(k => {
+                htmlK += `<tr>
+                            <td><strong>${window.vmsEscape(k.jenis_kenderaan || '-')}</strong></td>
+                            <td>${window.vmsEscape(k.model)}</td>
+                            <td><span style="color:#1e293b; font-weight:600;">${window.vmsEscape(k.no_plat)}</span></td>
+                            <td style="text-align:center; white-space:nowrap;">
+                                <button type="button" onclick="editKenderaan(${k.id}, '${window.vmsEscape(k.jenis_kenderaan || '')}', '${window.vmsEscape(k.model || '')}', '${window.vmsEscape(k.no_plat || '')}')" title="Kemaskini" style="background:none; border:none; cursor:pointer; font-size:15px; padding:2px 4px; margin:0 3px;">✏️</button>
+                                <button type="button" onclick="padamKenderaan(${k.id})" title="Padam" style="background:none; border:none; cursor:pointer; font-size:15px; padding:2px 4px; margin:0 3px; color:#ef4444; font-weight:bold;">✕</button>
+                            </td>
+                          </tr>`;
+            });
+            tbodyK.innerHTML = htmlK;
+        } else {
+            tbodyK.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">Tiada rekod kenderaan.</td></tr>';
+        }
+    }
+}
+
+window.tambahPemandu = async function() {
+    const nama = document.getElementById('namaPemanduBaru').value.trim();
+    const kategori = document.getElementById('kategoriPemanduBaru').value;
+    if(!nama) return alert('Sila masukkan nama pemandu!');
+    
+    const { error } = await supabaseClient.from('pemandu').insert([{ nama: nama, kategori: kategori }]);
+    if(error) alert('Ralat: ' + error.message);
+    else { document.getElementById('namaPemanduBaru').value = ''; muatTetapan(); }
+};
+
+window.padamPemandu = async function(id) {
+    if(!confirm('Adakah anda pasti mahu memadam pemandu ini?')) return;
+    const { error } = await supabaseClient.from('pemandu').delete().eq('id', id);
+    if(error) alert('Ralat: ' + error.message);
+    else muatTetapan();
+};
+
+window.tambahKenderaan = async function() {
+    const plat = document.getElementById('platKenderaanBaru').value.trim();
+    const model = document.getElementById('modelKenderaanBaru').value.trim();
+    const jenis = document.getElementById('jenisKenderaanBaru').value.trim();
+
+    if(!plat || !model || !jenis) return alert('Sila masukkan Kategori, Keluaran, dan No. Plat!');
+    
+    const { error } = await supabaseClient.from('kenderaan').insert([{ no_plat: plat, model: model, jenis_kenderaan: jenis }]);
+    if(error) alert('Ralat: ' + error.message);
+    else { 
+        document.getElementById('platKenderaanBaru').value = ''; 
+        document.getElementById('modelKenderaanBaru').value = ''; 
+        document.getElementById('jenisKenderaanBaru').value = ''; 
+        muatTetapan(); 
+    }
+};
+
+window.padamKenderaan = async function(id) {
+    if(!confirm('Adakah anda pasti mahu memadam kenderaan ini?')) return;
+    const { error } = await supabaseClient.from('kenderaan').delete().eq('id', id);
+    if(error) alert('Ralat: ' + error.message);
+    else muatTetapan();
+};
+
+window.editPemandu = async function(id, namaAsal, kategoriAsal) {
+    const namaBaru = prompt("Kemaskini Nama Pemandu:", namaAsal);
+    if (namaBaru === null) return;
+    if (!namaBaru.trim()) return alert("Nama tidak boleh kosong!");
+
+    const kategoriBaru = prompt("Kemaskini Kategori (Taip: Tetap atau Gantian):", kategoriAsal || 'Tetap');
+    if (kategoriBaru === null) return;
+
+    const { error } = await supabaseClient
+        .from('pemandu')
+        .update({ nama: namaBaru.trim(), kategori: kategoriBaru.trim() })
+        .eq('id', id);
+
+    if (error) alert("Ralat: " + error.message);
+    else muatTetapan();
+};
+
+window.editKenderaan = async function(id, jenisAsal, modelAsal, platAsal) {
+    const jenisBaru = prompt("Kemaskini Kategori Kenderaan (Cth: Bas, Van, Kereta, SUV):", jenisAsal || '');
+    if (jenisBaru === null) return;
+    if (!jenisBaru.trim()) return alert("Kategori tidak boleh kosong!");
+
+    const modelBaru = prompt("Kemaskini Keluaran / Model (Cth: Scania, Hiace):", modelAsal || '');
+    if (modelBaru === null) return;
+    if (!modelBaru.trim()) return alert("Keluaran tidak boleh kosong!");
+
+    const platBaru = prompt("Kemaskini No. Plat:", platAsal || '');
+    if (platBaru === null) return;
+    if (!platBaru.trim()) return alert("No. Plat tidak boleh kosong!");
+
+    const { error } = await supabaseClient
+        .from('kenderaan')
+        .update({ 
+            jenis_kenderaan: jenisBaru.trim(), 
+            model: modelBaru.trim(), 
+            no_plat: platBaru.trim() 
+        })
+        .eq('id', id);
+
+    if (error) alert("Ralat: " + error.message);
+    else muatTetapan();
+};
+
+function formatMasaLogin(tarikh) {
+    if (!tarikh) return '<span style="color: #94a3b8; font-style: italic; font-size: 12px;">Belum log masuk</span>';
+    const d = new Date(tarikh);
+    return d.toLocaleString('ms-MY', { 
+        day: '2-digit', month: 'short', year: 'numeric', 
+        hour: '2-digit', minute: '2-digit', hour12: true 
+    });
+}
+
+// ==========================================
+// FUNGSI PENGURUSAN PENGGUNA (URUSETIA SAHAJA)
+// ==========================================
+async function muatSenaraiPengguna() {
+    const tbody = document.getElementById('jadualTetapanPengguna');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 25px;">Memuatkan senarai pengguna... ⏳</td></tr>';
+
+    const { data: users, error } = await supabaseClient
+        .from('profil')
+        .select('*')
+        .order('nama', { ascending: true });
+
+    if (error) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red; padding: 20px;">Ralat: ${window.vmsEscape(error.message)}</td></tr>`;
+        return;
+    }
+
+    if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #64748b;">Tiada rekod pengguna dijumpai.</td></tr>';
+        return;
+    }
+
+    let html = '';
+    users.forEach((u, i) => {
+        const perananSemasa = u.peranan || 'pemohon';
+
+        let badge = '<span style="background:#fee2e2; color:#b91c1c; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Akaun Tidak Aktif</span>';
+        if (perananSemasa === 'pemohon') {
+            badge = '<span style="background:#dbeafe; color:#1d4ed8; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Pemohon</span>';
+        } else if (perananSemasa === 'urusetia') {
+            badge = '<span style="background:#ffedd5; color:#c2410c; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Urusetia</span>';
+        } else if (perananSemasa === 'pelulus') {
+            badge = '<span style="background:#dcfce7; color:#15803d; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Pelulus</span>';
+        } else if (perananSemasa === 'pemandu') {
+            badge = '<span style="background:#fef08a; color:#854d0e; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;">Pemandu</span>';
+        }
+
+        html += `
+            <tr>
+                <td style="text-align: center; font-weight: 600;">${i + 1}</td>
+                <td><strong>${window.vmsEscape(u.nama || '-')}</strong></td>
+                <td style="color: #64748b; font-size: 13px;">${window.vmsEscape(u.email || u.emel || '-')}</td>
+                <td style="color: #64748b; font-size: 13px;">${formatMasaLogin(u.last_sign_in_at || u.log_terakhir)}</td>
+                <td>${badge}</td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                       <select id="select-role-${u.id}" style="width: 130px; padding: 6px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <option value="pemohon" ${perananSemasa === 'pemohon' ? 'selected' : ''}>Akaun Tidak Aktif</option>
+                            <option value="pemohon" ${perananSemasa === 'pemohon' ? 'selected' : ''}>Pemohon</option>
+                            <option value="urusetia" ${perananSemasa === 'urusetia' ? 'selected' : ''}>Urusetia</option>
+                            <option value="pelulus" ${perananSemasa === 'pelulus' ? 'selected' : ''}>Pelulus</option>
+                            <option value="pemandu" ${perananSemasa === 'pemandu' ? 'selected' : ''}>Pemandu</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="simpanPerananUser('${u.id}')" style="padding: 6px 14px; font-size: 12px;">Simpan</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+window.simpanPerananUser = async function(userId) {
+    const selectElem = document.getElementById(`select-role-${userId}`);
+    if (!selectElem) return;
+    const perananBaru = selectElem.value;
+
+    const { error } = await supabaseClient
+        .from('profil')
+        .update({ peranan: perananBaru })
+        .eq('id', userId);
+
+    if (error) {
+        alert("Ralat mengemaskini peranan: " + error.message);
+    } else {
+        alert("Peranan pengguna berjaya dikemaskini!");
+        muatSenaraiPengguna();
+    }
+};
+
+window.semakTujuanLain = function(nilai) {
+    const inputLain = document.getElementById('inputTujuanLain');
+    if (nilai === 'Lain-lain') {
+        inputLain.classList.remove('hidden');
+        inputLain.focus();
+    } else {
+        inputLain.classList.add('hidden');
+        inputLain.value = '';
+    }
+};
+
+// ==========================================
+// FUNGSI PENGURUSAN BAHAGIAN (BERASASKAN ID)
+// ==========================================
+async function muatSenaraiBahagian() {
+    const tbody = document.getElementById('jadualTetapanBahagian');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 25px;">Memuatkan senarai bahagian... ⏳</td></tr>';
+
+    const { data: bahagianData, error } = await supabaseClient
+        .from('bahagian')
+        .select('*')
+        .order('id', { ascending: true });
+
+    if (error) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red; padding: 20px;">Ralat: ${window.vmsEscape(error.message)}</td></tr>`;
+        return;
+    }
+
+    if (!bahagianData || bahagianData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #64748b;">Tiada rekod bahagian dijumpai. Sila klik butang + Tambah Bahagian.</td></tr>';
+        return;
+    }
+
+    let html = '';
+    bahagianData.forEach((b, i) => {
+        html += `
+            <tr>
+                <td style="text-align: center; font-weight: 600;">${i + 1}</td>
+                <td><strong>${window.vmsEscape(b.nama_bahagian)}</strong></td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 15px; justify-content: center; align-items: center;">
+                        <button onclick="editBahagian('${b.id}', '${window.vmsEscape(b.nama_bahagian)}')" style="background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 0; transition: transform 0.2s;" title="Kemaskini" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">✏️</button>
+                        <button onclick="padamBahagian('${b.id}')" style="background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 0; transition: transform 0.2s;" title="Padam" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">❌</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+window.editBahagian = async function(id, namaLama) {
+    const namaBaru = prompt("Kemaskini nama Bahagian / Cawangan:", namaLama);
+    if (!namaBaru || namaBaru.trim() === "" || namaBaru.trim() === namaLama) return;
+
+    const { error } = await supabaseClient
+        .from('bahagian')
+        .update({ nama_bahagian: namaBaru.trim() })
+        .eq('id', id);
+
+    if (error) {
+        alert("Ralat mengemaskini bahagian: " + error.message);
+    } else {
+        muatSenaraiBahagian();
+        if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
+    }
+};
+
+window.padamBahagian = async function(id) {
+    if (!confirm("Adakah anda pasti mahu memadam bahagian ini?")) return;
+
+    const { error } = await supabaseClient
+        .from('bahagian')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        alert("Ralat memadam bahagian: " + error.message);
+    } else {
+        muatSenaraiBahagian();
+        if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
+    }
+};
+
+window.tambahBahagian = async function() {
+    const namaBaharu = prompt("Masukkan nama Bahagian / Cawangan baharu:");
+    
+    if (!namaBaharu || namaBaharu.trim() === "") return; 
+
+    const { error } = await supabaseClient
+        .from('bahagian')
+        .insert([{ nama_bahagian: namaBaharu.trim() }]);
+
+    if (error) {
+        alert("Ralat menambah bahagian: " + error.message);
+    } else {
+        muatSenaraiBahagian();
+        if (typeof muatDropdownBahagian === 'function') muatDropdownBahagian();
+    }
+};
+
+async function muatDropdownBahagian() {
+    const dropdown = document.getElementById('pilihanBahagian');
+    if (!dropdown) return;
+
+    const { data, error } = await supabaseClient
+        .from('bahagian')
+        .select('nama_bahagian')
+        .order('nama_bahagian', { ascending: true });
+
+    if (error) {
+        console.error("Ralat memuatkan dropdown bahagian:", error.message);
+        return;
+    }
+
+    dropdown.innerHTML = '<option value="">Sila pilih bahagian / cawangan</option>';
+
+    if (data && data.length > 0) {
+        data.forEach(b => {
+            dropdown.innerHTML += `<option value="${window.vmsEscape(b.nama_bahagian)}">${window.vmsEscape(b.nama_bahagian)}</option>`;
+        });
+    }
+}
+
+async function mampatkanGambar(file) {
+    if (!file || !file.type.match(/image.*/)) return file; 
+
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1200;
+                const MAX_HEIGHT = 1200;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height && width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                } else if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    resolve(newFile);
+                }, 'image/jpeg', 0.7);
+            };
+        };
+    });
+}
+
+window.editTempahanAwam = async function(id) {
+    const t = window.cacheTugasanPemandu.find(x => x.id === id);
+    if (!t) return alert("Rekod tidak dijumpai.");
+
+    const { data: pemanduList } = await supabaseClient.from('pemandu').select('*');
+    const { data: kenderaanList } = await supabaseClient.from('kenderaan').select('*');
+
+   let pemanduOpts = `<option value="">-- Pilih / Kosongkan Pemandu --</option>
+                       <option value="${window.vmsEscape(t.nama_pemohon)}" ${t.nama_pemandu === t.nama_pemohon ? 'selected' : ''} style="font-weight:bold; color:#0284c7;">👉 [Pandu Sendiri] - ${window.vmsEscape(t.nama_pemohon)}</option>`;
+    if (pemanduList) {
+        pemanduList.forEach(p => {
+            const isSelected = (t.nama_pemandu === p.nama) ? 'selected' : '';
+            pemanduOpts += `<option value="${window.vmsEscape(p.nama)}" ${isSelected}>${window.vmsEscape(p.nama)}</option>`;
+        });
+    }
+
+    let kenderaanOpts = '<option value="">-- Pilih / Kosongkan Kenderaan --</option>';
+    if (kenderaanList) {
+        kenderaanList.forEach(k => {
+            const isSelected = (t.id_kenderaan == k.id) ? 'selected' : '';
+            kenderaanOpts += `<option value="${window.vmsEscape(k.id)}" ${isSelected}>[${window.vmsEscape(k.jenis_kenderaan || '-')}] ${window.vmsEscape(k.no_plat)} - ${window.vmsEscape(k.model)}</option>`;
+        });
+    }
+
+    const modalId = 'modalEditJadual';
+    const sediaAda = document.getElementById(modalId);
+    if (sediaAda) sediaAda.remove();
+
+    const htmlModal = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; display:flex; justify-content:center; align-items:center;">
+        <div style="background:white; padding:25px; border-radius:12px; width:450px; max-width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#102a43; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">✏️ Kemaskini Jadual & Tugasan</h3>
+            
+            <div style="margin-bottom:12px; display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#475569;">Tarikh Pergi</label>
+                    <input type="date" id="editJadualTarikh" value="${window.vmsEscape(t.tarikh_pergi || '')}" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#475569;">Masa Bertolak</label>
+                    <input type="time" id="editJadualMasa" value="${window.vmsEscape(t.masa_bertolak || '')}" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                </div>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#475569;">Ubah Pemandu</label>
+                <select id="editJadualPemandu" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    ${pemanduOpts}
+                </select>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#475569;">Ubah Kenderaan</label>
+                <select id="editJadualKenderaan" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+                    ${kenderaanOpts}
+                </select>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#ef4444;">Alasan Perubahan (Wajib)</label>
+                <textarea id="editJadualAlasan" placeholder="Cth: Pemandu asal cuti sakit / Kenderaan rosak..." style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box; height:60px;" required></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-light" style="padding:8px 15px;">Batal</button>
+                <button onclick="simpanEditJadualAwam(${t.id})" class="btn btn-primary" style="padding:8px 15px;">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', htmlModal);
+};
+
+window.simpanEditJadualAwam = async function(id) {
+    const tarikh = document.getElementById('editJadualTarikh').value;
+    const masa = document.getElementById('editJadualMasa').value;
+    const pemandu = document.getElementById('editJadualPemandu').value;
+    const kenderaan = document.getElementById('editJadualKenderaan').value;
+    const alasan = document.getElementById('editJadualAlasan').value.trim();
+
+    if (!alasan) return alert("Sila nyatakan alasan perubahan untuk tujuan rekod!");
+
+    const alasanBerekod = `[Kemas kini pada ${new Date().toLocaleDateString('ms-MY')}] ${alasan}`;
+
+    document.body.style.cursor = 'wait';
+
+    const { error } = await supabaseClient.from('tempahan').update({
+        tarikh_pergi: tarikh || null,
+        masa_bertolak: masa || null,
+        nama_pemandu: pemandu || null,
+        id_kenderaan: kenderaan ? parseInt(kenderaan) : null,
+        alasan_perubahan: alasanBerekod
+    }).eq('id', id);
+
+    document.body.style.cursor = 'default';
+
+    if (error) {
+        alert("Ralat kemaskini: " + error.message);
+    } else {
+        alert("✅ Maklumat jadual berjaya dikemaskini berserta alasan!");
+        document.getElementById('modalEditJadual').remove();
+        semakJadualAwam('aktif');
+    }
+};
+
+window.padamTempahanAwam = async function(id) {
+    if (!confirm("⚠️ AMARAN: Adakah anda pasti mahu memadam rekod permohonan ini secara kekal? Tindakan ini tidak boleh diundur.")) return;
+
+    const { error } = await supabaseClient.from('tempahan').delete().eq('id', id);
+
+    if (error) alert("Ralat padam: " + error.message);
+    else {
+        alert("✅ Rekod permohonan telah berjaya dipadam.");
+        semakJadualAwam('aktif');
+    }
+};
+
+window.bukaModalProfil = async function() {
+    document.getElementById('modalProfil').classList.remove('hidden');
+    document.getElementById('previewAvatar').src = document.getElementById('headerAvatar').src;
+    
+    const { data } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
+    if (data) document.getElementById('inputNamaProfil').value = data.nama || '';
+};
+
+window.previewGambarProfil = function(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) { document.getElementById('previewAvatar').src = e.target.result; }
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+window.simpanProfil = async function() {
+    const inputNama = document.getElementById('inputNamaProfil').value.trim();
+    if (!inputNama) return alert("Sila masukkan nama penuh anda.");
+
+    const file = document.getElementById('inputAvatar').files[0];
+    const btn = document.getElementById('btnSimpanProfil');
+    const teksAsal = btn.innerText;
+    btn.innerText = "⏳ Menyimpan...";
+    btn.disabled = true;
+    
+    try {
+        let updateData = { nama: inputNama };
+
+        if (file) {
+            const failMampat = await mampatkanGambar(file);
+            const fName = `avatar_${currentUser.id}_${Date.now()}.${failMampat.name.split('.').pop()}`;
+            const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failMampat);
+            if(upErr) throw upErr;
+            const avatarUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+            
+            updateData.gambar_profil = avatarUrl;
+            document.getElementById('headerAvatar').src = avatarUrl;
+        }
+        
+        const { error: updateErr } = await supabaseClient.from('profil').update(updateData).eq('id', currentUser.id);
+        if(updateErr) throw updateErr;
+        
+        alert("✅ Maklumat profil berjaya dikemaskini!");
+        document.getElementById('modalProfil').classList.add('hidden');
+        
+        const appNameField = document.getElementById('applicantName');
+        if (appNameField) appNameField.value = inputNama;
+        
+        semakJadualAwam('aktif');
+        if(typeof muatTugasanPemandu === 'function' && !document.getElementById('tab-tugasan-pemandu').classList.contains('hidden')) {
+            muatTugasanPemandu();
+        }
+    } catch(e) {
+        alert("Ralat mengemaskini profil: " + e.message);
+    } finally {
+        btn.innerText = teksAsal;
+        btn.disabled = false;
+    }
+};
+
+// ==========================================
+// FUNGSI KHAS PEMANDU: JADUAL TUGASAN & REKOD
+// ==========================================
+window.muatTugasanPemandu = async function(tMula = '', tAkhir = '', teksCari = '') {
+    const div = document.getElementById('senarai-tugasan-pemandu');
+    if (!div) return;
+    div.innerHTML = "<div style='padding:30px; text-align:center; color:#64748b;'>Memuatkan jadual tugasan... ⏳</div>";
+
+    const { data: profil } = await supabaseClient.from('profil').select('nama').eq('id', currentUser.id).single();
+    const namaPemanduSemasa = profil ? profil.nama : '';
+
+    let query = supabaseClient.from('tempahan')
+        .select('*')
+        .in('status', ['Selesai Diagih', 'Lulus'])
+        .order('tarikh_pergi', { ascending: false });
+
+    if (tMula) query = query.gte('tarikh_pergi', tMula);
+    if (tAkhir) query = query.lte('tarikh_pergi', tAkhir);
+
+    const { data, error } = await query;
+    const { data: senaraiKenderaan } = await supabaseClient.from('kenderaan').select('id, no_plat, model, jenis_kenderaan');
+    
+    const { data: senaraiProfil } = await supabaseClient.from('profil').select('nama, gambar_profil');
+    const petaAvatar = {};
+    if (senaraiProfil) senaraiProfil.forEach(p => petaAvatar[p.nama] = p.gambar_profil);
+
+    let html = `
+    <div style="background: linear-gradient(to right, #f8fafc, #f1f5f9); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.03); display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex: 2; min-width: 200px;">
+            <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">🔍 Carian Cepat</label>
+            <input type="text" id="cariTugasanTeks" value="${window.vmsEscape(teksCari)}" placeholder="Cari pemandu, lokasi, kenderaan atau pemohon..." style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; outline:none; transition:0.2s;" onfocus="this.style.borderColor='#0284c7'">
+        </div>
+        <div style="flex: 1; min-width: 140px;">
+            <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">📅 Dari Tarikh</label>
+            <input type="date" id="cariTugasanMula" value="${window.vmsEscape(tMula)}" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit;">
+        </div>
+        <div style="flex: 1; min-width: 140px;">
+            <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">📅 Hingga Tarikh</label>
+            <input type="date" id="cariTugasanAkhir" value="${window.vmsEscape(tAkhir)}" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit;">
+        </div>
+        <div style="flex: 0 0 auto; display:flex; gap:10px;">
+            <button onclick="muatTugasanPemandu(document.getElementById('cariTugasanMula').value, document.getElementById('cariTugasanAkhir').value, document.getElementById('cariTugasanTeks').value)" class="btn btn-primary" style="padding:10px 20px; border-radius:8px; font-weight:600; box-shadow:0 4px 10px rgba(2, 132, 199, 0.2);">Cari</button>
+            <button onclick="muatTugasanPemandu('', '', '')" class="btn btn-outline" style="padding:10px 20px; border-radius:8px; background:white; font-weight:600;">Reset</button>
+        </div>
+    </div>
+    `;
+
+    if (error) return div.innerHTML = html + "Ralat: " + window.vmsEscape(error.message);
+
+    let filteredData = data || [];
+    if (teksCari.trim() !== '') {
+        const k = teksCari.toLowerCase();
+        filteredData = filteredData.filter(t => {
+            const kenderaan = senaraiKenderaan && t.id_kenderaan ? senaraiKenderaan.find(x => x.id == t.id_kenderaan) : null;
+            const namaK = kenderaan ? `${kenderaan.no_plat} ${kenderaan.model}`.toLowerCase() : '';
+            return (t.destinasi && t.destinasi.toLowerCase().includes(k)) || 
+                   (t.lokasi && t.lokasi.toLowerCase().includes(k)) || 
+                   (t.nama_pemohon && t.nama_pemohon.toLowerCase().includes(k)) ||
+                   (t.nama_pemandu && t.nama_pemandu.toLowerCase().includes(k)) ||
+                   namaK.includes(k);
+        });
+    }
+
+    if (!filteredData || filteredData.length === 0) return div.innerHTML = html + "<div style='padding:20px; text-align:center; color:#64748b; background:#f8fafc; border-radius:8px;'>Tiada rekod tugasan ditemui bertepatan dengan carian anda.</div>";
+
+    window.cacheTugasanPemandu = filteredData;
+
+    html += `<div class="table-responsive"><table class="vms-table" style="min-width: 1000px; width:100%;">
+        <thead>
+            <tr>
+                <th style="width:25%;">Pemandu</th>
+                <th>Kenderaan</th>
+                <th>Lokasi & Pemohon</th>
+                <th>Masa & Tarikh Pergi</th>
+                <th>Masa & Tarikh Balik</th>
+                <th style="text-align:center; width:120px;">Tindakan</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    filteredData.forEach((t, index) => {
+        const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+        let infoKenderaan = '-';
+        if (t.id_kenderaan && senaraiKenderaan) {
+            const k = senaraiKenderaan.find(x => x.id == t.id_kenderaan);
+            if (k) infoKenderaan = `<strong>${window.vmsEscape(k.model || '-')}</strong><br><small style="color:#475569; font-weight:600;">${window.vmsEscape(k.no_plat || '-')}</small>`;
+        }
+
+        const namaP = t.nama_pemandu || 'Belum Diagih';
+        const urlAvatar = petaAvatar[namaP] || `https://ui-avatars.com/api/?name=${encodeURIComponent(namaP)}&background=0f172a&color=fff`;
+
+        const adakahMilikSaya = (t.nama_pemandu === namaPemanduSemasa);
+        const rowStyle = adakahMilikSaya ? 'background:#f0f9ff;' : '';
+        
+        let tindakanHtml = '';
+        if (adakahMilikSaya) {
+            tindakanHtml = `<button onclick="bukaBorangTugasan(${index}, false)" class="btn" style="padding:6px 10px; font-size:12px; width:100%; background:#0284c7; color:white; border:1px solid #0284c7; font-weight:bold;">📝 Isi Rekod Saya</button>`;
+        } else {
+            tindakanHtml = `<button onclick="bukaBorangTugasan(${index}, true)" class="btn" style="padding:6px 10px; font-size:12px; width:100%; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">👁️ Lihat Sahaja</button>`;
+        }
+
+        html += `
+        <tr style="${rowStyle}">
+            <td>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <img src="${window.vmsEscape(urlAvatar)}" alt="Avatar" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid ${adakahMilikSaya ? '#0284c7' : '#e2e8f0'}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div>
+                        <strong style="color:#1e293b; display:block; line-height:1.2;">${window.vmsEscape(namaP)}</strong>
+                        <small style="color:#0284c7; font-weight:700;">${window.vmsEscape(noRujukan)}</small>
+                    </div>
+                </div>
+            </td>
+            <td>${infoKenderaan}</td>
+            <td>
+                <strong style="color:#102a43;">${window.vmsEscape(t.destinasi || t.lokasi)}</strong><br>
+                <small style="color:#64748b;">Pemohon: ${window.vmsEscape(t.nama_pemohon)}</small>
+            </td>
+            <td>
+                <strong style="color:#334155;">${window.vmsEscape(t.masa_bertolak || '-')}</strong><br>
+                <small style="color:#94a3b8;">${window.vmsEscape(t.tarikh_pergi || '-')}</small>
+            </td>
+            <td>
+                <strong style="color:#334155;">${window.vmsEscape(t.masa_balik || '-')}</strong><br>
+                <small style="color:#94a3b8;">${window.vmsEscape(t.tarikh_balik || '-')}</small>
+            </td>
+            <td style="text-align:center;">
+                ${tindakanHtml}
+            </td>
+        </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    div.innerHTML = html;
+};
+
+// ==========================================
+// FUNGSI BUKA BORANG (MODAL POP-UP / LIHAT SAHAJA)
+// ==========================================
+window.bukaBorangTugasan = function(index, hanyaLihat = false) {
+    const t = window.cacheTugasanPemandu[index];
+    if (!t) return alert("Ralat: Rekod tidak dijumpai.");
+
+    const noRujukan = `VMS-${t.id.toString().padStart(4, '0')}`;
+    const odoMula = t.odometer_mula || '';
+    const odoAkhir = t.odometer_akhir || '';
+    const linkResit = t.resit_minyak 
+        ? `<a href="${window.vmsEscape(t.resit_minyak)}" target="_blank" style="color:#0284c7; font-weight:600; text-decoration:underline;">📎 Lihat Resit Tersimpan</a>` 
+        : '<span style="color:#ef4444; font-size:12px;">Belum dimuat naik</span>';
+
+    const modalId = 'modalTugasanPemandu';
+    let sediaAda = document.getElementById(modalId);
+    if (sediaAda) sediaAda.remove();
+
+    const setDisabled = hanyaLihat ? 'disabled' : '';
+    const setBgInput = hanyaLihat ? 'background:#f1f5f9; cursor:not-allowed;' : '';
+    
+    const ruanganUpload = hanyaLihat 
+        ? `<div style="margin-top:8px;">Status: ${linkResit}</div>`
+        : `<input type="file" id="resitForm" accept="image/*" style="font-size: 13px; width:100%; cursor:pointer;"><div style="margin-top:8px;">Status: ${linkResit}</div>`;
+        
+    const butangTindakan = hanyaLihat 
+        ? `<button onclick="document.getElementById('${modalId}').remove()" class="btn btn-light" style="padding:10px 15px;">Tutup Paparan</button>`
+        : `<button onclick="document.getElementById('${modalId}').remove()" class="btn btn-light" style="padding:10px 15px;">Batal</button>
+           <button id="btnSimpanPemandu" onclick="simpanRekodPemandu(${t.id})" class="btn btn-primary" style="padding:10px 15px;">💾 Simpan Rekod</button>`;
+
+    const htmlModal = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; display:flex; justify-content:center; align-items:center;">
+        <div style="background:white; padding:25px; border-radius:12px; width:450px; max-width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-top:0; color:#102a43; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">🚗 Rekod Odometer & Resit</h3>
+            
+            ${hanyaLihat ? '<div style="background:#fef3c7; color:#b45309; padding:8px; border-radius:6px; font-size:12px; font-weight:bold; margin-bottom:10px; text-align:center;">Mod Paparan Sahaja - Tidak Boleh Diedit</div>' : ''}
+
+            <div style="margin-bottom:15px; background:#f8fafc; padding:12px; border-radius:8px; font-size:13px; line-height:1.6; border:1px solid #e2e8f0;">
+                <strong style="color:#0284c7; font-size:14px;">${window.vmsEscape(noRujukan)}</strong><br>
+                <strong>Pemandu:</strong> ${window.vmsEscape(t.nama_pemandu)}<br>
+                <strong>Destinasi:</strong> ${window.vmsEscape(t.destinasi || t.lokasi)}<br>
+                <strong>Tarikh Bertolak:</strong> ${window.vmsEscape(t.tarikh_pergi)}
+            </div>
+
+            <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+                <div style="flex:1; min-width: 140px;">
+                    <label style="font-size:12px; font-weight:600; color:#1e293b; display:block; margin-bottom:5px;">Odometer Mula (KM)</label>
+                    <input type="number" id="odoMulaForm" value="${window.vmsEscape(odoMula)}" placeholder="${hanyaLihat ? 'Tiada rekod' : 'Cth: 125000'}" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box; ${setBgInput}" ${setDisabled}>
+                </div>
+                <div style="flex:1; min-width: 140px;">
+                    <label style="font-size:12px; font-weight:600; color:#1e293b; display:block; margin-bottom:5px;">Odometer Akhir (KM)</label>
+                    <input type="number" id="odoAkhirForm" value="${window.vmsEscape(odoAkhir)}" placeholder="${hanyaLihat ? 'Tiada rekod' : 'Cth: 125450'}" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box; ${setBgInput}" ${setDisabled}>
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:6px; border:1px dashed #cbd5e1;">
+                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:#1e293b;">📸 Gambar Resit Minyak / Tol</label>
+                ${ruanganUpload}
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                ${butangTindakan}
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', htmlModal);
+};
+
+// ==========================================
+// FUNGSI SIMPAN REKOD
+// ==========================================
+window.simpanRekodPemandu = async function(id) {
+    const btn = document.getElementById('btnSimpanPemandu');
+    const teksAsal = btn.innerText;
+    btn.innerText = "⏳ Menyimpan...";
+    btn.disabled = true;
+
+    try {
+        const odoMula = document.getElementById('odoMulaForm').value;
+        const odoAkhir = document.getElementById('odoAkhirForm').value;
+        const resitInput = document.getElementById('resitForm').files[0];
+        let resitUrl = null;
+
+        if (resitInput) {
+            const failMampat = await mampatkanGambar(resitInput);
+            const fName = `resit_${id}_${Date.now()}.${failMampat.name.split('.').pop()}`;
+            const { error: upErr } = await supabaseClient.storage.from('dokumen_sokongan').upload(fName, failMampat);
+            if (upErr) throw upErr;
+            resitUrl = supabaseClient.storage.from('dokumen_sokongan').getPublicUrl(fName).data.publicUrl;
+        }
+
+        let updateData = {};
+        if (odoMula) updateData.odometer_mula = odoMula;
+        if (odoAkhir) updateData.odometer_akhir = odoAkhir;
+        if (resitUrl) updateData.resit_minyak = resitUrl;
+
+        if (Object.keys(updateData).length > 0) {
+            const { error } = await supabaseClient.from('tempahan').update(updateData).eq('id', id);
+            if (error) throw error;
+            
+            alert("✅ Rekod odometer dan resit berjaya disimpan!");
+            document.getElementById('modalTugasanPemandu').remove(); 
+            
+            const tMula = document.getElementById('cariTugasanMula') ? document.getElementById('cariTugasanMula').value : '';
+            const tAkhir = document.getElementById('cariTugasanAkhir') ? document.getElementById('cariTugasanAkhir').value : '';
+            muatTugasanPemandu(tMula, tAkhir); 
+            
+        } else {
+            alert("Sila isi sekurang-kurangnya Odometer atau muat naik resit.");
+        }
+    } catch (error) {
+        alert("Ralat sistem: " + error.message);
+    } finally {
+        btn.innerText = teksAsal;
+        btn.disabled = false;
+    }
+};
+
+window.kemaskiniLencanaTugasan = async function() {
+    if (!document.getElementById('style-lencana-vms')) {
+        const style = document.createElement('style');
+        style.id = 'style-lencana-vms';
+        style.innerHTML = `
+            @keyframes kelipMerahVms {
+                0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+                50% { opacity: 0.75; transform: scale(1.12); box-shadow: 0 0 8px 3px rgba(239, 68, 68, 0.5); }
+            }
+            .lencana-tugasan-merah {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background-color: #ef4444;
+                color: #ffffff;
+                font-size: 11px;
+                font-weight: 800;
+                min-width: 20px;
+                height: 20px;
+                padding: 0 6px;
+                border-radius: 999px;
+                margin-left: 8px;
+                vertical-align: middle;
+                animation: kelipMerahVms 1.2s infinite ease-in-out;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function setLencanaPadaButang(btnId, jumlah) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        let badge = btn.querySelector('.lencana-tugasan-merah');
+        if (jumlah > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'lencana-tugasan-merah';
+                btn.appendChild(badge);
+            }
+            badge.textContent = jumlah;
+        } else if (badge) {
+            badge.remove();
+        }
+    }
+
+    if (window.userRole === 'urusetia') {
+        const { count } = await supabaseClient
+            .from('tempahan')
+            .select('*', { count: 'exact', head: true })
+            .in('status', ['Menunggu Semakan', 'Lulus']);
+        setLencanaPadaButang('btnTabUrusetia', count || 0);
+    }
+
+    if (window.userRole === 'pelulus') {
+        const { count } = await supabaseClient
+            .from('tempahan')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'Menunggu Kelulusan');
+        setLencanaPadaButang('btnTabPelulus', count || 0);
+    }
+};
+
+// ==========================================
+// FUNGSI NOTIFIKASI EMAILJS
+// ==========================================
+if (typeof emailjs !== 'undefined') {
+    emailjs.init("o9Nr-qrxQqfnY6Moy");
+}
+
+window.hantarEmelNotifikasi = function(namaPenerima, emelPenerima, noRujukan, status, mesejTambahan) {
+    if (!emelPenerima) {
+        console.log("Tiada e-mel penerima, notifikasi e-mel dibatalkan.");
+        return;
+    }
+
+    const templateParams = {
+        to_name: namaPenerima,
+        to_email: emelPenerima,
+        no_rujukan: noRujukan,
+        status_permohonan: status,
+        mesej: mesejTambahan || 'Tiada catatan tambahan.',
+        link_sistem: "https://vms.is.iktbnchembong.com"
+    };
+
+    emailjs.send('service_fos3mh5', 'template_bglvxw3', templateParams)
+        .then(function(response) {
+            console.log('✅ EMEL BERJAYA DIHANTAR!', response.status, response.text);
+        }, function(error) {
+            console.error('❌ GAGAL HANTAR EMEL...', error);
+        });
+};
