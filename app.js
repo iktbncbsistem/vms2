@@ -443,17 +443,21 @@ window.muatSenaraiUrusetia = async function(btn = null) {
                 <span style="background:${badgeBg}; color:${badgeWarna}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; display:inline-block;">${t.status}</span>
             </td>
             <td style="text-align:center;">
-                <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})" style="margin-bottom:10px; width:100%; justify-content:center;">🔍 Butiran Penuh</button>
         `;
 
         if (t.status === 'Menunggu Semakan') {
+            // Susunan MENDATAR (Row) untuk butang-butang Urusetia
             html += `
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button class="btn-modern btn-modern-lulus" onclick="sahkanUrusetia(${t.id})" style="width:100%; justify-content:center;">✅ Sahkan & Hantar</button>
-                    <button class="btn-modern btn-modern-tolak" onclick="updateStatus(${t.id}, 'Tolak')" style="width:100%; justify-content:center;">❌ Tolak (Tidak Lengkap)</button>
+                <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                    <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})">🔍 Butiran Penuh</button>
+                    <button class="btn-modern btn-modern-lulus" onclick="sahkanUrusetia(${t.id})">✅ Sahkan & Hantar</button>
+                    <button class="btn-modern btn-modern-tolak" onclick="updateStatus(${t.id}, 'Tolak')">❌ Tolak (Tidak Lengkap)</button>
                 </div>
             `;
         } else if (t.status === 'Lulus') {
+            // Kekalkan susunan ke bawah (width:100%) KHAS untuk fasa Agihan sahaja supaya dropdown tak sempit
+            html += `
+                <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})" style="margin-bottom:10px; width:100%; justify-content:center;">🔍 Butiran Penuh</button>
             
             // ==========================================
             // DROPDOWN PEMANDU (AUTO-FILTER)
