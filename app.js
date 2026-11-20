@@ -357,11 +357,19 @@ if(vehicleForm) {
 // ==========================================
 // URUSETIA: PAPAR & AGIH KENDERAAN
 // ==========================================
-window.muatSenaraiUrusetia = async function() {
+window.muatSenaraiUrusetia = async function(btn = null) {
     if (typeof kemaskiniLencanaTugasan === 'function') kemaskiniLencanaTugasan();
 
     const div = document.getElementById('senarai-tempahan-urusetia');
     if(!div) return;
+
+    // MAGIK VISUAL: Hanya lengah 0.4 saat JIKA butang Segarkan ditekan (supaya tak nampak butang mati). 
+    // Jika sekadar tukar tab, ia kekal laju tanpa delay.
+    if (btn) {
+        btn.innerHTML = '⏳ Menyegarkan...';
+        btn.style.opacity = '0.7';
+        await new Promise(r => setTimeout(r, 400));
+    }
 
     // 1. Tarik permohonan yang perlu tindakan (Menunggu Semakan & Lulus)
     const { data: tempahan, error } = await supabaseClient.from('tempahan').select('*').in('status', ['Menunggu Semakan', 'Lulus']).order('id', {ascending: false});
@@ -370,10 +378,10 @@ window.muatSenaraiUrusetia = async function() {
     // Jika tiada permohonan
     if (!tempahan || tempahan.length === 0) {
         return div.innerHTML = `
-        <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
+<div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
             <div class="table-header-gradient" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>📋 Senarai Tindakan & Pengesahan Urusetia</span>
-                <button class="btn btn-light" onclick="this.innerHTML='⏳...'; muatSenaraiUrusetia()" style="padding:6px 12px; font-size:12px; color:#0f172a; border-radius:6px; cursor:pointer; font-weight:bold; border:none; box-shadow:0 2px 4px rgba(0,0,0,0.1);">🔄 Segarkan</button>
+                <button class="btn-modern btn-modern-butiran" onclick="muatSenaraiUrusetia(this)" style="background: rgba(255,255,255,0.9); color: #0f172a; border: none; padding: 6px 12px; z-index: 10;">🔄 Segarkan</button>
             </div>
             <div style="padding: 40px; text-align:center; color:#64748b;">
                 <span style="font-size:30px; display:block; margin-bottom:10px;">📭</span>
@@ -397,7 +405,7 @@ window.muatSenaraiUrusetia = async function() {
     <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 15px;">
         <div class="table-header-gradient" style="display:flex; justify-content:space-between; align-items:center;">
             <span>📋 Senarai Tindakan & Pengesahan Urusetia</span>
-            <button class="btn btn-light" onclick="this.innerHTML='⏳...'; muatSenaraiUrusetia()" style="padding:6px 12px; font-size:12px; color:#0f172a; border-radius:6px; cursor:pointer; font-weight:bold; border:none; box-shadow:0 2px 4px rgba(0,0,0,0.1);">🔄 Segarkan</button>
+            <button class="btn-modern btn-modern-butiran" onclick="muatSenaraiUrusetia(this)" style="background: rgba(255,255,255,0.9); color: #0f172a; border: none; padding: 6px 12px; z-index: 10;">🔄 Segarkan</button>
         </div>
         <table class="vms-table-modern">
             <thead>
