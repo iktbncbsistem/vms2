@@ -446,22 +446,24 @@ window.muatSenaraiUrusetia = async function(btn = null) {
         `;
 
         if (t.status === 'Menunggu Semakan') {
-            // Susunan MENDATAR (Row) untuk butang-butang Urusetia
+            // Susunan MENDATAR yang padat untuk butang Urusetia (seperti tab Pelulus)
             html += `
-                <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                    <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})">🔍 Butiran Penuh</button>
-                    <button class="btn-modern btn-modern-lulus" onclick="sahkanUrusetia(${t.id})">✅ Sahkan & Hantar</button>
-                    <button class="btn-modern btn-modern-tolak" onclick="updateStatus(${t.id}, 'Tolak')">❌ Tolak (Tidak Lengkap)</button>
+                <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                    <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})">🔍 Butiran</button>
+                    <button class="btn-modern btn-modern-lulus" onclick="sahkanUrusetia(${t.id})">✅ Sahkan</button>
+                    <button class="btn-modern btn-modern-tolak" onclick="updateStatus(${t.id}, 'Tolak')">❌ Tolak</button>
                 </div>
             `;
         } else if (t.status === 'Lulus') {
-            // Kekalkan susunan ke bawah (width:100%) KHAS untuk fasa Agihan sahaja supaya dropdown tak sempit
+            // Kekalkan satu butang Butiran di atas dropdown agihan
             html += `
-                <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})" style="margin-bottom:10px; width:100%; justify-content:center;">🔍 Butiran Penuh</button>
+                <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})" style="margin-bottom:8px; width:100%; justify-content:center;">🔍 Butiran Penuh</button>
             `;
             
             // ==========================================
             // DROPDOWN PEMANDU (AUTO-FILTER)
+            // ==========================================
+            
             html += `<select id="pemandu-${t.id}" style="margin-bottom:8px; width:100%; padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; outline:none; font-family:inherit;">
                     <option value="">-- Pilih Pemandu --</option>
                     <option value="${t.nama_pemohon}" style="font-weight:bold; color:#0284c7;">👉 [Pandu Sendiri] - ${t.nama_pemohon}</option>`;
