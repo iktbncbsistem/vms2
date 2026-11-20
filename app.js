@@ -458,10 +458,10 @@ window.muatSenaraiUrusetia = async function(btn = null) {
             // Kekalkan susunan ke bawah (width:100%) KHAS untuk fasa Agihan sahaja supaya dropdown tak sempit
             html += `
                 <button class="btn-modern btn-modern-butiran" onclick="paparButiran(${t.id})" style="margin-bottom:10px; width:100%; justify-content:center;">🔍 Butiran Penuh</button>
+            `;
             
             // ==========================================
             // DROPDOWN PEMANDU (AUTO-FILTER)
-            // ==========================================
             html += `<select id="pemandu-${t.id}" style="margin-bottom:8px; width:100%; padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; outline:none; font-family:inherit;">
                     <option value="">-- Pilih Pemandu --</option>
                     <option value="${t.nama_pemohon}" style="font-weight:bold; color:#0284c7;">👉 [Pandu Sendiri] - ${t.nama_pemohon}</option>`;
